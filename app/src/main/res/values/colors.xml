@@ -1,0 +1,19 @@
+<resources>
+    <color name="brand">#820000</color>
+    <color name="brand_dark">#5A0000</color>
+    <color name="brand_deep">#3E0000</color>
+    <color name="brand_soft">#A31414</color>
+    <color name="brand_tint">#F9ECEC</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white70">#B3FFFFFF</color>
+    <color name="text_dark">#1C1B1B</color>
+    <color name="text_gray">#7A7574</color>
+    <color name="bg_light">#F6F4F3</color>
+    <color name="card_stroke">#EBE6E5</color>
+    <color name="green_ok">#1E7A38</color>
+    <color name="amber_wait">#C98A00</color>
+    <!-- eski nomlar mosligi uchun -->
+    <color name="sevimli_red">#820000</color>
+    <color name="sevimli_red_dark">#5A0000</color>
+    <color name="sevimli_red_light">#F9ECEC</color>
+</resources>
