@@ -213,8 +213,8 @@
                         android:layout_marginStart="14dp"
                         android:orientation="vertical">
 
-                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="Skaner diagnostika"/>
-                        <TextView style="@style/MenuCardSub" android:text="Texnik tekshiruv"/>
+                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="Sozlamalar"/>
+                        <TextView style="@style/MenuCardSub" android:text="Menejer · sklad tanlash"/>
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -226,7 +226,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="8dp"
-        android:text="v0.3 · Sevimli Market"
+        android:text="v0.4 · Sevimli Market"
         android:textColor="@color/text_gray"
         android:textSize="12sp" />
 </LinearLayout>

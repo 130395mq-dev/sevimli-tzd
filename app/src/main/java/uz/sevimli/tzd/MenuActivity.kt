@@ -19,8 +19,9 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, LookupActivity::class.java))
         }
 
+        // "Skaner diagnostika" kartasi endi Sozlamalarni ochadi
         b.cardScannerTest.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         val soon = { _: android.view.View ->
@@ -31,5 +32,12 @@ class MenuActivity : AppCompatActivity() {
         b.cardMove.setOnClickListener(soon)
         b.cardPicking.setOnClickListener(soon)
         b.cardWriteoff.setOnClickListener(soon)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Status chip: tanlangan sklad
+        val store = Config.storeName(this)
+        b.statusChip.text = if (store != null) "TZD-01 · $store" else "Sklad tanlanmagan"
     }
 }

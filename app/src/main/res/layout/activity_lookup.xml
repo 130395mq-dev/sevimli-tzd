@@ -15,7 +15,7 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="14dp"
-        android:paddingBottom="18dp">
+        android:paddingBottom="16dp">
 
         <TextView
             android:id="@+id/btnBack"
@@ -26,13 +26,28 @@
             android:textSize="24sp"
             android:paddingEnd="14dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Просмотр товара"
-            android:textColor="@color/white"
-            android:textSize="19sp"
-            android:textStyle="bold" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Просмотр товара"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/headerStore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="—"
+                android:textColor="@color/white70"
+                android:textSize="12sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <EditText
@@ -50,7 +65,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingTop="60dp">
+        android:paddingTop="70dp">
 
         <FrameLayout
             android:layout_width="92dp"
@@ -83,111 +98,200 @@
             android:textSize="13sp" />
     </LinearLayout>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card"
+    <ProgressBar
+        android:id="@+id/loading"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:indeterminateTint="@color/brand"
+        android:visibility="gone" />
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="14dp"
-        android:visibility="gone"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@color/white">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/pName"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_dark"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_margin="14dp"
+                android:visibility="gone"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:id="@+id/pName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_dark"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/pBarcode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_chip"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:textColor="@color/text_gray"
+                            android:textSize="13sp"
+                            android:fontFamily="monospace" />
+
+                        <TextView
+                            android:id="@+id/pArticle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:textColor="@color/text_gray"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_price_panel"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Narx"
+                            android:textColor="@color/white70"
+                            android:textSize="12sp"
+                            android:letterSpacing="0.06" />
+
+                        <TextView
+                            android:id="@+id/pPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/white"
+                            android:textSize="32sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:id="@+id/storeLabel"
+                                android:text="Qoldiq"
+                                android:textColor="@color/text_gray"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/pStock"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/brand"
+                                android:textSize="26sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="O'lchov"
+                                android:textColor="@color/text_gray"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/pUom"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_dark"
+                                android:textSize="18sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@color/card_stroke"
+                        android:id="@+id/divider" />
+
+                    <TextView
+                        android:id="@+id/otherLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Boshqa skladlarda:"
+                        android:textColor="@color/text_gray"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/otherStores"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <TextView
-                android:id="@+id/pBarcode"
-                android:layout_width="wrap_content"
+                android:id="@+id/notFound"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_margin="14dp"
+                android:gravity="center"
+                android:padding="20dp"
                 android:background="@drawable/bg_chip"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:textColor="@color/text_gray"
-                android:textSize="13sp"
-                android:fontFamily="monospace" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_price_panel"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Narx"
-                    android:textColor="@color/white70"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.06" />
-
-                <TextView
-                    android:id="@+id/pPrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <View
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/bg_icon_circle"
-                    android:backgroundTint="@color/green_ok" />
-
-                <TextView
-                    android:id="@+id/pStock"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textColor="@color/text_dark"
-                    android:textSize="15sp" />
-            </LinearLayout>
+                android:backgroundTint="@color/brand_tint"
+                android:textColor="@color/brand_dark"
+                android:textSize="16sp"
+                android:visibility="gone" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/notFound"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="14dp"
-        android:gravity="center"
-        android:padding="20dp"
-        android:background="@drawable/bg_chip"
-        android:backgroundTint="@color/brand_tint"
-        android:text="Mahsulot topilmadi"
-        android:textColor="@color/brand_dark"
-        android:textSize="16sp"
-        android:visibility="gone" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    </ScrollView>
 
     <TextView
         android:id="@+id/lastCode"
