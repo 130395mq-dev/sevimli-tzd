@@ -38,6 +38,8 @@ object Config {
     fun setStore(ctx: Context, id: Int, name: String) =
         prefs(ctx).edit().putInt(KEY_STORE_ID, id).putString(KEY_STORE_NAME, name).apply()
 
+    fun hasStore(ctx: Context): Boolean = storeId(ctx) > 0
+
     private fun prefs(ctx: Context) =
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }

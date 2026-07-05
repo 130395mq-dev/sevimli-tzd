@@ -33,6 +33,16 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".SupplyActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".CounterpartyActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

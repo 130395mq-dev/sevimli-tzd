@@ -27,7 +27,13 @@ class MenuActivity : AppCompatActivity() {
         val soon = { _: android.view.View ->
             Toast.makeText(this, "Bu bo'lim tez kunda qo'shiladi", Toast.LENGTH_SHORT).show()
         }
-        b.cardReceiving.setOnClickListener(soon)
+        b.cardReceiving.setOnClickListener {
+            if (!Config.hasStore(this)) {
+                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            } else {
+                startActivity(Intent(this, SupplyActivity::class.java))
+            }
+        }
         b.cardInventory.setOnClickListener(soon)
         b.cardMove.setOnClickListener(soon)
         b.cardPicking.setOnClickListener(soon)

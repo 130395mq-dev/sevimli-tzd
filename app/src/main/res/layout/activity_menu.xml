@@ -112,7 +112,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_receive" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Приёмка"/>
-                        <TextView style="@style/MenuCardSub" android:text="Tez kunda"/>
+                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
@@ -133,7 +133,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_inventory" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Инвентаризация"/>
-                        <TextView style="@style/MenuCardSub" android:text="Tez kunda"/>
+                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -146,7 +146,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_move" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Перемещение"/>
-                        <TextView style="@style/MenuCardSub" android:text="Tez kunda"/>
+                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
@@ -167,7 +167,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_pick" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Подбор заказа"/>
-                        <TextView style="@style/MenuCardSub" android:text="Tez kunda"/>
+                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -180,7 +180,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_writeoff" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Списание"/>
-                        <TextView style="@style/MenuCardSub" android:text="Tez kunda"/>
+                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
@@ -226,7 +226,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="8dp"
-        android:text="v0.4 · Sevimli Market"
+        android:text="v0.5 · Sevimli Market"
         android:textColor="@color/text_gray"
         android:textSize="12sp" />
 </LinearLayout>
