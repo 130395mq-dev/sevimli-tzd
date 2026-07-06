@@ -147,7 +147,7 @@ class LookupActivity : AppCompatActivity() {
         put("article", data.getStringExtra("p_article") ?: "")
         put("price", data.getLongExtra("p_price", 0))
         put("uom", data.getStringExtra("p_uom") ?: "")
-        put("store_name", Config.storeName(this) ?: "")
+        put("store_name", Config.storeName(this@LookupActivity) ?: "")
         put("store_qty", data.getDoubleExtra("p_store_qty", 0.0))
         put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
     }
