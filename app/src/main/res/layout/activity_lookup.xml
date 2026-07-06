@@ -294,6 +294,20 @@
     </ScrollView>
 
     <TextView
+        android:id="@+id/btnManualSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="14dp"
+        android:background="@drawable/bg_chip"
+        android:backgroundTint="@color/brand_tint"
+        android:gravity="center"
+        android:padding="14dp"
+        android:text="🔍 Qo'lda qidirish (shtrix yo'q bo'lsa)"
+        android:textColor="@color/brand_dark"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
         android:id="@+id/lastCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

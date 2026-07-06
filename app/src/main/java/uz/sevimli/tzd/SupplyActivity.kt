@@ -42,6 +42,15 @@ class SupplyActivity : AppCompatActivity() {
         }
     }
 
+    private val pickProduct = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { res ->
+        if (res.resultCode == RESULT_OK && res.data != null) {
+            val json = productFromIntent(res.data!!)
+            askQuantity(json, json.optString("barcode"))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivitySupplyBinding.inflate(layoutInflater)
@@ -49,6 +58,9 @@ class SupplyActivity : AppCompatActivity() {
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnFinish.setOnClickListener { finishDocument() }
+        b.btnManualAdd.setOnClickListener {
+            pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
+        }
         b.scanInput.showSoftInputOnFocus = false
 
         b.scanInput.setOnEditorActionListener { _, actionId, event ->
@@ -94,7 +106,10 @@ class SupplyActivity : AppCompatActivity() {
         val price = product.optLong("price", 0)
         val pmid = product.optString("moysklad_id",
             product.optString("code")) // backend product_moysklad_id qaytarmasa fallback
-        val existing = items.find { it.barcode == code || it.name == name }
+        // Diqqat: barcode bo'sh bo'lishi mumkin (qo'lda qo'shilgan mahsulot),
+        // shuning uchun bo'sh kodni solishtirmaymiz — aks holda turli mahsulotlar
+        // bir-biriga aralashib ketishi mumkin edi.
+        val existing = items.find { (code.isNotBlank() && it.barcode == code) || it.name == name }
         val was = existing?.quantity ?: 0.0
 
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
@@ -273,6 +288,15 @@ class SupplyActivity : AppCompatActivity() {
         if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
+
+    /** ProductSearchActivity'dan qaytgan tanlovni product_lookup javobi kabi JSON'ga aylantiradi. */
+    private fun productFromIntent(data: Intent): JSONObject = JSONObject().apply {
+        put("found", true)
+        put("name", data.getStringExtra("p_name") ?: "")
+        put("barcode", data.getStringExtra("p_barcode") ?: "")
+        put("price", data.getLongExtra("p_price", 0))
+        put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
+    }
 
     override fun onResume() {
         super.onResume()

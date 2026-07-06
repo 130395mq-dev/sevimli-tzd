@@ -1,11 +1,13 @@
 package uz.sevimli.tzd
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivityLookupBinding
 import java.text.NumberFormat
 import java.util.Locale
@@ -16,6 +18,18 @@ class LookupActivity : AppCompatActivity() {
     private lateinit var b: ActivityLookupBinding
     private val fmt = NumberFormat.getInstance(Locale("uz"))
 
+    private val pickProduct = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { res ->
+        if (res.resultCode == RESULT_OK && res.data != null) {
+            val json = productFromIntent(res.data!!)
+            b.emptyState.visibility = View.GONE
+            b.notFound.visibility = View.GONE
+            b.lastCode.text = "Qo'lda tanlandi"
+            showResult(json, json.optString("barcode"))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityLookupBinding.inflate(layoutInflater)
@@ -25,6 +39,9 @@ class LookupActivity : AppCompatActivity() {
         b.headerStore.text = storeName
 
         b.btnBack.setOnClickListener { finish() }
+        b.btnManualSearch.setOnClickListener {
+            pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
+        }
         b.scanInput.showSoftInputOnFocus = false
 
         b.scanInput.setOnEditorActionListener { _, actionId, event ->
@@ -121,6 +138,19 @@ class LookupActivity : AppCompatActivity() {
 
     private fun trimNum(d: Double): String =
         if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+
+    /** ProductSearchActivity'dan qaytgan tanlovni product_lookup javobi kabi JSON'ga aylantiradi. */
+    private fun productFromIntent(data: Intent): JSONObject = JSONObject().apply {
+        put("found", true)
+        put("name", data.getStringExtra("p_name") ?: "")
+        put("barcode", data.getStringExtra("p_barcode") ?: "")
+        put("article", data.getStringExtra("p_article") ?: "")
+        put("price", data.getLongExtra("p_price", 0))
+        put("uom", data.getStringExtra("p_uom") ?: "")
+        put("store_name", Config.storeName(this) ?: "")
+        put("store_qty", data.getDoubleExtra("p_store_qty", 0.0))
+        put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
+    }
 
     override fun onResume() {
         super.onResume()

@@ -101,6 +101,23 @@
         android:background="@color/card_stroke" />
 
     <TextView
+        android:id="@+id/btnManualAdd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:gravity="center"
+        android:padding="12dp"
+        android:text="🔍 Qo'lda qo'shish (shtrix yo'q bo'lsa)"
+        android:textColor="@color/brand"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/card_stroke" />
+
+    <TextView
         android:id="@+id/emptyHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
