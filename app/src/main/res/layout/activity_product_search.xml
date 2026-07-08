@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
+    <!-- Sarlavha -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,7 +16,7 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="30dp">
 
         <TextView
             android:id="@+id/btnBack"
@@ -26,42 +27,128 @@
             android:textSize="24sp"
             android:paddingEnd="14dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Mahsulot qidirish"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mahsulot qidirish"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nomi, kodi yoki artikuli bo'yicha"
+                android:textColor="@color/white70"
+                android:textSize="12sp" />
+        </LinearLayout>
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/search"
+    <!-- Suzuvchi qidiruv paneli (sarlavha ustiga chiqadi) -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_margin="12dp"
-        android:hint="Nomi yoki kodi bo'yicha qidirish..."
-        android:inputType="text"
-        android:background="@drawable/bg_chip"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp" />
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="-22dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="@color/white">
 
-    <TextView
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="6dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                app:tint="@color/brand" />
+
+            <EditText
+                android:id="@+id/search"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="Qidirish..."
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="6dp"
+                android:textColor="@color/text_dark"
+                android:textColorHint="@color/text_gray"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/btnClear"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:padding="9dp"
+                android:src="@drawable/ic_close"
+                android:visibility="gone"
+                app:tint="@color/text_gray" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Bo'sh holat / ko'rsatma -->
+    <LinearLayout
         android:id="@+id/hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:gravity="center"
-        android:padding="24dp"
-        android:text="Kamida 2 ta harf kiriting"
-        android:textColor="@color/text_gray"
-        android:textSize="14sp" />
+        android:paddingTop="70dp">
+
+        <FrameLayout
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search"
+                app:tint="@color/brand" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/hintTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Mahsulot nomini yozing"
+            android:textColor="@color/text_dark"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/hintSub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Kamida 2 ta harf kiriting"
+            android:textColor="@color/text_gray"
+            android:textSize="13sp" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/loading"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="28dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
 
@@ -76,8 +163,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="12dp" />
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp" />
     </ScrollView>
 </LinearLayout>

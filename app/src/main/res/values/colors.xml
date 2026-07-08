@@ -11,7 +11,9 @@
     <color name="bg_light">#F6F4F3</color>
     <color name="card_stroke">#EBE6E5</color>
     <color name="green_ok">#1E7A38</color>
+    <color name="green_tint">#E4F1E8</color>
     <color name="amber_wait">#C98A00</color>
+    <color name="pill_gray">#F0EDEC</color>
     <!-- eski nomlar mosligi uchun -->
     <color name="sevimli_red">#820000</color>
     <color name="sevimli_red_dark">#5A0000</color>
