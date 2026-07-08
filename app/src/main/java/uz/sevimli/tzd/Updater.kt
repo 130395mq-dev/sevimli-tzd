@@ -137,7 +137,7 @@ object Updater {
         }
         val total = conn.contentLength
         conn.inputStream.use { input ->
-            out.outputStream.use { output ->
+            out.outputStream().use { output ->
                 val buf = ByteArray(16 * 1024)
                 var read: Int
                 var done = 0L
