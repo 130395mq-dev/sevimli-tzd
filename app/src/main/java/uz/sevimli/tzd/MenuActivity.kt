@@ -39,6 +39,9 @@ class MenuActivity : AppCompatActivity() {
         b.cardPicking.setOnClickListener(soon)
         b.cardWriteoff.setOnClickListener(soon)
 
+        // Pastdagi versiya yozuvi — haqiqiy versiyani ko'rsatadi
+        b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Sevimli Market"
+
         // Status chipni bosib qo'lda yangilanishni tekshirish mumkin
         b.statusChip.setOnClickListener { Updater.check(this, silent = false) }
 
