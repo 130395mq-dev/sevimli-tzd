@@ -25,6 +25,8 @@ class SplashActivity : AppCompatActivity() {
             .setInterpolator(DecelerateInterpolator())
             .start()
 
+        // Haqiqiy versiyani ko'rsatadi (qattiq yozilgan matn emas)
+        b.splashVersion.text = "Ombor boshqaruv tizimi · v${BuildConfig.VERSION_NAME}"
         b.splashVersion.alpha = 0f
         b.splashVersion.animate().alpha(1f).setStartDelay(400).setDuration(500).start()
 
