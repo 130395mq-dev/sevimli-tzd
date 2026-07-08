@@ -115,6 +115,7 @@ class SupplyActivity : AppCompatActivity() {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
         val qName = view.findViewById<TextView>(R.id.qName)
         val qPrice = view.findViewById<TextView>(R.id.qPrice)
+        val qPackInfo = view.findViewById<TextView>(R.id.qPackInfo)
         val qWas = view.findViewById<TextView>(R.id.qWas)
         val qWill = view.findViewById<TextView>(R.id.qWill)
         val qInput = view.findViewById<EditText>(R.id.qInput)
@@ -125,7 +126,17 @@ class SupplyActivity : AppCompatActivity() {
         qName.text = name
         qPrice.text = "${fmt.format(price)} so'm"
         qWas.text = "Было: ${trimNum(was)}"
-        qInput.setText("1")
+
+        // Upakovka (blok) shtrixi skanlangan bo'lsa — miqdorni avtomatik to'ldiramiz
+        val packQty = product.optDouble("pack_qty", 0.0)
+        if (product.optBoolean("is_pack", false) && packQty > 0) {
+            qPackInfo.visibility = View.VISIBLE
+            qPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
+            qInput.setText(trimNum(packQty))
+        } else {
+            qPackInfo.visibility = View.GONE
+            qInput.setText("1")
+        }
 
         fun currentQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
         fun updateWill() { qWill.text = "Будет: ${trimNum(was + currentQty())}" }

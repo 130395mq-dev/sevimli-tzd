@@ -100,6 +100,15 @@ class LookupActivity : AppCompatActivity() {
         val price = json.optLong("price", 0)
         b.pPrice.text = "${fmt.format(price)} so'm"
 
+        // Upakovka (blok) shtrixi skanlangan bo'lsa — ichida nechta dona
+        val packQty = json.optDouble("pack_qty", 0.0)
+        if (json.optBoolean("is_pack", false) && packQty > 0) {
+            b.pPackInfo.visibility = View.VISIBLE
+            b.pPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
+        } else {
+            b.pPackInfo.visibility = View.GONE
+        }
+
         val storeQty = json.optDouble("store_qty", 0.0)
         b.pStock.text = trimNum(storeQty)
         b.storeLabel.text = "Qoldiq" + (json.optString("store_name").let {
