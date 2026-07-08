@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write   # GitHub Release yaratish uchun
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,11 +29,42 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Decode signing keystore
+        run: echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Read version
+        id: ver
+        run: |
+          VC=$(grep -m1 versionCode app/build.gradle | grep -o '[0-9]\+')
+          VN=$(grep -m1 versionName app/build.gradle | grep -o '"[^"]*"' | tr -d '"')
+          echo "code=$VC" >> "$GITHUB_OUTPUT"
+          echo "name=$VN" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          KEY_ALIAS: sevimli
+          KEY_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Prepare release files
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk sevimli-tzd.apk
+          NOTES=$(git log -1 --pretty=%s)
+          jq -n \
+            --argjson vc "${{ steps.ver.outputs.code }}" \
+            --arg vn "${{ steps.ver.outputs.name }}" \
+            --arg notes "$NOTES" \
+            --arg url "https://github.com/${{ github.repository }}/releases/latest/download/sevimli-tzd.apk" \
+            '{versionCode:$vc, versionName:$vn, notes:$notes, url:$url}' > version.json
+          cat version.json
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: sevimli-tzd-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v${{ steps.ver.outputs.name }}-${{ steps.ver.outputs.code }}
+          name: Sevimli TZD ${{ steps.ver.outputs.name }}
+          files: |
+            sevimli-tzd.apk
+            version.json

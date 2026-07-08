@@ -38,6 +38,12 @@ class MenuActivity : AppCompatActivity() {
         b.cardMove.setOnClickListener(soon)
         b.cardPicking.setOnClickListener(soon)
         b.cardWriteoff.setOnClickListener(soon)
+
+        // Status chipni bosib qo'lda yangilanishni tekshirish mumkin
+        b.statusChip.setOnClickListener { Updater.check(this, silent = false) }
+
+        // Menyu ochilganda jimgina yangilanishni tekshiradi
+        Updater.check(this)
     }
 
     override fun onResume() {

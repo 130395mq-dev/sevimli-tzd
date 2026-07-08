@@ -8,3 +8,7 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Imzo kalitlari — hech qachon repoga tushmasin!
+*.keystore
+*.jks
