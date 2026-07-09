@@ -24,6 +24,14 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
+        b.cardDocuments.setOnClickListener {
+            if (!Config.hasStore(this)) {
+                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            } else {
+                startActivity(Intent(this, DocumentsActivity::class.java))
+            }
+        }
+
         val soon = { _: android.view.View ->
             Toast.makeText(this, "Bu bo'lim tez kunda qo'shiladi", Toast.LENGTH_SHORT).show()
         }
