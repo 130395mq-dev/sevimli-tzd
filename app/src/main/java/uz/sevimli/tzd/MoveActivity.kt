@@ -290,8 +290,8 @@ class MoveActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val name = result.json.optString("moysklad_name", "Перемещение")
                         AlertDialog.Builder(this)
-                            .setTitle("Yuborildi ✓")
-                            .setMessage("MoySklad: $name")
+                            .setTitle("Jo'natildi ✓")
+                            .setMessage("MoySklad: $name\n\n$targetStoreName skladi qabul qilib tasdiqlagach, qoldiq ko'chadi.")
                             .setPositiveButton("OK") { _, _ -> finish() }
                             .setCancelable(false)
                             .show()

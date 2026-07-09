@@ -45,7 +45,7 @@ class MenuActivity : AppCompatActivity() {
             if (!Config.hasStore(this)) {
                 Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
             } else {
-                startActivity(Intent(this, MoveActivity::class.java))
+                startActivity(Intent(this, MoveInboxActivity::class.java))
             }
         }
         b.cardPicking.setOnClickListener(soon)
