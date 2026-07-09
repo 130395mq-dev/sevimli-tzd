@@ -112,15 +112,24 @@ class InventoryActivity : AppCompatActivity() {
         qPrice.text = "${fmt.format(price)} so'm"
         qWas.text = "Было: ${trimNum(was)}"
 
-        // Upakovka (blok) shtrixi skanlangan bo'lsa — miqdorni avtomatik to'ldiramiz
+        // Tarozi shtrixi — og'irlik (kg), yoki Upakovka (blok) — ichidagi dona: avto to'ldiramiz
         val packQty = product.optDouble("pack_qty", 0.0)
-        if (product.optBoolean("is_pack", false) && packQty > 0) {
-            qPackInfo.visibility = View.VISIBLE
-            qPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
-            qInput.setText(trimNum(packQty))
-        } else {
-            qPackInfo.visibility = View.GONE
-            qInput.setText("1")
+        val scaleWeight = product.optDouble("scale_weight", 0.0)
+        when {
+            product.optBoolean("scale", false) && scaleWeight > 0 -> {
+                qPackInfo.visibility = View.VISIBLE
+                qPackInfo.text = "⚖ Tarozi: ${trimNum(scaleWeight)} kg"
+                qInput.setText(trimNum(scaleWeight))
+            }
+            product.optBoolean("is_pack", false) && packQty > 0 -> {
+                qPackInfo.visibility = View.VISIBLE
+                qPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
+                qInput.setText(trimNum(packQty))
+            }
+            else -> {
+                qPackInfo.visibility = View.GONE
+                qInput.setText("1")
+            }
         }
 
         fun currentQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
