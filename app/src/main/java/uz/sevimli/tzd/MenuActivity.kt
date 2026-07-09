@@ -41,7 +41,13 @@ class MenuActivity : AppCompatActivity() {
                 startActivity(Intent(this, InventoryActivity::class.java))
             }
         }
-        b.cardMove.setOnClickListener(soon)
+        b.cardMove.setOnClickListener {
+            if (!Config.hasStore(this)) {
+                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            } else {
+                startActivity(Intent(this, MoveActivity::class.java))
+            }
+        }
         b.cardPicking.setOnClickListener(soon)
         b.cardWriteoff.setOnClickListener(soon)
 

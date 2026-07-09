@@ -146,7 +146,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_move" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Перемещение"/>
-                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
+                        <TextView style="@style/MenuCardSub" android:text="ko'chirish"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>

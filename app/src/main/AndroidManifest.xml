@@ -44,6 +44,16 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".MoveActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".StorePickerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".CounterpartyActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
