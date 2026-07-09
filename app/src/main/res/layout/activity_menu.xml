@@ -133,7 +133,7 @@
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_inventory" app:tint="@color/brand"/>
                         </FrameLayout>
                         <TextView style="@style/MenuCardTitle" android:text="Инвентаризация"/>
-                        <TextView style="@style/MenuCardSub" android:text="qabul"/>
+                        <TextView style="@style/MenuCardSub" android:text="sanoq"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
