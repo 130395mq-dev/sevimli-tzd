@@ -1,5 +1,6 @@
 package uz.sevimli.tzd
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -11,33 +12,55 @@ import uz.sevimli.tzd.databinding.ActivityDocumentsBinding
 import kotlin.concurrent.thread
 
 /**
- * Bugun ushbu skladda yaratilgan hujjatlar (Приёмка, Инвентаризация, Перемещение).
- * Har kun o'ziniki — ertaga o'sha kunda yaratilganlari ko'rinadi.
+ * Bitta funksiyaning hujjatlar ro'yxati (o'z ichida saqlanadi). `type` extra:
+ * "supply" (Приёмка), "inventory" (Инвентаризация). Pastda «Yangi hujjat» —
+ * o'sha turdagi yangi hujjat yaratish. Hujjatlar kunlar bo'yicha turadi.
  */
 class DocumentsActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityDocumentsBinding
+    private var type: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityDocumentsBinding.inflate(layoutInflater)
         setContentView(b.root)
 
+        type = intent.getStringExtra("type") ?: ""
+        val title = intent.getStringExtra("title") ?: "Hujjatlar"
+        b.headerTitle.text = title
+        b.headerDate.text = Config.storeName(this) ?: ""
+
         b.btnBack.setOnClickListener { finish() }
         b.btnRefresh.setOnClickListener { load() }
+
+        // Yangi hujjat tugmasi — turga qarab tegishli ekranni ochadi
+        val createTarget = when (type) {
+            "supply" -> SupplyActivity::class.java
+            "inventory" -> InventoryActivity::class.java
+            else -> null
+        }
+        if (createTarget != null) {
+            b.btnNew.visibility = View.VISIBLE
+            b.btnNewText.text = "＋  Yangi hujjat yaratish"
+            b.btnNew.setOnClickListener {
+                startActivity(Intent(this, createTarget))
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        load()
+        load() // yaratilgandan keyin ro'yxat yangilanadi
     }
 
     private fun load() {
         b.loading.visibility = View.VISIBLE
         b.emptyHint.visibility = View.GONE
         b.list.removeAllViews()
+        val query = if (type.isEmpty()) emptyMap() else mapOf("type" to type)
         thread {
-            val result = Api.get(this, "documents")
+            val result = Api.get(this, "documents", query)
             runOnUiThread {
                 b.loading.visibility = View.GONE
                 when (result) {
@@ -52,11 +75,10 @@ class DocumentsActivity : AppCompatActivity() {
     }
 
     private fun render(json: org.json.JSONObject) {
-        b.headerDate.text = json.optString("date")
         b.list.removeAllViews()
         val arr = json.optJSONArray("documents")
         if (arr == null || arr.length() == 0) {
-            b.emptyHint.text = "Bugun hali hujjat yaratilmagan"
+            b.emptyHint.text = "Hali hujjat yo'q"
             b.emptyHint.visibility = View.VISIBLE
             return
         }
@@ -67,6 +89,7 @@ class DocumentsActivity : AppCompatActivity() {
                 d.optString("name"),
                 d.optString("status"),
                 d.optString("status_code"),
+                d.optString("date"),
                 d.optString("time"),
                 d.optDouble("qty", 0.0),
             ))
@@ -75,7 +98,7 @@ class DocumentsActivity : AppCompatActivity() {
 
     private fun buildCard(
         type: String, name: String, status: String,
-        statusCode: String, time: String, qty: Double,
+        statusCode: String, date: String, time: String, qty: Double,
     ): View {
         val card = CardView(this).apply {
             radius = dp(16f); cardElevation = 0f
@@ -96,7 +119,6 @@ class DocumentsActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
-        // yuqori qator: tur badge + vaqt
         val topRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -108,11 +130,11 @@ class DocumentsActivity : AppCompatActivity() {
             backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.brand_tint))
             setPadding(dp(9f).toInt(), dp(3f).toInt(), dp(9f).toInt(), dp(3f).toInt())
         }
-        val timeTv = TextView(this).apply {
-            text = "  $time"; textSize = 12f
+        val dateTv = TextView(this).apply {
+            text = "  $date · $time"; textSize = 12f
             setTextColor(getColor(R.color.text_gray))
         }
-        topRow.addView(badge); topRow.addView(timeTv)
+        topRow.addView(badge); topRow.addView(dateTv)
 
         val nameTv = TextView(this).apply {
             text = name; textSize = 16f

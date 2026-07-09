@@ -186,46 +186,6 @@
             </LinearLayout>
 
             <androidx.cardview.widget.CardView
-                android:id="@+id/cardDocuments"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/white"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="16dp">
-
-                    <FrameLayout style="@style/MenuIconWrap" android:background="@drawable/bg_icon_circle">
-                        <ImageView style="@style/MenuIcon" android:src="@drawable/ic_inventory" app:tint="@color/brand"/>
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="14dp"
-                        android:orientation="vertical">
-
-                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="Bugungi hujjatlar"/>
-                        <TextView style="@style/MenuCardSub" android:text="Bugun yaratilgan ishlar"/>
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/ic_chevron_right"
-                        app:tint="@color/brand" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
                 android:id="@+id/cardScannerTest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

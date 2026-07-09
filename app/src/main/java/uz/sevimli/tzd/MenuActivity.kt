@@ -24,30 +24,15 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        b.cardDocuments.setOnClickListener {
-            if (!Config.hasStore(this)) {
-                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
-            } else {
-                startActivity(Intent(this, DocumentsActivity::class.java))
-            }
-        }
 
         val soon = { _: android.view.View ->
             Toast.makeText(this, "Bu bo'lim tez kunda qo'shiladi", Toast.LENGTH_SHORT).show()
         }
         b.cardReceiving.setOnClickListener {
-            if (!Config.hasStore(this)) {
-                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
-            } else {
-                startActivity(Intent(this, SupplyActivity::class.java))
-            }
+            openDocs("supply", "Приёмка")
         }
         b.cardInventory.setOnClickListener {
-            if (!Config.hasStore(this)) {
-                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
-            } else {
-                startActivity(Intent(this, InventoryActivity::class.java))
-            }
+            openDocs("inventory", "Инвентаризация")
         }
         b.cardMove.setOnClickListener {
             if (!Config.hasStore(this)) {
@@ -67,6 +52,18 @@ class MenuActivity : AppCompatActivity() {
 
         // Menyu ochilganda jimgina yangilanishni tekshiradi
         Updater.check(this)
+    }
+
+    /** Funksiyaning o'z hujjatlar ro'yxatini ochadi (sklad tanlanган bo'lsa). */
+    private fun openDocs(type: String, title: String) {
+        if (!Config.hasStore(this)) {
+            Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            return
+        }
+        startActivity(Intent(this, DocumentsActivity::class.java).apply {
+            putExtra("type", type)
+            putExtra("title", title)
+        })
     }
 
     override fun onResume() {
