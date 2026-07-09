@@ -33,6 +33,8 @@ class MoveActivity : AppCompatActivity() {
 
     private var targetStoreId: Int = -1
     private var targetStoreName: String = ""
+    private var orgId: String = ""
+    private var orgName: String = ""
     private val sourceStoreName: String by lazy { Config.storeName(this) ?: "Sklad" }
 
     private val pickStore = registerForActivityResult(
@@ -41,10 +43,29 @@ class MoveActivity : AppCompatActivity() {
         if (res.resultCode == RESULT_OK && res.data != null) {
             targetStoreId = res.data!!.getIntExtra("store_id", -1)
             targetStoreName = res.data!!.getStringExtra("store_name") ?: ""
-            b.headerRoute.text = "$sourceStoreName → $targetStoreName"
+            updateRoute()
+            // Sklad tanlangach — organizatsiya tanlaymiz
+            pickOrg.launch(Intent(this, OrgPickerActivity::class.java))
         } else if (targetStoreId < 0) {
             finish() // maqsad-sklad tanlanmasa, chiqamiz
         }
+    }
+
+    private val pickOrg = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { res ->
+        if (res.resultCode == RESULT_OK && res.data != null) {
+            orgId = res.data!!.getStringExtra("org_id") ?: ""
+            orgName = res.data!!.getStringExtra("org_name") ?: ""
+            updateRoute()
+        } else if (orgId.isEmpty()) {
+            finish() // organizatsiya tanlanmasa, chiqamiz
+        }
+    }
+
+    private fun updateRoute() {
+        val route = "$sourceStoreName → $targetStoreName"
+        b.headerRoute.text = if (orgName.isNotEmpty()) "$route · $orgName" else route
     }
 
     private val pickProduct = registerForActivityResult(
@@ -233,9 +254,12 @@ class MoveActivity : AppCompatActivity() {
         if (targetStoreId < 0) {
             Toast.makeText(this, "Qayerga skladi tanlanmagan", Toast.LENGTH_SHORT).show(); return
         }
+        if (orgId.isEmpty()) {
+            Toast.makeText(this, "Organizatsiya tanlanmagan", Toast.LENGTH_SHORT).show(); return
+        }
         AlertDialog.Builder(this)
             .setTitle("Перемещениеni yakunlash")
-            .setMessage("$sourceStoreName → $targetStoreName\n${items.size} ta mahsulot · jami ${trimNum(items.sumOf { it.quantity })}\nMoySklad'ga yozilsinmi?")
+            .setMessage("$sourceStoreName → $targetStoreName\nOrg: $orgName\n${items.size} ta mahsulot · jami ${trimNum(items.sumOf { it.quantity })}\nMoySklad'ga yozilsinmi?")
             .setPositiveButton("Завершить") { _, _ -> sendDocument() }
             .setNegativeButton("Bekor", null)
             .show()
@@ -255,6 +279,7 @@ class MoveActivity : AppCompatActivity() {
         val body = JSONObject().apply {
             put("client_uuid", clientUuid)
             put("target_store_id", targetStoreId)
+            put("organization_id", orgId)
             put("lines", lines)
         }
         thread {
