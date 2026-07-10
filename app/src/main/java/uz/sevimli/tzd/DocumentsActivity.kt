@@ -38,6 +38,7 @@ class DocumentsActivity : AppCompatActivity() {
         val createTarget = when (type) {
             "supply" -> SupplyActivity::class.java
             "inventory" -> InventoryActivity::class.java
+            "shipment" -> ShipmentActivity::class.java
             else -> null
         }
         if (createTarget != null) {

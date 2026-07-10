@@ -42,11 +42,7 @@ class MenuActivity : AppCompatActivity() {
             }
         }
         b.cardPicking.setOnClickListener {
-            if (!Config.hasStore(this)) {
-                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
-            } else {
-                startActivity(Intent(this, PickInboxActivity::class.java))
-            }
+            openDocs("shipment", "Отгрузка")
         }
         b.cardWriteoff.setOnClickListener(soon)
 

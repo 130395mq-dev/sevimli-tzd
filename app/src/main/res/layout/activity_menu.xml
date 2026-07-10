@@ -166,8 +166,8 @@
                         <FrameLayout style="@style/MenuIconWrap" android:background="@drawable/bg_icon_circle">
                             <ImageView style="@style/MenuIcon" android:src="@drawable/ic_pick" app:tint="@color/brand"/>
                         </FrameLayout>
-                        <TextView style="@style/MenuCardTitle" android:text="Подбор заказа"/>
-                        <TextView style="@style/MenuCardSub" android:text="buyurtma yig'ish"/>
+                        <TextView style="@style/MenuCardTitle" android:text="Отгрузка"/>
+                        <TextView style="@style/MenuCardSub" android:text="mijozga jo'natish"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
