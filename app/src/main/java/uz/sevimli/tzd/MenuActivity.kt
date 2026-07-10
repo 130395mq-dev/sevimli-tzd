@@ -41,7 +41,13 @@ class MenuActivity : AppCompatActivity() {
                 startActivity(Intent(this, MoveInboxActivity::class.java))
             }
         }
-        b.cardPicking.setOnClickListener(soon)
+        b.cardPicking.setOnClickListener {
+            if (!Config.hasStore(this)) {
+                Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            } else {
+                startActivity(Intent(this, PickInboxActivity::class.java))
+            }
+        }
         b.cardWriteoff.setOnClickListener(soon)
 
         // Pastdagi versiya yozuvi — haqiqiy versiyani ko'rsatadi

@@ -64,6 +64,16 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".PickInboxActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".PickReceiveActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".StorePickerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
