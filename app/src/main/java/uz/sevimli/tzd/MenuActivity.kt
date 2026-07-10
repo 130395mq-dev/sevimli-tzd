@@ -25,9 +25,6 @@ class MenuActivity : AppCompatActivity() {
         }
 
 
-        val soon = { _: android.view.View ->
-            Toast.makeText(this, "Bu bo'lim tez kunda qo'shiladi", Toast.LENGTH_SHORT).show()
-        }
         b.cardReceiving.setOnClickListener {
             openDocs("supply", "Приёмка")
         }
@@ -44,7 +41,9 @@ class MenuActivity : AppCompatActivity() {
         b.cardPicking.setOnClickListener {
             openDocs("shipment", "Отгрузка")
         }
-        b.cardWriteoff.setOnClickListener(soon)
+        b.cardWriteoff.setOnClickListener {
+            openDocs("writeoff", "Списание")
+        }
 
         // Pastdagi versiya yozuvi — haqiqiy versiyani ko'rsatadi
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Sevimli Market"

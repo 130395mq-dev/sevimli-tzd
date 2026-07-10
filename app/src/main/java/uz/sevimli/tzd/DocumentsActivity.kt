@@ -39,6 +39,7 @@ class DocumentsActivity : AppCompatActivity() {
             "supply" -> SupplyActivity::class.java
             "inventory" -> InventoryActivity::class.java
             "shipment" -> ShipmentActivity::class.java
+            "writeoff" -> WriteoffActivity::class.java
             else -> null
         }
         if (createTarget != null) {

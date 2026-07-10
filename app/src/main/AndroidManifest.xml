@@ -69,6 +69,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".WriteoffActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".StorePickerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
