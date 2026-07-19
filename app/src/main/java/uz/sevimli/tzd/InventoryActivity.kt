@@ -272,14 +272,22 @@ class InventoryActivity : AppCompatActivity() {
                             .show()
                     }
                     is ApiResult.Error -> {
-                        val msg = if (result.offline)
-                            "Internet yo'q. Hujjat saqlanmadi — internet qaytganda qayta urinib ko'ring."
-                        else result.message
-                        AlertDialog.Builder(this)
-                            .setTitle("Yuborilmadi")
-                            .setMessage(msg)
-                            .setPositiveButton("OK", null)
-                            .show()
+                        if (result.offline) {
+                            // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
+                            OfflineQueue.enqueue(this, "inventory", "Инвентаризация", body)
+                            AlertDialog.Builder(this)
+                                .setTitle("Saqlandi ⏳")
+                                .setMessage("Internet yo'q. Hujjat telefonda saqlandi — internet qaytganda o'zi yuboriladi.")
+                                .setPositiveButton("OK") { _, _ -> finish() }
+                                .setCancelable(false)
+                                .show()
+                        } else {
+                            AlertDialog.Builder(this)
+                                .setTitle("Yuborilmadi")
+                                .setMessage(result.message)
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
                     }
                 }
             }
