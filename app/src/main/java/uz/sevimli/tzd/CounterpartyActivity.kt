@@ -9,12 +9,16 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import org.json.JSONArray
 import uz.sevimli.tzd.databinding.ActivityCounterpartyBinding
 import kotlin.concurrent.thread
 
+/**
+ * Kontragent tanlash. Endi MAHALLIY bazadan o'qiydi (offline ishlaydi).
+ * Internet bo'lsa — ochilganda fon rejimda ro'yxatni yangilab oladi.
+ */
 class CounterpartyActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityCounterpartyBinding
@@ -27,14 +31,20 @@ class CounterpartyActivity : AppCompatActivity() {
         setContentView(b.root)
 
         b.btnBack.setOnClickListener { finish() }
-        load("")
+        load("")   // mahalliy bazadan — internetsiz ham ishlaydi
+
+        // Internet bo'lsa — kontragentlarni jimgina yangilab olamiz
+        thread {
+            val ok = CatalogSync.syncCounterparties(this)
+            if (ok) runOnUiThread { load(b.search.text.toString().trim()) }
+        }
 
         b.search.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 searchRunnable?.let { handler.removeCallbacks(it) }
                 val q = s?.toString()?.trim() ?: ""
                 searchRunnable = Runnable { load(q) }
-                handler.postDelayed(searchRunnable!!, 350)
+                handler.postDelayed(searchRunnable!!, 200)
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -42,23 +52,28 @@ class CounterpartyActivity : AppCompatActivity() {
     }
 
     private fun load(q: String) {
-        b.loading.visibility = View.VISIBLE
-        b.list.removeAllViews()
-        thread {
-            val result = Api.get(this, "counterparties", if (q.isEmpty()) emptyMap() else mapOf("q" to q))
-            runOnUiThread {
-                b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> render(result.json)
-                    is ApiResult.Error -> Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
-                }
-            }
+        b.loading.visibility = View.GONE
+        val db = LocalDb.get(this)
+        if (db.counterpartyCount() == 0) {
+            showHint("Kontragentlar hali yuklanmagan.\nBir marta internet bilan oching — keyin offline ham ishlaydi.")
+            return
         }
+        render(db.searchCounterparties(q))
     }
 
-    private fun render(json: org.json.JSONObject) {
+    private fun showHint(text: String) {
         b.list.removeAllViews()
-        val arr = json.optJSONArray("counterparties") ?: return
+        val tv = TextView(this).apply {
+            this.text = text
+            textSize = 14f
+            setTextColor(getColor(R.color.text_dark))
+            setPadding(dp(16f).toInt(), dp(24f).toInt(), dp(16f).toInt(), dp(16f).toInt())
+        }
+        b.list.addView(tv)
+    }
+
+    private fun render(arr: JSONArray) {
+        b.list.removeAllViews()
         for (i in 0 until arr.length()) {
             val c = arr.getJSONObject(i)
             val id = c.optInt("id")
