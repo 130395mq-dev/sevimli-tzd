@@ -55,10 +55,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="7dp"
-                android:text="Demo rejim · TZD-01"
+                android:text="Sklad tanlanmagan"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:text="🔄 Yangilash"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:background="@drawable/bg_icon_circle_dark"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:foreground="?attr/selectableItemBackground" />
     </LinearLayout>
 
     <ScrollView

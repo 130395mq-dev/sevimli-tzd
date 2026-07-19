@@ -67,11 +67,17 @@ class LookupActivity : AppCompatActivity() {
 
         thread {
             val result = Api.get(this, "product", mapOf("barcode" to code))
+            val json: org.json.JSONObject? = when (result) {
+                is ApiResult.Success -> result.json
+                is ApiResult.Error -> if (result.offline) OfflineLookup.lookup(this, code) else null
+            }
+            val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
                 b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> showResult(result.json, code)
-                    is ApiResult.Error -> showError(result.message)
+                when {
+                    serverErr != null -> showError(serverErr)
+                    json != null -> showResult(json, code)
+                    else -> showError("Mahsulot topilmadi")
                 }
             }
         }

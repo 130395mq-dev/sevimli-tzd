@@ -65,11 +65,18 @@ class ProductSearchActivity : AppCompatActivity() {
         b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "product-search", mapOf("q" to q))
+            // Internet bo'lmasa — mahalliy bazadan qidiramiz
+            val json: org.json.JSONObject? = when (result) {
+                is ApiResult.Success -> result.json
+                is ApiResult.Error -> if (result.offline) LocalDb.get(this).searchProductsResult(q) else null
+            }
+            val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
                 b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> render(result.json)
-                    is ApiResult.Error -> Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                when {
+                    serverErr != null -> Toast.makeText(this, serverErr, Toast.LENGTH_SHORT).show()
+                    json != null -> render(json)
+                    else -> render(org.json.JSONObject().put("products", org.json.JSONArray()))
                 }
             }
         }

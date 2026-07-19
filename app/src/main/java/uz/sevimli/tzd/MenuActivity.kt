@@ -1,7 +1,9 @@
 package uz.sevimli.tzd
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import uz.sevimli.tzd.databinding.ActivityMenuBinding
@@ -19,18 +21,11 @@ class MenuActivity : AppCompatActivity() {
         b.cardLookup.setOnClickListener {
             startActivity(Intent(this, LookupActivity::class.java))
         }
-
-        // "Skaner diagnostika" kartasi endi Sozlamalarni ochadi
         b.cardScannerTest.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
-
-        b.cardReceiving.setOnClickListener {
-            openDocs("supply", "Приёмка")
-        }
-        b.cardInventory.setOnClickListener {
-            openDocs("inventory", "Инвентаризация")
-        }
+        b.cardReceiving.setOnClickListener { openDocs("supply", "Приёмка") }
+        b.cardInventory.setOnClickListener { openDocs("inventory", "Инвентаризация") }
         b.cardMove.setOnClickListener {
             if (!Config.hasStore(this)) {
                 Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
@@ -38,29 +33,23 @@ class MenuActivity : AppCompatActivity() {
                 startActivity(Intent(this, MoveInboxActivity::class.java))
             }
         }
-        b.cardPicking.setOnClickListener {
-            openDocs("shipment", "Отгрузка")
-        }
-        b.cardWriteoff.setOnClickListener {
-            openDocs("writeoff", "Списание")
-        }
+        b.cardPicking.setOnClickListener { openDocs("shipment", "Отгрузка") }
+        b.cardWriteoff.setOnClickListener { openDocs("writeoff", "Списание") }
 
-        // Pastdagi versiya yozuvi — haqiqiy versiyani ko'rsatadi
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Sevimli Market"
 
-        // Status chipni bosish:
-        //  - yuborilmagan hujjat bo'lsa — hozir yuborishga urinadi
-        //  - bo'lmasa — yangilanishni tekshiradi
+        // 🔄 To'liq yangilash (mahsulot + kontragent + qoldiqni qaytadan yuklaydi)
+        b.btnRefresh.setOnClickListener { fullRefresh() }
+
+        // Status chipni bosish: yuborilmagan hujjat bo'lsa yuboradi, aks holda yangilanish tekshiradi
         b.statusChip.setOnClickListener {
             if (OfflineQueue.size(this) > 0) flushQueue(manual = true)
             else Updater.check(this, silent = false)
         }
 
-        // Menyu ochilganda jimgina yangilanishni tekshiradi
         Updater.check(this)
     }
 
-    /** Funksiyaning o'z hujjatlar ro'yxatini ochadi (sklad tanlangan bo'lsa). */
     private fun openDocs(type: String, title: String) {
         if (!Config.hasStore(this)) {
             Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
@@ -75,11 +64,12 @@ class MenuActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatus()
-        // Menyuga har qaytganda navbatdagi hujjatlarni jimgina yuborishga urinamiz
+        // navbatdagi hujjatlarni jimgina yuboramiz
         flushQueue(manual = false)
+        // internet bo'lsa — offline bazani jimgina yangilaymiz (chekланган)
+        thread { CatalogSync.autoRefresh(this) }
     }
 
-    /** Status chip: tanlangan sklad + yuborilmagan hujjatlar soni. */
     private fun updateStatus() {
         val store = Config.storeName(this) ?: "Sklad tanlanmagan"
         val pending = OfflineQueue.size(this)
@@ -87,7 +77,6 @@ class MenuActivity : AppCompatActivity() {
             if (pending > 0) "$store · ⏳ $pending yuborilmagan" else store
     }
 
-    /** Navbatdagi hujjatlarni fon oqimida yuborishga urinadi. */
     private fun flushQueue(manual: Boolean) {
         if (OfflineQueue.size(this) == 0) {
             if (manual) Updater.check(this, silent = false)
@@ -97,11 +86,40 @@ class MenuActivity : AppCompatActivity() {
         thread {
             val sent = OfflineQueue.flushBlocking(this)
             runOnUiThread {
-                if (sent > 0) {
-                    Toast.makeText(this, "$sent ta hujjat yuborildi ✓", Toast.LENGTH_SHORT).show()
-                } else if (manual) {
-                    Toast.makeText(this, "Hozircha yuborilmadi (internet yoki server)", Toast.LENGTH_SHORT).show()
-                }
+                if (sent > 0) Toast.makeText(this, "$sent ta hujjat yuborildi ✓", Toast.LENGTH_SHORT).show()
+                else if (manual) Toast.makeText(this, "Hozircha yuborilmadi (internet yoki server)", Toast.LENGTH_SHORT).show()
+                updateStatus()
+            }
+        }
+    }
+
+    /** To'liq yangilash: mahsulot + kontragent + qoldiqni qaytadan yuklaydi (progress bilan). */
+    private fun fullRefresh() {
+        val label = TextView(this).apply {
+            text = "Boshlanmoqda..."
+            val p = (20 * resources.displayMetrics.density).toInt()
+            setPadding(p, p, p, p)
+            textSize = 15f
+        }
+        val dlg = AlertDialog.Builder(this)
+            .setTitle("🔄 To'liq yangilash")
+            .setView(label)
+            .setCancelable(false)
+            .create()
+        dlg.show()
+
+        thread {
+            runOnUiThread { label.text = "Kontragentlar yuklanmoqda..." }
+            CatalogSync.syncCounterparties(this)
+
+            val ok = CatalogSync.syncProductsFull(this) { done, total ->
+                runOnUiThread { label.text = "Mahsulotlar yuklanmoqda...\n$done / $total" }
+            }
+
+            runOnUiThread {
+                dlg.dismiss()
+                if (ok) Toast.makeText(this, "Yangilandi ✓", Toast.LENGTH_LONG).show()
+                else Toast.makeText(this, "Yuklab bo'lmadi — internetni tekshiring", Toast.LENGTH_LONG).show()
                 updateStatus()
             }
         }

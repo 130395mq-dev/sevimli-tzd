@@ -83,22 +83,26 @@ class SupplyActivity : AppCompatActivity() {
         b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "product", mapOf("barcode" to code))
+            // Internet bo'lmasa — mahalliy (offline) bazadan qidiramiz
+            val json: org.json.JSONObject? = when (result) {
+                is ApiResult.Success -> result.json
+                is ApiResult.Error -> if (result.offline) OfflineLookup.lookup(this, code) else null
+            }
+            val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
                 b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> {
-                        val j = result.json
-                        if (!j.optBoolean("found", false)) {
-                            ScanFeedback.fail(this)
-                            Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
-                        } else {
-                            ScanFeedback.ok(this)
-                            askQuantity(j, code)
-                        }
-                    }
-                    is ApiResult.Error -> {
+                when {
+                    serverErr != null -> {
                         ScanFeedback.fail(this)
-                        Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, serverErr, Toast.LENGTH_SHORT).show()
+                    }
+                    json == null || !json.optBoolean("found", false) -> {
+                        ScanFeedback.fail(this)
+                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        ScanFeedback.ok(this)
+                        askQuantity(json, code)
                     }
                 }
             }
