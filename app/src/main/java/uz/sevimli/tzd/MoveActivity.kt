@@ -118,13 +118,17 @@ class MoveActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val j = result.json
                         if (!j.optBoolean("found", false)) {
+                            ScanFeedback.fail(this)
                             Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
                         } else {
+                            ScanFeedback.ok(this)
                             askQuantity(j, code)
                         }
                     }
-                    is ApiResult.Error ->
+                    is ApiResult.Error -> {
+                        ScanFeedback.fail(this)
                         Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -155,7 +159,11 @@ class MoveActivity : AppCompatActivity() {
         val btnOk = view.findViewById<View>(R.id.btnOk)
 
         qName.text = name
-        qPrice.text = "${fmt.format(price)} so'm"
+        val storeQty = product.optDouble("store_qty", -1.0)
+        qPrice.text = if (storeQty >= 0)
+            "${fmt.format(price)} so'm · Qoldiq: ${trimNum(storeQty)}"
+        else
+            "${fmt.format(price)} so'm"
         qWas.text = "Было: ${trimNum(was)}"
 
         // Upakovka (blok) shtrixi skanlangan bo'lsa — miqdorni avtomatik to'ldiramiz
@@ -170,7 +178,11 @@ class MoveActivity : AppCompatActivity() {
         }
 
         fun currentQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
-        fun updateWill() { qWill.text = "Будет: ${trimNum(was + currentQty())}" }
+        fun updateWill() {
+            val will = was + currentQty()
+            qWill.text = "Будет: ${trimNum(will)}"
+            if (storeQty >= 0 && will > storeQty) qWill.append("  ⚠ qoldiqdan ko'p")
+        }
         updateWill()
         qInput.setOnFocusChangeListener { _, _ -> updateWill() }
         qInput.setSelection(qInput.text.length)

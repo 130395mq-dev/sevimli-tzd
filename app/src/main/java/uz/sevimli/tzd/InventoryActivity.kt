@@ -78,13 +78,17 @@ class InventoryActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val j = result.json
                         if (!j.optBoolean("found", false)) {
+                            ScanFeedback.fail(this)
                             Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
                         } else {
+                            ScanFeedback.ok(this)
                             askQuantity(j, code)
                         }
                     }
-                    is ApiResult.Error ->
+                    is ApiResult.Error -> {
+                        ScanFeedback.fail(this)
                         Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -115,7 +119,11 @@ class InventoryActivity : AppCompatActivity() {
         val btnOk = view.findViewById<View>(R.id.btnOk)
 
         qName.text = name
-        qPrice.text = "${fmt.format(price)} so'm"
+        val storeQty = product.optDouble("store_qty", -1.0)
+        qPrice.text = if (storeQty >= 0)
+            "${fmt.format(price)} so'm · Qoldiq: ${trimNum(storeQty)}"
+        else
+            "${fmt.format(price)} so'm"
         qWas.text = "Было: ${trimNum(was)}"
 
         // Tarozi shtrixi — og'irlik (kg), yoki Upakovka (blok) — ichidagi dona: avto to'ldiramiz

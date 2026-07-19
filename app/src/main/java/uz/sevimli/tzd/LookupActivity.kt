@@ -80,10 +80,12 @@ class LookupActivity : AppCompatActivity() {
     private fun showResult(json: org.json.JSONObject, code: String) {
         val found = json.optBoolean("found", false)
         if (!found) {
+            ScanFeedback.fail(this)
             b.notFound.text = "Mahsulot topilmadi\n$code"
             b.notFound.visibility = View.VISIBLE
             return
         }
+        ScanFeedback.ok(this)
         b.card.visibility = View.VISIBLE
         b.pName.text = json.optString("name")
 
@@ -150,6 +152,7 @@ class LookupActivity : AppCompatActivity() {
     }
 
     private fun showError(message: String) {
+        ScanFeedback.fail(this)
         b.notFound.text = message
         b.notFound.visibility = View.VISIBLE
     }
