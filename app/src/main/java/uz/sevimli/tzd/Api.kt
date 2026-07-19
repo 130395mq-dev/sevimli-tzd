@@ -14,8 +14,6 @@ sealed class ApiResult {
 
 object Api {
 
-    private const val APP_VERSION = "0.4"
-
     /** GET so'rov (token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
         val qs = if (query.isEmpty()) "" else "?" + query.entries.joinToString("&") {
@@ -38,9 +36,11 @@ object Api {
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = method
                 connectTimeout = 8000
-                readTimeout = 12000
+                // POST (MoySklad'ga yozish) server tomonda 120s gacha ketishi mumkin,
+                // shuning uchun yozish so'rovlariga uzoq timeout beramiz. GET tez qoladi.
+                readTimeout = if (body != null) 125000 else 12000
                 setRequestProperty("X-Device-Token", token)
-                setRequestProperty("X-App-Version", APP_VERSION)
+                setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)
                 setRequestProperty("Accept", "application/json")
                 if (body != null) {
                     doOutput = true
@@ -51,11 +51,15 @@ object Api {
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
-            val json = JSONObject(text)
+            // Javob JSON bo'lmasligi mumkin (proxy 502, Django HTML xato sahifasi) —
+            // bunda tushunarli xabar chiqaramiz, crash qilmaymiz.
+            val json = try { JSONObject(text) } catch (e: Exception) { null }
             if (code in 200..299) {
-                ApiResult.Success(json)
+                if (json != null) ApiResult.Success(json)
+                else ApiResult.Error("Server javobi noto'g'ri format ($code)")
             } else {
-                val msg = json.optString("error", "Server xatosi ($code)")
+                val msg = json?.optString("error", "Server xatosi ($code)")
+                    ?: "Server xatosi ($code)"
                 ApiResult.Error(msg)
             }
         } catch (e: java.net.UnknownHostException) {

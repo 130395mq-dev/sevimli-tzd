@@ -94,7 +94,13 @@ class InventoryActivity : AppCompatActivity() {
         val name = product.optString("name")
         val price = product.optLong("price", 0)
         val pmid = product.optString("moysklad_id", product.optString("code"))
-        val existing = items.find { (code.isNotBlank() && it.barcode == code) || it.name == name }
+        // Qatorlarni ISHONCHLI kalit — mahsulot ID si bo'yicha birlashtiramiz (barcode zaxira).
+        // Ilgari NOM bo'yicha ham birlashtirilardi — bir xil nomli turli mahsulotlar
+        // aralashib, miqdor buzilardi.
+        val existing = items.find {
+            (pmid.isNotBlank() && it.productMoyskladId == pmid) ||
+                    (code.isNotBlank() && it.barcode == code)
+        }
         val was = existing?.quantity ?: 0.0
 
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
@@ -155,7 +161,7 @@ class InventoryActivity : AppCompatActivity() {
             val add = currentQty()
             if (add <= 0) { dialog.dismiss(); return@setOnClickListener }
             if (existing != null) {
-                existing.quantity += add
+                existing.quantity = round3(existing.quantity + add)
             } else {
                 items.add(SupplyItem(pmid, code, name, price, add))
             }
@@ -282,8 +288,13 @@ class InventoryActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun trimNum(d: Double): String =
-        if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+    /** Miqdorni 3 xonagacha yaxlitlaydi (0.1+0.2 kabi "shovqin"ni yo'qotadi). */
+    private fun round3(d: Double): Double = Math.round(d * 1000.0) / 1000.0
+
+    private fun trimNum(d: Double): String {
+        val r = round3(d)
+        return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
+    }
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
 
