@@ -120,6 +120,46 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:text="Qurilma tokeni"
+            android:textColor="@color/text_dark"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/inToken"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:hint="Qurilma tokeni (admin paneldan)"
+            android:inputType="text"
+            android:maxLines="1"
+            android:background="@drawable/bg_chip"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveToken"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Tokenni saqlash"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            app:backgroundTint="@color/brand"
+            app:cornerRadius="14dp"
+            android:layout_marginBottom="18dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_stroke"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="4dp"
             android:text="Qurilma qaysi skladga ishlaydi?"

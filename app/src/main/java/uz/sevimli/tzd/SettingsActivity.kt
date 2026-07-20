@@ -22,6 +22,7 @@ class SettingsActivity : AppCompatActivity() {
 
         b.btnBack.setOnClickListener { finish() }
         b.btnLogin.setOnClickListener { doLogin() }
+        b.btnSaveToken.setOnClickListener { saveToken() }
     }
 
     private fun doLogin() {
@@ -57,6 +58,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadStores() {
         b.loginStage.visibility = View.GONE
         b.storeStage.visibility = View.VISIBLE
+        b.inToken.setText(Config.token(this))   // joriy tokenni ko'rsatamiz
         b.loading.visibility = View.VISIBLE
 
         thread {
@@ -70,6 +72,18 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** Qurilma tokenini saqlaydi va eski sklad keshini tozalaydi. */
+    private fun saveToken() {
+        val t = b.inToken.text.toString().trim()
+        if (t.isEmpty()) {
+            Toast.makeText(this, "Token kiriting", Toast.LENGTH_SHORT).show(); return
+        }
+        Config.setToken(this, t)
+        thread { LocalDb.get(this).clearProducts() }   // boshqa sklad ma'lumoti tozalansin
+        Toast.makeText(this, "Token saqlandi. Menyuda 'Yangilash' ni bosing.", Toast.LENGTH_LONG).show()
+        loadStores()   // yangi token bilan sklad ro'yxati
     }
 
     private fun renderStores(json: JSONObject) {
