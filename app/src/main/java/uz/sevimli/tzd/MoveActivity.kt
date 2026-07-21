@@ -31,6 +31,13 @@ class MoveActivity : AppCompatActivity() {
     private val items = mutableListOf<SupplyItem>()
     private val clientUuid = UUID.randomUUID().toString()
 
+    // Skaner (miqdor oynasi ochiq turganda) uchun holat
+    private var qtyDialog: android.app.AlertDialog? = null
+    private var qtyConfirmWith: ((Double) -> Unit)? = null
+    private var qtyPrefill: Double = 0.0
+    private val scanBuf = StringBuilder()
+    private var lastScanKey = 0L
+
     private var targetStoreId: Int = -1
     private var targetStoreName: String = ""
     private var orgId: String = ""
@@ -204,17 +211,22 @@ class MoveActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
-        btnOk.setOnClickListener {
-            val add = currentQty()
-            if (add <= 0) { dialog.dismiss(); return@setOnClickListener }
-            if (existing != null) {
-                existing.quantity = round3(existing.quantity + add)
-            } else {
-                items.add(SupplyItem(pmid, code, name, price, add))
+        val confirmWith: (Double) -> Unit = { addQty ->
+            if (addQty > 0) {
+                if (existing != null) existing.quantity = round3(existing.quantity + addQty)
+                else items.add(SupplyItem(pmid, code, name, price, addQty))
+                renderList()
             }
             dialog.dismiss()
-            renderList()
         }
+        btnOk.setOnClickListener { confirmWith(currentQty()) }
+
+        // Skaner: oyna ochiq turganda keyingi mahsulot skanlansa — joriyni standart
+        // miqdor bilan tasdiqlab, yangisiga o'tamiz (raqamlar miqdorga tushmaydi).
+        qtyPrefill = currentQty()
+        qtyConfirmWith = confirmWith
+        qtyDialog = dialog
+        dialog.setOnDismissListener { qtyDialog = null; qtyConfirmWith = null }
         dialog.show()
     }
 
@@ -378,5 +390,28 @@ class MoveActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) b.scanInput.requestFocus()
+    }
+
+    /** Miqdor oynasi ochiq turganda kelgan SKAN (tez ketma-ketlik + Enter) ni ushlaymiz. */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (qtyDialog?.isShowing == true && event.action == KeyEvent.ACTION_DOWN) {
+            val now = System.currentTimeMillis()
+            if (now - lastScanKey > 150) scanBuf.setLength(0)
+            lastScanKey = now
+            val kc = event.keyCode
+            if (kc == KeyEvent.KEYCODE_ENTER || kc == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                val code = scanBuf.toString().trim()
+                scanBuf.setLength(0)
+                if (code.length >= 6) {                    // barcode — yangi mahsulot
+                    qtyConfirmWith?.invoke(qtyPrefill)     // joriyni standart miqdor bilan tasdiqlaymiz
+                    onScan(code)
+                    return true
+                }
+            } else {
+                val ch = event.unicodeChar
+                if (ch != 0) scanBuf.append(ch.toChar())
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 }

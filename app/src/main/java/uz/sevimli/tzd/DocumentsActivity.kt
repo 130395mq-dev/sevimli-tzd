@@ -1,20 +1,22 @@
 package uz.sevimli.tzd
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivityDocumentsBinding
 import kotlin.concurrent.thread
 
 /**
- * Bitta funksiyaning hujjatlar ro'yxati (o'z ichida saqlanadi). `type` extra:
- * "supply" (Приёмка), "inventory" (Инвентаризация). Pastda «Yangi hujjat» —
- * o'sha turdagi yangi hujjat yaratish. Hujjatlar kunlar bo'yicha turadi.
+ * Bitta funksiyaning hujjatlar ro'yxati. Xato bilan qolgan hujjat qizil ko'rinadi
+ * va bosilganda MoySklad'ga qaytadan yuborishga uriniladi.
  */
 class DocumentsActivity : AppCompatActivity() {
 
@@ -34,7 +36,6 @@ class DocumentsActivity : AppCompatActivity() {
         b.btnBack.setOnClickListener { finish() }
         b.btnRefresh.setOnClickListener { load() }
 
-        // Yangi hujjat tugmasi — turga qarab tegishli ekranni ochadi
         val createTarget = when (type) {
             "supply" -> SupplyActivity::class.java
             "inventory" -> InventoryActivity::class.java
@@ -45,15 +46,13 @@ class DocumentsActivity : AppCompatActivity() {
         if (createTarget != null) {
             b.btnNew.visibility = View.VISIBLE
             b.btnNewText.text = "＋  Yangi hujjat yaratish"
-            b.btnNew.setOnClickListener {
-                startActivity(Intent(this, createTarget))
-            }
+            b.btnNew.setOnClickListener { startActivity(Intent(this, createTarget)) }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        load() // yaratilgandan keyin ro'yxat yangilanadi
+        load()
     }
 
     private fun load() {
@@ -76,7 +75,7 @@ class DocumentsActivity : AppCompatActivity() {
         }
     }
 
-    private fun render(json: org.json.JSONObject) {
+    private fun render(json: JSONObject) {
         b.list.removeAllViews()
         val arr = json.optJSONArray("documents")
         if (arr == null || arr.length() == 0) {
@@ -85,26 +84,26 @@ class DocumentsActivity : AppCompatActivity() {
             return
         }
         for (i in 0 until arr.length()) {
-            val d = arr.getJSONObject(i)
-            b.list.addView(buildCard(
-                d.optString("type"),
-                d.optString("name"),
-                d.optString("status"),
-                d.optString("status_code"),
-                d.optString("date"),
-                d.optString("time"),
-                d.optDouble("qty", 0.0),
-            ))
+            b.list.addView(buildCard(arr.getJSONObject(i)))
         }
     }
 
-    private fun buildCard(
-        type: String, name: String, status: String,
-        statusCode: String, date: String, time: String, qty: Double,
-    ): View {
+    private fun buildCard(d: JSONObject): View {
+        val type = d.optString("type")
+        val name = d.optString("name")
+        val status = d.optString("status")
+        val statusCode = d.optString("status_code")
+        val date = d.optString("date")
+        val time = d.optString("time")
+        val qty = d.optDouble("qty", 0.0)
+        val id = d.optInt("id")
+        val tcode = d.optString("tcode")
+        val errorText = d.optString("error")
+        val isError = statusCode == "error"
+
         val card = CardView(this).apply {
             radius = dp(16f); cardElevation = 0f
-            setCardBackgroundColor(getColor(R.color.white))
+            setCardBackgroundColor(getColor(if (isError) R.color.brand_tint else R.color.white))
             val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -118,8 +117,7 @@ class DocumentsActivity : AppCompatActivity() {
         }
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
         val topRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -145,11 +143,12 @@ class DocumentsActivity : AppCompatActivity() {
             setPadding(0, dp(6f).toInt(), 0, 0)
         }
         val statusTv = TextView(this).apply {
-            text = "$status · jami ${trimNum(qty)}"
+            text = if (isError) "⚠ $status · qayta yuborish uchun bosing"
+                   else "$status · jami ${trimNum(qty)}"
             textSize = 13f
             setTextColor(getColor(when (statusCode) {
                 "synced" -> R.color.green_ok
-                "error" -> R.color.brand
+                "error" -> R.color.brand_soft
                 else -> R.color.amber_wait
             }))
             setPadding(0, dp(3f).toInt(), 0, 0)
@@ -157,7 +156,43 @@ class DocumentsActivity : AppCompatActivity() {
         col.addView(topRow); col.addView(nameTv); col.addView(statusTv)
         root.addView(col)
         card.addView(root)
+
+        if (isError && tcode.isNotEmpty()) {
+            card.isClickable = true
+            card.foreground = getDrawable(android.R.drawable.list_selector_background)
+            card.setOnClickListener { confirmRetry(tcode, id, name, errorText) }
+        }
         return card
+    }
+
+    private fun confirmRetry(tcode: String, id: Int, name: String, error: String) {
+        val msg = (if (error.isNotBlank()) "Xato: $error\n\n" else "") +
+                "«$name» hujjatini MoySklad'ga qaytadan yuboraylikmi?"
+        AlertDialog.Builder(this)
+            .setTitle("Qayta yuborish")
+            .setMessage(msg)
+            .setPositiveButton("Qayta yuborish") { _, _ -> doRetry(tcode, id) }
+            .setNegativeButton("Bekor", null)
+            .show()
+    }
+
+    private fun doRetry(tcode: String, id: Int) {
+        b.loading.visibility = View.VISIBLE
+        val body = JSONObject().put("type", tcode).put("id", id)
+        thread {
+            val r = Api.post(this, "retry-document", body)
+            runOnUiThread {
+                b.loading.visibility = View.GONE
+                when (r) {
+                    is ApiResult.Success -> {
+                        Toast.makeText(this, "Yuborildi ✓", Toast.LENGTH_SHORT).show()
+                        load()
+                    }
+                    is ApiResult.Error ->
+                        Toast.makeText(this, r.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     private fun trimNum(d: Double): String =

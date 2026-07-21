@@ -1,5 +1,6 @@
 package uz.sevimli.tzd
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -15,6 +16,25 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var b: ActivitySettingsBinding
 
+    private val pickOrg = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { res ->
+        if (res.resultCode == RESULT_OK && res.data != null) {
+            val id = res.data!!.getStringExtra("org_id") ?: ""
+            val name = res.data!!.getStringExtra("org_name") ?: ""
+            if (id.isNotEmpty()) {
+                Config.setOrg(this, id, name)
+                updateOrgLabel()
+                Toast.makeText(this, "Organizatsiya: $name", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun updateOrgLabel() {
+        val name = Config.orgName(this)
+        b.btnOrg.text = if (name.isNullOrBlank()) "Organizatsiyani tanlash" else "Organizatsiya: $name"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivitySettingsBinding.inflate(layoutInflater)
@@ -23,6 +43,8 @@ class SettingsActivity : AppCompatActivity() {
         b.btnBack.setOnClickListener { finish() }
         b.btnLogin.setOnClickListener { doLogin() }
         b.btnSaveToken.setOnClickListener { saveToken() }
+        b.btnOrg.setOnClickListener { pickOrg.launch(Intent(this, OrgPickerActivity::class.java)) }
+        updateOrgLabel()
     }
 
     private fun doLogin() {

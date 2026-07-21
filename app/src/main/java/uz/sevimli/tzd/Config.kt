@@ -12,6 +12,8 @@ object Config {
     private const val KEY_TOKEN = "device_token"
     private const val KEY_STORE_ID = "store_id"
     private const val KEY_STORE_NAME = "store_name"
+    private const val KEY_ORG_ID = "org_id"
+    private const val KEY_ORG_NAME = "org_name"
 
     // Standart qiymatlar (birinchi o'rnatishda)
     private const val DEFAULT_BASE_URL = "https://web-production-e3caa.up.railway.app"
@@ -39,6 +41,11 @@ object Config {
         prefs(ctx).edit().putInt(KEY_STORE_ID, id).putString(KEY_STORE_NAME, name).apply()
 
     fun hasStore(ctx: Context): Boolean = storeId(ctx) > 0
+
+    fun orgId(ctx: Context): String = prefs(ctx).getString(KEY_ORG_ID, "") ?: ""
+    fun orgName(ctx: Context): String? = prefs(ctx).getString(KEY_ORG_NAME, null)
+    fun setOrg(ctx: Context, id: String, name: String) =
+        prefs(ctx).edit().putString(KEY_ORG_ID, id).putString(KEY_ORG_NAME, name).apply()
 
     private fun prefs(ctx: Context) =
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
