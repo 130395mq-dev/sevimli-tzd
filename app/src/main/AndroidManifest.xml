@@ -75,6 +75,16 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".PurchaseReturnActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".SalesReturnActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".StorePickerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
