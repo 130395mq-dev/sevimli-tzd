@@ -37,6 +37,9 @@ class MenuActivity : AppCompatActivity() {
         b.cardWriteoff.setOnClickListener { openDocs("writeoff", "Списание") }
         b.cardPReturn.setOnClickListener { openDocs("preturn", "Возврат поставщику") }
         b.cardSReturn.setOnClickListener { openDocs("sreturn", "Возврат покупателя") }
+        b.cardEtiketka.setOnClickListener {
+            startActivity(Intent(this, EtiketkaActivity::class.java))
+        }
 
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Sevimli Market"
 
