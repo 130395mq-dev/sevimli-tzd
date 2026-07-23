@@ -82,8 +82,61 @@ class SupplyActivity : AppCompatActivity() {
             } else false
         }
 
-        // Avval kontragent tanlash
-        pickCp.launch(Intent(this, CounterpartyActivity::class.java))
+        // Yarim qolgan hujjat (qoralama) bo'lsa — davom etish taklifi
+        if (DraftStore.has(this, "supply")) {
+            AlertDialog.Builder(this)
+                .setTitle("Yarim qolgan Приёмка")
+                .setMessage("Tugallanmagan hujjat bor. Davom etasizmi?")
+                .setCancelable(false)
+                .setPositiveButton("Davom etish") { _, _ -> loadDraft() }
+                .setNegativeButton("Yangi hujjat") { _, _ ->
+                    DraftStore.clear(this, "supply")
+                    pickCp.launch(Intent(this, CounterpartyActivity::class.java))
+                }
+                .show()
+        } else {
+            pickCp.launch(Intent(this, CounterpartyActivity::class.java))
+        }
+    }
+
+    /** Joriy holatni qoralama sifatida saqlaydi (har o'zgarishda chaqiriladi). */
+    private fun saveDraft() {
+        if (items.isEmpty()) { DraftStore.clear(this, "supply"); return }
+        val arr = JSONArray()
+        for (it in items) arr.put(JSONObject().apply {
+            put("pmid", it.productMoyskladId)
+            put("barcode", it.barcode)
+            put("name", it.name)
+            put("price", it.price)
+            put("quantity", it.quantity)
+        })
+        val d = JSONObject().apply {
+            put("cpId", cpId); put("cpName", cpName); put("items", arr)
+        }
+        DraftStore.save(this, "supply", d.toString())
+    }
+
+    /** Qoralamani yuklaydi (kontragent + mahsulotlar). */
+    private fun loadDraft() {
+        val s = DraftStore.load(this, "supply") ?: return
+        try {
+            val d = JSONObject(s)
+            cpId = d.optInt("cpId", -1)
+            cpName = d.optString("cpName", "")
+            b.headerCp.text = cpName
+            val arr = d.optJSONArray("items") ?: JSONArray()
+            items.clear()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                items.add(SupplyItem(
+                    o.optString("pmid"), o.optString("barcode"), o.optString("name"),
+                    o.optLong("price"), o.optDouble("quantity")))
+            }
+            renderList()
+        } catch (e: Exception) {
+            DraftStore.clear(this, "supply")
+            pickCp.launch(Intent(this, CounterpartyActivity::class.java))
+        }
     }
 
     private fun onScan(code: String) {
@@ -244,6 +297,7 @@ class SupplyActivity : AppCompatActivity() {
             }
             b.list.addView(div)
         }
+        saveDraft()   // har o'zgarishda qoralama saqlanadi
     }
 
     private fun editItem(item: SupplyItem) {
@@ -306,6 +360,7 @@ class SupplyActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
+                        DraftStore.clear(this, "supply")   // yuborildi — qoralama tozalanadi
                         val name = result.json.optString("moysklad_name", "Приёмка")
                         AlertDialog.Builder(this)
                             .setTitle("Yuborildi ✓")
@@ -317,6 +372,7 @@ class SupplyActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
+                            DraftStore.clear(this, "supply")   // navbatga tushdi — qoralama tozalanadi
                             OfflineQueue.enqueue(this, "supply", "Приёмка", body)
                             AlertDialog.Builder(this)
                                 .setTitle("Saqlandi ⏳")
@@ -341,7 +397,7 @@ class SupplyActivity : AppCompatActivity() {
         if (items.isEmpty()) { finish(); return }
         AlertDialog.Builder(this)
             .setTitle("Chiqish")
-            .setMessage("Hujjat yakunlanmagan. Chiqilsinmi? (ma'lumot saqlanmaydi)")
+            .setMessage("Hujjat qoralama sifatida saqlanadi — keyin davom etasiz.")
             .setPositiveButton("Chiqish") { _, _ -> finish() }
             .setNegativeButton("Qolish", null)
             .show()
