@@ -41,9 +41,10 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/priceMode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="skanerlab chop eting"
+                android:text="Narx: Chakana"
                 android:textColor="@color/white70"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -87,23 +88,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
             android:gravity="center"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:text="Xprinter\n30*20"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/pOpt"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
-            android:text="Ulgurji\nоптом"
             android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>

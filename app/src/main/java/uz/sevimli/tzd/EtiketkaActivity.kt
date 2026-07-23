@@ -40,8 +40,9 @@ class EtiketkaActivity : AppCompatActivity() {
         b.btnBack.setOnClickListener { finish() }
         b.pGodex.setOnClickListener { setPrinter("godex") }
         b.pXprinter.setOnClickListener { setPrinter("xprinter") }
-        b.pOpt.setOnClickListener { setPrinter("opt") }
         setPrinter("godex")
+        // Narx turi Sozlamalardan olinadi (chakana / ulgurji) — sarlavhada ko'rsatamiz
+        b.priceMode.text = if (Config.isUlgurji(this)) "Narx: Ulgurji (оптом)" else "Narx: Chakana"
 
         b.btnPrint.setOnClickListener { sendPrint() }
 
@@ -66,10 +67,8 @@ class EtiketkaActivity : AppCompatActivity() {
         val off = android.graphics.Color.parseColor("#9AA0A6")
         b.pGodex.setTextColor(if (p == "godex") sel else off)
         b.pXprinter.setTextColor(if (p == "xprinter") sel else off)
-        b.pOpt.setTextColor(if (p == "opt") sel else off)
         b.pGodex.setBackgroundResource(if (p == "godex") R.drawable.bg_chip_on else R.drawable.bg_chip_off)
         b.pXprinter.setBackgroundResource(if (p == "xprinter") R.drawable.bg_chip_on else R.drawable.bg_chip_off)
-        b.pOpt.setBackgroundResource(if (p == "opt") R.drawable.bg_chip_on else R.drawable.bg_chip_off)
     }
 
     private fun onScan(code: String) {
@@ -200,6 +199,7 @@ class EtiketkaActivity : AppCompatActivity() {
         }
         val body = JSONObject().apply {
             put("printer", printer)
+            put("price_mode", Config.priceMode(this@EtiketkaActivity))  // chakana / ulgurji
             put("items", arr)
         }
         b.loading.visibility = View.VISIBLE

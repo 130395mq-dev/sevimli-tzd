@@ -42,6 +42,15 @@ object Config {
 
     fun hasStore(ctx: Context): Boolean = storeId(ctx) > 0
 
+    // --- Narx turi: "chakana" (standart) yoki "ulgurji" (optom filial) ---
+    fun priceMode(ctx: Context): String =
+        prefs(ctx).getString("price_mode", "chakana") ?: "chakana"
+
+    fun setPriceMode(ctx: Context, mode: String) =
+        prefs(ctx).edit().putString("price_mode", mode).apply()
+
+    fun isUlgurji(ctx: Context): Boolean = priceMode(ctx) == "ulgurji"
+
     // --- Menyu bo'limlari yoqilgan/o'chirilgan (kalit bo'yicha, standart: yoqilgan) ---
     fun isFn(ctx: Context, key: String): Boolean =
         prefs(ctx).getBoolean("fn_$key", true)

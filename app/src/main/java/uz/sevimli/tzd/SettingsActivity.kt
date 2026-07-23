@@ -82,6 +82,11 @@ class SettingsActivity : AppCompatActivity() {
         b.storeStage.visibility = View.VISIBLE
         b.inToken.setText(Config.token(this))   // joriy tokenni ko'rsatamiz
         renderFunctions()                        // bo'limlar yoqish/o'chirish
+        // Narx turi (chakana / ulgurji)
+        b.swUlgurji.isChecked = Config.isUlgurji(this)
+        b.swUlgurji.setOnCheckedChangeListener { _, on ->
+            Config.setPriceMode(this, if (on) "ulgurji" else "chakana")
+        }
         b.loading.visibility = View.VISIBLE
 
         thread {
