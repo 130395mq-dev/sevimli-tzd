@@ -81,6 +81,7 @@ class SettingsActivity : AppCompatActivity() {
         b.loginStage.visibility = View.GONE
         b.storeStage.visibility = View.VISIBLE
         b.inToken.setText(Config.token(this))   // joriy tokenni ko'rsatamiz
+        renderFunctions()                        // bo'limlar yoqish/o'chirish
         b.loading.visibility = View.VISIBLE
 
         thread {
@@ -158,6 +159,46 @@ class SettingsActivity : AppCompatActivity() {
                     is ApiResult.Error ->
                         Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+    }
+
+    /** Bo'limlarni yoqish/o'chirish ro'yxati (MenuFunctions.LIST dan avtomatik). */
+    private fun renderFunctions() {
+        b.fnList.removeAllViews()
+        val list = MenuFunctions.LIST
+        for ((idx, fn) in list.withIndex()) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(dp(4f).toInt(), dp(12f).toInt(), dp(4f).toInt(), dp(12f).toInt())
+            }
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            col.addView(TextView(this).apply {
+                text = fn.title; textSize = 16f; setTextColor(getColor(R.color.text_dark))
+            })
+            col.addView(TextView(this).apply {
+                text = fn.sub; textSize = 12f; setTextColor(getColor(R.color.text_gray))
+            })
+            val sw = androidx.appcompat.widget.SwitchCompat(this).apply {
+                isChecked = Config.isFn(this@SettingsActivity, fn.key)
+                setOnCheckedChangeListener { _, on ->
+                    Config.setFn(this@SettingsActivity, fn.key, on)
+                }
+            }
+            row.addView(col)
+            row.addView(sw)
+            b.fnList.addView(row)
+            if (idx < list.size - 1) {
+                b.fnList.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1)
+                    setBackgroundColor(getColor(R.color.card_stroke))
+                })
             }
         }
     }

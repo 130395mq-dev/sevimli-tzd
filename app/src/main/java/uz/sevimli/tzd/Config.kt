@@ -42,6 +42,13 @@ object Config {
 
     fun hasStore(ctx: Context): Boolean = storeId(ctx) > 0
 
+    // --- Menyu bo'limlari yoqilgan/o'chirilgan (kalit bo'yicha, standart: yoqilgan) ---
+    fun isFn(ctx: Context, key: String): Boolean =
+        prefs(ctx).getBoolean("fn_$key", true)
+
+    fun setFn(ctx: Context, key: String, on: Boolean) =
+        prefs(ctx).edit().putBoolean("fn_$key", on).apply()
+
     fun orgId(ctx: Context): String = prefs(ctx).getString(KEY_ORG_ID, "") ?: ""
     fun orgName(ctx: Context): String? = prefs(ctx).getString(KEY_ORG_NAME, null)
     fun setOrg(ctx: Context, id: String, name: String) =

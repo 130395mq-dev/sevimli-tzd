@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
+    <!-- SARLAVHA -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -106,118 +107,162 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- SKLAD TANLASH BOSQICHI -->
-    <LinearLayout
+    <!-- SOZLAMALAR (login'dan keyin) — bitta scroll -->
+    <ScrollView
         android:id="@+id/storeStage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:padding="16dp"
+        android:overScrollMode="never"
         android:visibility="gone">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:text="Qurilma tokeni"
-            android:textColor="@color/text_dark"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <EditText
-            android:id="@+id/inToken"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:hint="Qurilma tokeni (admin paneldan)"
-            android:inputType="text"
-            android:maxLines="1"
-            android:background="@drawable/bg_chip"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="10dp" />
+            <!-- BO'LIMLAR (dashboard) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="2dp"
+                android:text="Bo'limlar (dashboardда ko'rinishi)"
+                android:textColor="@color/text_dark"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSaveToken"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Tokenni saqlash"
-            android:textAllCaps="false"
-            android:textSize="15sp"
-            app:backgroundTint="@color/brand"
-            app:cornerRadius="14dp"
-            android:layout_marginBottom="18dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="8dp"
+                android:text="Kerakli bo'limlarni yoqing — menyuda faqat o'shalar chiqadi. «Просмотр товара» doim ko'rinadi."
+                android:textColor="@color/text_gray"
+                android:textSize="13sp" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/card_stroke"
-            android:layout_marginBottom="16dp" />
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/white"
+                android:layout_marginBottom="18dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="6dp"
-            android:text="Organizatsiya (yuridik shaxs)"
-            android:textColor="@color/text_dark"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+                <LinearLayout
+                    android:id="@+id/fnList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp" />
+            </androidx.cardview.widget.CardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnOrg"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Organizatsiyani tanlash"
-            android:textAllCaps="false"
-            android:textSize="15sp"
-            app:backgroundTint="@color/pill_gray"
-            android:textColor="@color/text_dark"
-            app:cornerRadius="14dp"
-            android:layout_marginBottom="18dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/card_stroke"
+                android:layout_marginBottom="16dp" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/card_stroke"
-            android:layout_marginBottom="16dp" />
+            <!-- QURILMA TOKENI -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="6dp"
+                android:text="Qurilma tokeni"
+                android:textColor="@color/text_dark"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="4dp"
-            android:text="Qurilma qaysi skladga ishlaydi?"
-            android:textColor="@color/text_dark"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            <EditText
+                android:id="@+id/inToken"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:hint="Qurilma tokeni (admin paneldan)"
+                android:inputType="text"
+                android:maxLines="1"
+                android:background="@drawable/bg_chip"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="10dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="14dp"
-            android:text="Tanlangan sklad barcha funksiyaga amal qiladi"
-            android:textColor="@color/text_gray"
-            android:textSize="13sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveToken"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Tokenni saqlash"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/brand"
+                app:cornerRadius="14dp"
+                android:layout_marginBottom="18dp" />
 
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/card_stroke"
+                android:layout_marginBottom="16dp" />
+
+            <!-- ORGANIZATSIYA -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="6dp"
+                android:text="Organizatsiya (yuridik shaxs)"
+                android:textColor="@color/text_dark"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOrg"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Organizatsiyani tanlash"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/pill_gray"
+                android:textColor="@color/text_dark"
+                app:cornerRadius="14dp"
+                android:layout_marginBottom="18dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/card_stroke"
+                android:layout_marginBottom="16dp" />
+
+            <!-- SKLAD -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="2dp"
+                android:text="Qurilma qaysi skladga ishlaydi?"
+                android:textColor="@color/text_dark"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="8dp"
+                android:text="Tanlangan sklad barcha funksiyaga amal qiladi"
+                android:textColor="@color/text_gray"
+                android:textSize="13sp" />
 
             <LinearLayout
                 android:id="@+id/storeList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
-        </ScrollView>
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/loading"

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/white"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout style="@style/MenuCardInner">
+        <FrameLayout android:id="@+id/mIconWrap" style="@style/MenuIconWrap" android:background="@drawable/bg_icon_circle">
+            <ImageView android:id="@+id/mIcon" style="@style/MenuIcon" app:tint="@color/brand"/>
+        </FrameLayout>
+        <TextView android:id="@+id/mTitle" style="@style/MenuCardTitle" android:text=""/>
+        <TextView android:id="@+id/mSub" style="@style/MenuCardSub" android:text=""/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
