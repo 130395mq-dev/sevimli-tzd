@@ -31,7 +31,7 @@ class MenuActivity : AppCompatActivity() {
         b.cardScannerTest.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
-        b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Sevimli Market"
+        b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Jamlov"
         b.btnRefresh.setOnClickListener { fullRefresh() }
         b.statusChip.setOnClickListener {
             if (OfflineQueue.size(this) > 0) flushQueue(manual = true)

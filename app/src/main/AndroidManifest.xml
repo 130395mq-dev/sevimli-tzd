@@ -8,8 +8,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:label="Sevimli TZD"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="Jamlov"
         android:supportsRtl="true"
         android:theme="@style/Theme.SevimliTZD">
 
