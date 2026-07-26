@@ -19,6 +19,7 @@
     <color name="green_ok">#16A34A</color>
     <color name="green_tint">#DCFCE7</color>
     <color name="amber_wait">#C98A00</color>
+    <color name="warning">#D97706</color>
 
     <!-- Ikonka foni (adaptiv) -->
     <color name="ic_launcher_bg">#FFFFFF</color>
