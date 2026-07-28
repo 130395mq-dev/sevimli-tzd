@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_header"
+        android:paddingStart="20dp" android:paddingEnd="20dp"
+        android:paddingTop="22dp" android:paddingBottom="20dp">
+        <TextView android:id="@+id/setupTitle"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Jamlov — sozlash" android:textColor="@color/white"
+            android:textSize="20sp" android:textStyle="bold" />
+        <TextView android:id="@+id/setupSub"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Hisobingizga kiring" android:textColor="@color/white70"
+            android:textSize="13sp" android:layout_marginTop="3dp" />
+    </LinearLayout>
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:overScrollMode="never">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="20dp">
+
+            <!-- STEP 0: KIRISH -->
+            <LinearLayout android:id="@+id/step0" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Email" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
+                <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:inputType="textEmailAddress"
+                    android:hint="siz@company.uz" android:layout_marginBottom="10dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Parol" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
+                <EditText android:id="@+id/etPass" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:inputType="textPassword" android:hint="••••••••"/>
+                <TextView android:id="@+id/msgLogin" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:textColor="@color/warning"
+                    android:textSize="13sp" android:layout_marginTop="8dp"/>
+                <Button android:id="@+id/btnLogin" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:text="Kirish"
+                    android:textColor="@color/white" android:backgroundTint="@color/brand"
+                    android:layout_marginTop="14dp"/>
+            </LinearLayout>
+
+            <!-- STEP 1: LITSENZIYA (TOKEN) -->
+            <LinearLayout android:id="@+id/step1" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Qurilma litsenziyasi (token)" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Kabinetdan olgan tokenlaringizdan bittasini shu qurilmaga kiriting."
+                    android:textColor="@color/text_gray" android:textSize="13sp" android:layout_marginBottom="8dp"/>
+                <EditText android:id="@+id/etToken" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:inputType="text" android:hint="token..."/>
+                <TextView android:id="@+id/msgToken" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:textColor="@color/warning"
+                    android:textSize="13sp" android:layout_marginTop="8dp"/>
+                <Button android:id="@+id/btnToken" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:text="Tekshirish"
+                    android:textColor="@color/white" android:backgroundTint="@color/brand"
+                    android:layout_marginTop="14dp"/>
+            </LinearLayout>
+
+            <!-- STEP 2: FILIAL (SKLAD) -->
+            <LinearLayout android:id="@+id/step2" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Filialingizni tanlang" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="15sp"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Qurilma shu filialga (skladga) biriktiriladi."
+                    android:textColor="@color/text_gray" android:textSize="13sp" android:layout_marginBottom="6dp"/>
+                <ProgressBar android:id="@+id/storeLoading" android:layout_width="28dp" android:layout_height="28dp"
+                    android:layout_gravity="center_horizontal" android:layout_marginTop="14dp"
+                    android:indeterminateTint="@color/brand" android:visibility="gone"/>
+                <TextView android:id="@+id/msgStore" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:textColor="@color/warning" android:textSize="13sp"/>
+                <LinearLayout android:id="@+id/llStores" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+            <!-- STEP 3: SINXRON -->
+            <LinearLayout android:id="@+id/step3" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:gravity="center_horizontal" android:visibility="gone" android:paddingTop="40dp">
+                <ProgressBar android:layout_width="40dp" android:layout_height="40dp"
+                    android:indeterminateTint="@color/brand"/>
+                <TextView android:id="@+id/syncMsg" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="Sinxronlanmoqda..."
+                    android:textColor="@color/text_dark" android:textSize="15sp" android:layout_marginTop="18dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

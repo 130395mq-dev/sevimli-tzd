@@ -65,6 +65,13 @@ object Config {
 
     // --- Qurilma ID: token bitta terminalga bog'lanishi uchun (1 token = 1 TZD) ---
     // Android ID (qayta o'rnatishda ham barqaror) yoki UUID; saqlanadi.
+    // --- Birinchi ishga tushish tugaganmi (login+token+sklad) ---
+    fun isConfigured(ctx: Context): Boolean =
+        prefs(ctx).getBoolean("configured", false) || hasStore(ctx)
+
+    fun setConfigured(ctx: Context, v: Boolean) =
+        prefs(ctx).edit().putBoolean("configured", v).apply()
+
     fun deviceId(ctx: Context): String {
         val saved = prefs(ctx).getString("device_hw_id", null)
         if (!saved.isNullOrBlank()) return saved

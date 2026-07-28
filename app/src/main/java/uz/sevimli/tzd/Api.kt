@@ -14,30 +14,34 @@ sealed class ApiResult {
 
 object Api {
 
-    /** GET so'rov (token bilan). */
+    /** GET so'rov (TZD API, token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
         val qs = if (query.isEmpty()) "" else "?" + query.entries.joinToString("&") {
             "${it.key}=${URLEncoder.encode(it.value, "UTF-8")}"
         }
-        return request(ctx, "GET", "$path$qs", null)
+        return request(ctx, "GET", "$path$qs", null, "api/tzd")
     }
 
-    /** POST so'rov (JSON tanasi bilan). */
+    /** POST so'rov (TZD API, JSON tanasi bilan). */
     fun post(ctx: Context, path: String, body: JSONObject): ApiResult {
-        return request(ctx, "POST", path, body)
+        return request(ctx, "POST", path, body, "api/tzd")
     }
 
-    private fun request(ctx: Context, method: String, path: String, body: JSONObject?): ApiResult {
+    /** SaaS API (/api/saas/...) — kabinet login/onboarding uchun (device token shart emas). */
+    fun saasPost(ctx: Context, path: String, body: JSONObject): ApiResult {
+        return request(ctx, "POST", path, body, "api/saas")
+    }
+
+    private fun request(ctx: Context, method: String, path: String,
+                        body: JSONObject?, apiSeg: String): ApiResult {
         val base = Config.baseUrl(ctx)
         val token = Config.token(ctx)
         var conn: HttpURLConnection? = null
         return try {
-            val url = URL("$base/api/tzd/$path")
+            val url = URL("$base/$apiSeg/$path")
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = method
                 connectTimeout = 8000
-                // POST (MoySklad'ga yozish) server tomonda 120s gacha ketishi mumkin,
-                // shuning uchun yozish so'rovlariga uzoq timeout beramiz. GET tez qoladi.
                 readTimeout = if (body != null) 125000 else 12000
                 setRequestProperty("X-Device-Token", token)
                 setRequestProperty("X-Device-Id", Config.deviceId(ctx))
@@ -52,8 +56,6 @@ object Api {
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
-            // Javob JSON bo'lmasligi mumkin (proxy 502, Django HTML xato sahifasi) —
-            // bunda tushunarli xabar chiqaramiz, crash qilmaymiz.
             val json = try { JSONObject(text) } catch (e: Exception) { null }
             if (code in 200..299) {
                 if (json != null) ApiResult.Success(json)

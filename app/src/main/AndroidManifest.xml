@@ -31,6 +31,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".SetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".LookupActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

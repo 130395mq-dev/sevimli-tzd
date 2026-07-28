@@ -31,7 +31,8 @@ class SplashActivity : AppCompatActivity() {
         b.splashVersion.animate().alpha(1f).setStartDelay(400).setDuration(500).start()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MenuActivity::class.java))
+            val next = if (Config.isConfigured(this)) MenuActivity::class.java else SetupActivity::class.java
+            startActivity(Intent(this, next))
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
         }, 1400)
