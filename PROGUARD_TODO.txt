@@ -1,0 +1,29 @@
+DEFERRED HARDENING TASKS (require a full build + on-device test before shipping)
+================================================================================
+
+The following two changes were intentionally NOT applied during the audit
+hardening pass because they cannot be validated without a real build and a
+device test against the live warehouse-terminal fleet. Applying them blind
+risks breaking already-configured production terminals.
+
+1) Enable code shrinking / obfuscation (minifyEnabled + R8/ProGuard)
+   - Recommended: set `minifyEnabled true` (and `shrinkResources true`) in the
+     release buildType, add a proguard-rules.pro with keep rules.
+   - RISK: R8 can strip/obfuscate reflection-based code (Gson/Moshi models,
+     view-binding, any JSON (de)serialization, EncryptedSharedPreferences /
+     Tink keysets). Without keep rules and a device smoke test this can
+     silently corrupt network payloads or crash at runtime.
+   - Action: add keep rules, build a release APK, run the full flow (setup,
+     login, lookup, supply, move, documents, labels) on a test terminal.
+
+2) Raise minSdk
+   - Current minSdk = 21. EncryptedSharedPreferences (androidx.security) is
+     supported on API 23+; on API 21-22 the MasterKey/Tink path can behave
+     differently. Bumping minSdk to 23 would simplify the crypto story.
+   - RISK: any live terminal running Android 5.x (API 21/22) would stop
+     receiving updates / fail to install. Must confirm the fleet's minimum
+     OS version first.
+   - Action: audit deployed OS versions, then bump minSdk and re-test.
+
+Both are recommended for the government cybersecurity audit but are DEFERRED
+pending a proper build + device test.
