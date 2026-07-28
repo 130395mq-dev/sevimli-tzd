@@ -1,0 +1,22 @@
+GRADLE BUILD XATOSI TUZATISH — fayllar joyi
+============================================
+Xato sababi: "app" moduli fayllari reponing ROOT'iga tushib qolgan.
+Natijada root/build.gradle app'niki bilan almashib qolgan (versiyasiz plugin).
+
+TO'G'RI TUZILISH (shu zip'dagidek bo'lsin):
+
+  sevimli-tzd/build.gradle        <-- ROOT (atigi 4 qator, "version '8.5.2'" bor)
+  sevimli-tzd/settings.gradle     <-- ROOT
+  sevimli-tzd/app/build.gradle    <-- app moduli (versionCode 41)
+  sevimli-tzd/app/src/main/...    <-- Config.kt, AndroidManifest.xml, xml/...
+
+QADAMLAR (reponing ROOT papkasida):
+  1. root'dagi build.gradle ni SHU zip'dagi build.gradle bilan almashtiring
+     (kichik, 4 qatorli, versiyali bo'lishi kerak).
+  2. root'dagi ORTIQCHA narsalarni O'CHIRING (ular app/ ichiga tegishli edi):
+       - root/src   papkasi
+       - root/PROGUARD_TODO  fayli
+  3. app moduli fayllari faqat app/ ichida bo'lsin (shu zip'dagidek).
+  4. settings.gradle root'da turibdi (o'zgartirish shart emas, lekin zip'da bor).
+
+Keyin: commit + push -> GitHub Actions v4.1 APK yasaydi.

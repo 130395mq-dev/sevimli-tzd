@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Cybersecurity hardening: block ALL cleartext (HTTP) traffic app-wide.
-    No certificate pinning is configured intentionally, so server cert
-    rotation will NOT break the live fleet.
--->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-</network-security-config>
