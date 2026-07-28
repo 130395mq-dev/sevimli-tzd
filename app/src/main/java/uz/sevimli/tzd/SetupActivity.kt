@@ -30,6 +30,11 @@ class SetupActivity : AppCompatActivity() {
         step(0)
         b.btnLogin.setOnClickListener { doLogin() }
         b.btnToken.setOnClickListener { doToken() }
+        b.lnkManual.setOnClickListener {
+            val show = b.manualBox.visibility != View.VISIBLE
+            b.manualBox.visibility = if (show) View.VISIBLE else View.GONE
+            b.lnkManual.text = if (show) "Ro'yxatdan tanlash" else "Token qo'lda kiritish"
+        }
     }
 
     private fun step(i: Int) {
@@ -39,7 +44,7 @@ class SetupActivity : AppCompatActivity() {
         b.step3.visibility = if (i == 3) View.VISIBLE else View.GONE
         b.setupSub.text = when (i) {
             0 -> "Hisobingizga kiring"
-            1 -> "Qurilma litsenziyasi"
+            1 -> "Litsenziyani tanlang"
             2 -> "Filialni tanlang"
             else -> "Tayyorlanmoqda"
         }
@@ -60,8 +65,102 @@ class SetupActivity : AppCompatActivity() {
             runOnUiThread {
                 b.btnLogin.isEnabled = true
                 when (r) {
-                    is ApiResult.Success -> { msg(b.msgLogin, ""); step(1) }
+                    is ApiResult.Success -> {
+                        val sess = r.json.optString("token")
+                        if (sess.isNotEmpty()) Config.setSessionToken(this, sess)
+                        msg(b.msgLogin, "")
+                        loadLicenses()
+                    }
                     is ApiResult.Error -> msg(b.msgLogin, r.message)
+                }
+            }
+        }
+    }
+
+    // ---- 1a: LITSENZIYALAR RO'YXATI (kabinetdan) ----
+    private fun loadLicenses() {
+        step(1)
+        b.manualBox.visibility = View.GONE
+        b.lnkManual.text = "Token qo'lda kiritish"
+        b.licLoading.visibility = View.VISIBLE
+        b.llLicenses.removeAllViews()
+        msg(b.msgLicense, "")
+        thread {
+            val r = Api.saasGet(this, "devices")
+            runOnUiThread {
+                b.licLoading.visibility = View.GONE
+                when (r) {
+                    is ApiResult.Success -> renderLicenses(r.json)
+                    is ApiResult.Error -> msg(b.msgLicense, r.message)
+                }
+            }
+        }
+    }
+
+    private fun renderLicenses(json: JSONObject) {
+        b.llLicenses.removeAllViews()
+        val arr = json.optJSONArray("devices")
+        if (arr == null || arr.length() == 0) {
+            msg(b.msgLicense, "Litsenziya topilmadi. Kabinetda avval qurilma qo'shing yoki tokenni qo'lda kiriting.")
+            b.manualBox.visibility = View.VISIBLE
+            b.lnkManual.text = "Ro'yxatdan tanlash"
+            return
+        }
+        val myId = Config.deviceId(this)
+        for (i in 0 until arr.length()) {
+            val d = arr.getJSONObject(i)
+            val name = d.optString("name")
+            val token = d.optString("token")
+            val store = d.optString("store_name", "")
+            val bound = d.optBoolean("bound", false)
+            val hw = d.optString("hardware_id", "")
+            val mine = bound && hw == myId
+            val taken = bound && !mine   // boshqa qurilmaga bog'langan
+            val sub = when {
+                mine -> "Shu qurilmaga bog'langan"
+                taken -> "Band — boshqa qurilmada"
+                store.isNotEmpty() -> "Filial: $store"
+                else -> "Bo'sh — tayyor"
+            }
+            val card = CardView(this).apply {
+                radius = dp(14f); cardElevation = 0f
+                setCardBackgroundColor(getColor(if (taken) R.color.bg_light else R.color.white))
+                alpha = if (taken) 0.6f else 1f
+                val lp = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                lp.bottomMargin = dp(10f).toInt()
+                layoutParams = lp
+            }
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(18f).toInt(), dp(15f).toInt(), dp(18f).toInt(), dp(15f).toInt())
+            }
+            val tvName = TextView(this).apply {
+                text = name; textSize = 16f
+                setTextColor(getColor(R.color.text_dark))
+            }
+            val tvSub = TextView(this).apply {
+                text = sub; textSize = 12f
+                setTextColor(getColor(if (taken) R.color.warning else R.color.text_gray))
+                setPadding(0, dp(3f).toInt(), 0, 0)
+            }
+            col.addView(tvName); col.addView(tvSub)
+            card.addView(col)
+            if (!taken) card.setOnClickListener { pickLicense(token, name) }
+            b.llLicenses.addView(card)
+        }
+    }
+
+    private fun pickLicense(token: String, name: String) {
+        Config.setToken(this, token)
+        msg(b.msgLicense, "Tekshirilmoqda...")
+        thread {
+            val r = Api.get(this, "ping")
+            runOnUiThread {
+                when (r) {
+                    is ApiResult.Success -> { msg(b.msgLicense, ""); loadStores() }
+                    is ApiResult.Error -> msg(b.msgLicense, r.message)
                 }
             }
         }

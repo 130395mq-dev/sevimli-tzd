@@ -37,6 +37,13 @@ object Config {
     fun setToken(ctx: Context, token: String) =
         prefs(ctx).edit().putString(KEY_TOKEN, token.trim()).apply()
 
+    // --- Kabinet sessiya tokeni (login natijasi) — SaaS API uchun ---
+    fun sessionToken(ctx: Context): String =
+        prefs(ctx).getString("session_token", "") ?: ""
+
+    fun setSessionToken(ctx: Context, token: String) =
+        prefs(ctx).edit().putString("session_token", token.trim()).apply()
+
     fun setStore(ctx: Context, id: Int, name: String) =
         prefs(ctx).edit().putInt(KEY_STORE_ID, id).putString(KEY_STORE_NAME, name).apply()
 

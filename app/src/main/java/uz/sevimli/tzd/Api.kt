@@ -32,6 +32,11 @@ object Api {
         return request(ctx, "POST", path, body, "api/saas")
     }
 
+    /** SaaS API GET (/api/saas/...) — sessiya tokeni (login natijasi) bilan. */
+    fun saasGet(ctx: Context, path: String): ApiResult {
+        return request(ctx, "GET", path, null, "api/saas")
+    }
+
     private fun request(ctx: Context, method: String, path: String,
                         body: JSONObject?, apiSeg: String): ApiResult {
         val base = Config.baseUrl(ctx)
@@ -47,6 +52,11 @@ object Api {
                 setRequestProperty("X-Device-Id", Config.deviceId(ctx))
                 setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)
                 setRequestProperty("Accept", "application/json")
+                // SaaS (kabinet) endpointlari menejer sessiya tokeni bilan ishlaydi
+                if (apiSeg == "api/saas") {
+                    val sess = Config.sessionToken(ctx)
+                    if (sess.isNotEmpty()) setRequestProperty("Authorization", "Bearer $sess")
+                }
                 if (body != null) {
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
