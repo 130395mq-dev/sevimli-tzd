@@ -40,6 +40,7 @@ object Api {
                 // shuning uchun yozish so'rovlariga uzoq timeout beramiz. GET tez qoladi.
                 readTimeout = if (body != null) 125000 else 12000
                 setRequestProperty("X-Device-Token", token)
+                setRequestProperty("X-Device-Id", Config.deviceId(ctx))
                 setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)
                 setRequestProperty("Accept", "application/json")
                 if (body != null) {

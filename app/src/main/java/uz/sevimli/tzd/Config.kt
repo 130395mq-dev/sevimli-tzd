@@ -63,6 +63,21 @@ object Config {
     fun setOrg(ctx: Context, id: String, name: String) =
         prefs(ctx).edit().putString(KEY_ORG_ID, id).putString(KEY_ORG_NAME, name).apply()
 
+    // --- Qurilma ID: token bitta terminalga bog'lanishi uchun (1 token = 1 TZD) ---
+    // Android ID (qayta o'rnatishda ham barqaror) yoki UUID; saqlanadi.
+    fun deviceId(ctx: Context): String {
+        val saved = prefs(ctx).getString("device_hw_id", null)
+        if (!saved.isNullOrBlank()) return saved
+        val androidId = try {
+            android.provider.Settings.Secure.getString(
+                ctx.contentResolver, android.provider.Settings.Secure.ANDROID_ID)
+        } catch (e: Exception) { null }
+        val id = if (!androidId.isNullOrBlank() && androidId != "9774d56d682e549c")
+                    androidId else java.util.UUID.randomUUID().toString()
+        prefs(ctx).edit().putString("device_hw_id", id).apply()
+        return id
+    }
+
     private fun prefs(ctx: Context) =
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }
