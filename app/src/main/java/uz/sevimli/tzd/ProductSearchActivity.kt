@@ -23,7 +23,6 @@ import kotlin.concurrent.thread
 /**
  * Shtrix kodi bo'lmagan (yoki topilmagan) mahsulotlarni nomi/kodi bo'yicha
  * qidirib, ro'yxatdan qo'lda tanlash uchun ekran.
- * Natija Intent orqali qaytariladi (Просмотр va Приёмка shu natijadan foydalanadi).
  */
 class ProductSearchActivity : AppCompatActivity() {
 
@@ -57,7 +56,7 @@ class ProductSearchActivity : AppCompatActivity() {
     private fun load(q: String) {
         b.list.removeAllViews()
         if (q.length < 2) {
-            showHint("Mahsulot nomini yozing", "Kamida 2 ta harf kiriting")
+            showHint("Nomi yoki kodi bo'yicha qidiring", "Kamida 2 ta belgi (masalan: S6406)")
             b.loading.visibility = View.GONE
             return
         }
@@ -65,7 +64,6 @@ class ProductSearchActivity : AppCompatActivity() {
         b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "product-search", mapOf("q" to q))
-            // Internet bo'lmasa — mahalliy bazadan qidiramiz
             val json: org.json.JSONObject? = when (result) {
                 is ApiResult.Success -> result.json
                 is ApiResult.Error -> if (result.offline) LocalDb.get(this).searchProductsResult(q) else null
@@ -102,7 +100,6 @@ class ProductSearchActivity : AppCompatActivity() {
         }
     }
 
-    /** Bitta mahsulot kartochkasini yasaydi. */
     private fun buildRow(p: JSONObject): View {
         val name = p.optString("name")
         val price = p.optLong("price", 0)
@@ -120,7 +117,6 @@ class ProductSearchActivity : AppCompatActivity() {
             layoutParams = lp
         }
 
-        // Bosh harf doirasi (avatar)
         val avatar = FrameLayout(this).apply {
             background = getDrawable(R.drawable.bg_avatar)
             layoutParams = LinearLayout.LayoutParams(dp(44f), dp(44f))
@@ -137,7 +133,6 @@ class ProductSearchActivity : AppCompatActivity() {
         avatar.addView(initial)
         row.addView(avatar)
 
-        // Matn ustuni: nom + narx/qoldiq belgilari
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -156,6 +151,23 @@ class ProductSearchActivity : AppCompatActivity() {
         }
         col.addView(nameTv)
 
+        // Kod / Artikul — MoySklad kodi bo'yicha qidirish va tanib olish uchun
+        val code = p.optString("code")
+        val article = p.optString("article")
+        val meta = listOfNotNull(
+            code.takeIf { it.isNotBlank() }?.let { "Kod: $it" },
+            article.takeIf { it.isNotBlank() }?.let { "Art: $it" }
+        ).joinToString("   \u00B7   ")
+        if (meta.isNotEmpty()) {
+            val codeTv = TextView(this).apply {
+                text = meta
+                textSize = 12f
+                setTextColor(getColor(R.color.text_gray))
+                setPadding(0, dp(2f), 0, 0)
+            }
+            col.addView(codeTv)
+        }
+
         val chips = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -173,7 +185,6 @@ class ProductSearchActivity : AppCompatActivity() {
         col.addView(chips)
         row.addView(col)
 
-        // O'ng tomonda strelka
         val chevron = ImageView(this).apply {
             setImageResource(R.drawable.ic_chevron_right)
             setColorFilter(getColor(R.color.text_gray))
@@ -198,7 +209,6 @@ class ProductSearchActivity : AppCompatActivity() {
         return row
     }
 
-    /** Kichik yumaloq belgi (narx / qoldiq). */
     private fun pill(text: String, bgColor: Int, textColor: Int): TextView =
         TextView(this).apply {
             this.text = text
