@@ -16,6 +16,15 @@ object Api {
 
     /** GET so'rov (TZD API, token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
+        // TEZLIK: shtrix skan lookup — avval mahalliy baza (bir zumda), topilmasa serverga.
+        // Barcha ekranlar (Приёмка, Просмотр, Инвентаризация, Отгрузка...) shu yerdan o'tadi.
+        val bc = query["barcode"]
+        if (path == "product" && !bc.isNullOrBlank()) {
+            try {
+                val local = OfflineLookup.lookup(ctx, bc)
+                if (local.optBoolean("found")) return ApiResult.Success(local)
+            } catch (e: Exception) { /* mahalliy topilmadi — serverga o'tamiz */ }
+        }
         val qs = if (query.isEmpty()) "" else "?" + query.entries.joinToString("&") {
             "${it.key}=${URLEncoder.encode(it.value, "UTF-8")}"
         }
