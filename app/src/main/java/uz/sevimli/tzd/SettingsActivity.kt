@@ -65,7 +65,7 @@ class SettingsActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 b.btnLogin.isEnabled = true
                 when (result) {
-                    is ApiResult.Success -> loadStores()
+                    is ApiResult.Success -> enterStoreStage(result.json)
                     is ApiResult.Error -> showLoginError(result.message)
                 }
             }
@@ -77,7 +77,13 @@ class SettingsActivity : AppCompatActivity() {
         b.loginError.visibility = View.VISIBLE
     }
 
-    private fun loadStores() {
+    /**
+     * Login muvaffaqiyatli — sklad bosqichiga o'tamiz.
+     * TEZLIK: sklad ro'yxati login javobida keladi — qo'shimcha so'rov shart emas.
+     * Agar javobda skladlar bo'lmasa (eski server yoki token almashtirilgan holat),
+     * zaxira sifatida alohida "stores" so'rovi qilinadi.
+     */
+    private fun enterStoreStage(loginJson: JSONObject?) {
         b.loginStage.visibility = View.GONE
         b.storeStage.visibility = View.VISIBLE
         b.inToken.setText(Config.token(this))   // joriy tokenni ko'rsatamiz
@@ -87,8 +93,15 @@ class SettingsActivity : AppCompatActivity() {
         b.swUlgurji.setOnCheckedChangeListener { _, on ->
             Config.setPriceMode(this, if (on) "ulgurji" else "chakana")
         }
-        b.loading.visibility = View.VISIBLE
 
+        val stores = loginJson?.optJSONArray("stores")
+        if (stores != null && stores.length() > 0) {
+            renderStores(loginJson)   // login javobidan — bir zumda, so'rovsiz
+            return
+        }
+
+        // Zaxira yo'l: alohida sklad so'rovi
+        b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "stores")
             runOnUiThread {
@@ -111,7 +124,7 @@ class SettingsActivity : AppCompatActivity() {
         Config.setToken(this, t)
         thread { LocalDb.get(this).clearProducts() }   // boshqa sklad ma'lumoti tozalansin
         Toast.makeText(this, "Token saqlandi. Menyuda 'Yangilash' ni bosing.", Toast.LENGTH_LONG).show()
-        loadStores()   // yangi token bilan sklad ro'yxati
+        enterStoreStage(null)   // yangi token bilan sklad ro'yxati (alohida so'rov)
     }
 
     private fun renderStores(json: JSONObject) {
