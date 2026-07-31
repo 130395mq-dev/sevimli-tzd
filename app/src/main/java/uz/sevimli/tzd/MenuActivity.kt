@@ -38,7 +38,7 @@ class MenuActivity : AppCompatActivity() {
             else Updater.check(this, silent = false)
         }
 
-        Updater.check(this)
+        Updater.forceCheck(this)   // MAJBURIY: yangi versiya bo'lsa so'ramasdan yangilaydi
     }
 
     /** Dashboard kartalarini KODDAN yasaydi: Просмотр (doim) + yoqilgan bo'limlar. */
@@ -143,6 +143,7 @@ class MenuActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        Updater.resumeIfPending(this)   // ruxsat berib qaytgan bo'lsa — majburiy yangilanish davom etadi
         buildGrid()            // sozlamalar o'zgargan bo'lsa — darrov aks etadi
         updateStatus()
         flushQueue(manual = false)
