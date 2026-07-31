@@ -132,12 +132,29 @@ class MenuActivity : AppCompatActivity() {
         })
     }
 
+    // Menyu ochiq turganda har 2 daqiqada jimgina avto-yangilash (qo'lda "Yangilash" kerak emas)
+    private val syncHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val syncTick = object : Runnable {
+        override fun run() {
+            thread { CatalogSync.autoRefresh(this@MenuActivity) }
+            syncHandler.postDelayed(this, 2 * 60 * 1000L)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         buildGrid()            // sozlamalar o'zgargan bo'lsa — darrov aks etadi
         updateStatus()
         flushQueue(manual = false)
         thread { CatalogSync.autoRefresh(this) }
+        // davriy avto-yangilashni yoqamiz
+        syncHandler.removeCallbacks(syncTick)
+        syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        syncHandler.removeCallbacks(syncTick)   // orqa fonда behuda ishlamasin
     }
 
     private fun updateStatus() {

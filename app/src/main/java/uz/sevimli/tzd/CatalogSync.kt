@@ -120,13 +120,14 @@ object CatalogSync {
      * Baza bo'sh bo'lsa hech narsa qilmaydi (foydalanuvchi "To'liq yangilash" bilan boshlaydi).
      */
     fun autoRefresh(ctx: Context) {
-        // kontragent — kamdan-kam
-        syncCounterparties(ctx)
         val db = LocalDb.get(ctx)
-        if (db.productCount() == 0) return  // hali to'liq yuklanmagan
-        val last = prefs(ctx).getLong(KEY_PROD_AT, 0L)
-        val age = System.currentTimeMillis() - last
-        if (age < 15 * 60 * 1000L) return   // 15 daqiqadan yosh bo'lsa — tegmaymiz
+        if (db.productCount() == 0) return  // hali to'liq yuklanmagan ("To'liq yangilash" kerak)
+        val p = prefs(ctx)
+        val now = System.currentTimeMillis()
+        // Kontragent — kamdan-kam (10 daqiqada bir)
+        if (now - p.getLong(KEY_CP_AT, 0L) > 10 * 60 * 1000L) syncCounterparties(ctx)
+        // Mahsulot delta — tez-tez (2 daqiqada bir). Qo'lda "Yangilash" bosish shart emas.
+        if (now - p.getLong(KEY_PROD_AT, 0L) < 2 * 60 * 1000L) return
         syncProductsDelta(ctx)
     }
 
