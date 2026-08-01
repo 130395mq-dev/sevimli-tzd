@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -159,12 +160,134 @@ class DocumentsActivity : AppCompatActivity() {
         root.addView(col)
         card.addView(root)
 
-        if (isError && tcode.isNotEmpty()) {
+        // Har qanday hujjatni bosib — ichini (tovarlar ro'yxatini) ochib ko'rish mumkin
+        if (tcode.isNotEmpty()) {
             card.isClickable = true
             card.foreground = getDrawable(android.R.drawable.list_selector_background)
-            card.setOnClickListener { confirmRetry(tcode, id, name, errorText) }
+            card.setOnClickListener { openDetail(tcode, id, name, statusCode, errorText) }
         }
         return card
+    }
+
+    /** Hujjatni ochib ichidagi tovarlarni ko'rsatadi (faqat ko'rish). */
+    private fun openDetail(tcode: String, id: Int, name: String, statusCode: String, errorText: String) {
+        b.loading.visibility = View.VISIBLE
+        thread {
+            val r = Api.get(this, "document-detail", mapOf("type" to tcode, "id" to id.toString()))
+            runOnUiThread {
+                b.loading.visibility = View.GONE
+                when (r) {
+                    is ApiResult.Success -> showDetailDialog(tcode, id, statusCode, name, r.json)
+                    is ApiResult.Error -> Toast.makeText(this, r.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun showDetailDialog(tcode: String, id: Int, statusCode: String, name: String, json: JSONObject) {
+        val lines = json.optJSONArray("lines")
+        val total = json.optDouble("total", 0.0)
+        val errorText = json.optString("error")
+        val isError = statusCode == "error"
+        val cnt = lines?.length() ?: 0
+
+        val pad = dp(16f).toInt()
+        val outer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, dp(12f).toInt(), pad, 0)
+        }
+        outer.addView(TextView(this).apply {
+            text = "Jami: $cnt tovar · ${trimNum(total)} dona"
+            textSize = 13f
+            setTextColor(getColor(R.color.text_gray))
+            setPadding(0, 0, 0, dp(8f).toInt())
+        })
+        if (isError && errorText.isNotBlank()) {
+            outer.addView(TextView(this).apply {
+                text = "⚠ Bu hujjat MoySklad'ga o'tmagan. Qizil bilan belgilangan tovar muammo bergan."
+                textSize = 12.5f
+                setTextColor(android.graphics.Color.parseColor("#B91C1C"))
+                setBackgroundColor(android.graphics.Color.parseColor("#FEF2F2"))
+                setPadding(dp(12f).toInt(), dp(10f).toInt(), dp(12f).toInt(), dp(10f).toInt())
+            })
+        }
+
+        val listCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(10f).toInt(), 0, dp(8f).toInt())
+        }
+        if (lines != null) {
+            for (i in 0 until lines.length()) {
+                listCol.addView(detailRow(lines.getJSONObject(i), i + 1))
+            }
+        }
+        val scroll = ScrollView(this).apply { addView(listCol) }
+        outer.addView(scroll)
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(if (name.isNotBlank()) name else "Hujjat tarkibi")
+            .setView(outer)
+            .setPositiveButton("Yopish", null)
+        if (isError && tcode.isNotEmpty()) {
+            builder.setNeutralButton("Qayta yuborish") { _, _ -> doRetry(tcode, id) }
+        }
+        builder.show()
+    }
+
+    private fun detailRow(ln: JSONObject, num: Int): View {
+        val problem = ln.optBoolean("problem", false)
+        val name = ln.optString("name")
+        val barcode = ln.optString("barcode")
+        val qty = ln.optDouble("qty", 0.0)
+
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12f).toInt(), dp(10f).toInt(), dp(12f).toInt(), dp(10f).toInt())
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.bottomMargin = dp(6f).toInt()
+            layoutParams = lp
+            setBackgroundColor(
+                if (problem) android.graphics.Color.parseColor("#FEE2E2")
+                else android.graphics.Color.parseColor("#F8F8FB"))
+        }
+        val col = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        col.addView(TextView(this).apply {
+            text = "$num. $name"
+            textSize = 15f
+            setTextColor(getColor(R.color.text_dark))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        if (barcode.isNotBlank()) {
+            col.addView(TextView(this).apply {
+                text = barcode
+                textSize = 12f
+                setTextColor(getColor(R.color.text_gray))
+            })
+        }
+        if (problem) {
+            col.addView(TextView(this).apply {
+                text = "⚠ Shu tovar muammo bergan (MoySklad'da topilmadi)"
+                textSize = 12f
+                setTextColor(android.graphics.Color.parseColor("#B91C1C"))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+        }
+        val qtyTv = TextView(this).apply {
+            text = trimNum(qty)
+            textSize = 16f
+            setTextColor(
+                if (problem) android.graphics.Color.parseColor("#B91C1C")
+                else getColor(R.color.text_dark))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        row.addView(col)
+        row.addView(qtyTv)
+        return row
     }
 
     private fun confirmRetry(tcode: String, id: Int, name: String, error: String) {
