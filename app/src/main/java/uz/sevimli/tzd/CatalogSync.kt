@@ -92,6 +92,9 @@ object CatalogSync {
         }
         var offset = 0
         var pageJson = fetchPage(ctx, 0, since) ?: return false
+        // Server bergan "o'chgan tovarlar" ro'yxatini mahalliy bazadan ham olib tashlaymiz
+        val deleted = pageJson.optJSONArray("deleted")
+        if (deleted != null && deleted.length() > 0) db.deleteProducts(deleted)
         while (true) {
             val arr = pageJson.optJSONArray("products")
             if (arr != null && arr.length() > 0) db.upsertProducts(arr)

@@ -98,6 +98,26 @@ class LocalDb private constructor(ctx: Context) :
         writableDatabase.execSQL("DELETE FROM barcode")
     }
 
+    /** MoySklad'da o'chgan tovarlarni (server bergan id ro'yxati) bazadan olib tashlaydi. */
+    @Synchronized
+    fun deleteProducts(ids: JSONArray) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val delP = db.compileStatement("DELETE FROM product WHERE moysklad_id=?")
+            val delB = db.compileStatement("DELETE FROM barcode WHERE product_id=?")
+            for (i in 0 until ids.length()) {
+                val mid = ids.optString(i)
+                if (mid.isBlank()) continue
+                delP.clearBindings(); delP.bindString(1, mid); delP.executeUpdateDelete()
+                delB.clearBindings(); delB.bindString(1, mid); delB.executeUpdateDelete()
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
     @Synchronized
     fun upsertProducts(arr: JSONArray) {
         val db = writableDatabase
