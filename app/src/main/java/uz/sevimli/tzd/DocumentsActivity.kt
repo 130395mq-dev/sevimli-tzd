@@ -216,13 +216,28 @@ class DocumentsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(10f).toInt(), 0, dp(8f).toInt())
         }
+        val editable = json.optBoolean("editable", false)
+        var dlg: AlertDialog? = null
         if (lines != null) {
             for (i in 0 until lines.length()) {
-                listCol.addView(detailRow(lines.getJSONObject(i), i + 1))
+                listCol.addView(detailRow(lines.getJSONObject(i), i + 1, editable) { lineId, lineName ->
+                    removeLine(tcode, id, lineId, lineName) {
+                        dlg?.dismiss()
+                        openDetail(tcode, id, name, statusCode, "")
+                    }
+                })
             }
         }
         val scroll = ScrollView(this).apply { addView(listCol) }
         outer.addView(scroll)
+        if (editable) {
+            outer.addView(TextView(this).apply {
+                text = "Keraksiz yoki xato tovarni 🗑 bilan olib tashlab, keyin qayta yuboring."
+                textSize = 12f
+                setTextColor(getColor(R.color.text_gray))
+                setPadding(0, dp(4f).toInt(), 0, dp(8f).toInt())
+            })
+        }
 
         val builder = AlertDialog.Builder(this)
             .setTitle(if (name.isNotBlank()) name else "Hujjat tarkibi")
@@ -231,10 +246,12 @@ class DocumentsActivity : AppCompatActivity() {
         if (isError && tcode.isNotEmpty()) {
             builder.setNeutralButton("Qayta yuborish") { _, _ -> doRetry(tcode, id) }
         }
-        builder.show()
+        val d = builder.create()
+        dlg = d
+        d.show()
     }
 
-    private fun detailRow(ln: JSONObject, num: Int): View {
+    private fun detailRow(ln: JSONObject, num: Int, editable: Boolean, onRemove: (Int, String) -> Unit): View {
         val problem = ln.optBoolean("problem", false)
         val name = ln.optString("name")
         val barcode = ln.optString("barcode")
@@ -287,7 +304,44 @@ class DocumentsActivity : AppCompatActivity() {
         }
         row.addView(col)
         row.addView(qtyTv)
+        if (editable) {
+            val rm = TextView(this).apply {
+                text = "🗑"
+                textSize = 19f
+                setPadding(dp(14f).toInt(), dp(4f).toInt(), dp(4f).toInt(), dp(4f).toInt())
+                isClickable = true
+                setOnClickListener { onRemove(ln.optInt("line_id"), ln.optString("name")) }
+            }
+            row.addView(rm)
+        }
         return row
+    }
+
+    /** Yuborilmagan hujjatdan bitta tovarni o'chiradi (tasdiqlab). */
+    private fun removeLine(tcode: String, docId: Int, lineId: Int, name: String, after: () -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle("Tovarni o'chirish")
+            .setMessage("«$name» ni hujjatdan olib tashlaymizmi?")
+            .setPositiveButton("O'chirish") { _, _ ->
+                b.loading.visibility = View.VISIBLE
+                val body = JSONObject().put("type", tcode).put("id", docId).put("line_id", lineId)
+                thread {
+                    val r = Api.post(this, "document-remove-line", body)
+                    runOnUiThread {
+                        b.loading.visibility = View.GONE
+                        when (r) {
+                            is ApiResult.Success -> {
+                                Toast.makeText(this, "O'chirildi", Toast.LENGTH_SHORT).show()
+                                after()
+                            }
+                            is ApiResult.Error ->
+                                Toast.makeText(this, r.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Bekor", null)
+            .show()
     }
 
     private fun confirmRetry(tcode: String, id: Int, name: String, error: String) {
