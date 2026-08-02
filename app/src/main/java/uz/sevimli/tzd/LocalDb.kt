@@ -251,8 +251,10 @@ class LocalDb private constructor(ctx: Context) :
         val arr = JSONArray()
         readableDatabase.rawQuery(
             "SELECT moysklad_id,name,code,article,price,buy_price,uom,store_qty FROM product " +
-                "WHERE name LIKE ? OR code LIKE ? OR article LIKE ? ORDER BY name LIMIT ?",
-            arrayOf("%$q%", "%$q%", "%$q%", limit.toString())).use { c ->
+                "WHERE name LIKE ? OR code LIKE ? OR article LIKE ? " +
+                "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?) " +
+                "ORDER BY name LIMIT ?",
+            arrayOf("%$q%", "%$q%", "%$q%", "%$q%", limit.toString())).use { c ->
             while (c.moveToNext()) {
                 arr.put(JSONObject()
                     .put("moysklad_id", c.getString(0))
