@@ -148,6 +148,11 @@ class MenuActivity : AppCompatActivity() {
         updateStatus()
         flushQueue(manual = false)
         thread { CatalogSync.autoRefresh(this) }
+        // Obuna holati: to'xtatilgan/muddati tugagan bo'lsa — bloklash ekrani
+        thread {
+            Api.get(this, "ping")
+            runOnUiThread { Api.blocked?.let { showBlocked(it) } }
+        }
         // davriy avto-yangilashni yoqamiz
         syncHandler.removeCallbacks(syncTick)
         syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
@@ -156,6 +161,41 @@ class MenuActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         syncHandler.removeCallbacks(syncTick)   // orqa fonда behuda ishlamasin
+    }
+
+    // ---- Obuna to'xtatilganda bloklash ekrani ----
+    private var blockDialog: AlertDialog? = null
+    private fun showBlocked(msg: String) {
+        if (blockDialog?.isShowing == true) return
+        val d = (24 * resources.displayMetrics.density).toInt()
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(d, d, d, d)
+            addView(TextView(this@MenuActivity).apply {
+                text = "⛔ Obuna to'xtatilgan"
+                textSize = 21f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            addView(TextView(this@MenuActivity).apply {
+                text = msg
+                textSize = 15f
+                setPadding(0, (14 * resources.displayMetrics.density).toInt(), 0, 0)
+            })
+        }
+        blockDialog = AlertDialog.Builder(this)
+            .setView(box)
+            .setCancelable(false)
+            .setPositiveButton("Qayta tekshirish") { _, _ ->
+                thread {
+                    Api.get(this, "ping")
+                    runOnUiThread {
+                        if (Api.blocked == null) { blockDialog?.dismiss(); blockDialog = null }
+                        else Api.blocked?.let { showBlocked(it) }
+                    }
+                }
+            }
+            .create()
+        blockDialog?.show()
     }
 
     private fun updateStatus() {

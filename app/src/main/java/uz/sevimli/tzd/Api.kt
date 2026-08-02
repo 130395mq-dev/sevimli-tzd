@@ -9,10 +9,14 @@ import java.net.URLEncoder
 /** Backend javobi: muvaffaqiyat yoki xato. */
 sealed class ApiResult {
     data class Success(val json: JSONObject) : ApiResult()
-    data class Error(val message: String, val offline: Boolean = false) : ApiResult()
+    data class Error(val message: String, val offline: Boolean = false, val blocked: Boolean = false) : ApiResult()
 }
 
 object Api {
+
+    /** Obuna to'xtatilgan/muddati tugagan bo'lsa server 403 "blocked" qaytaradi.
+     *  Shu global bayroq o'rnatiladi; muvaffaqiyatli javobda tozalanadi. */
+    @Volatile var blocked: String? = null
 
     /** GET so'rov (TZD API, token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
@@ -77,12 +81,18 @@ object Api {
             val text = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
             val json = try { JSONObject(text) } catch (e: Exception) { null }
             if (code in 200..299) {
+                blocked = null   // muvaffaqiyat — obuna faol, blok yo'q
                 if (json != null) ApiResult.Success(json)
                 else ApiResult.Error("Server javobi noto'g'ri format ($code)")
             } else {
                 val msg = json?.optString("error", "Server xatosi ($code)")
                     ?: "Server xatosi ($code)"
-                ApiResult.Error(msg)
+                if (json?.optBoolean("blocked", false) == true) {
+                    blocked = msg
+                    ApiResult.Error(msg, blocked = true)
+                } else {
+                    ApiResult.Error(msg)
+                }
             }
         } catch (e: java.net.UnknownHostException) {
             ApiResult.Error("Internet yo'q", offline = true)
