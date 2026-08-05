@@ -248,15 +248,28 @@ class LocalDb private constructor(ctx: Context) :
 
     @Synchronized
     fun searchProductsResult(q: String, limit: Int = 30): JSONObject {
-        val arr = JSONArray()
+        // Kod/artikul — PREFIKS (boshlanishi) bo'yicha, nom/shtrix — "ichiga oladi".
+        // Tarozi PLU kodlari nol'siz saqlansa ham topilsin (masalan "00123" -> "123").
+        val qz = q.trimStart('0')
+        val hasZ = qz.isNotEmpty() && qz != q
+        val where = StringBuilder(
+            "name LIKE ? OR code LIKE ? OR article LIKE ? " +
+                "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?)")
+        val args = arrayListOf("%$q%", "$q%", "$q%", "%$q%")
+        if (hasZ) {
+            where.append(" OR code LIKE ? OR article LIKE ? OR code = ? " +
+                "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?)")
+            args.add("$qz%"); args.add("$qz%"); args.add(qz); args.add("%$qz%")
+        }
+        args.add("80")  // muvofiqlik saralashdan oldin biroz ko'proq nomzod olamiz
+
+        val rows = ArrayList<JSONObject>()
         readableDatabase.rawQuery(
             "SELECT moysklad_id,name,code,article,price,buy_price,uom,store_qty FROM product " +
-                "WHERE name LIKE ? OR code LIKE ? OR article LIKE ? " +
-                "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?) " +
-                "ORDER BY name LIMIT ?",
-            arrayOf("%$q%", "%$q%", "%$q%", "%$q%", limit.toString())).use { c ->
+                "WHERE $where LIMIT ?",
+            args.toTypedArray()).use { c ->
             while (c.moveToNext()) {
-                arr.put(JSONObject()
+                rows.add(JSONObject()
                     .put("moysklad_id", c.getString(0))
                     .put("name", c.getString(1))
                     .put("code", c.getString(2) ?: "")
@@ -268,6 +281,22 @@ class LocalDb private constructor(ctx: Context) :
                     .put("barcode", ""))
             }
         }
+
+        // Muvofiqlik: aniq kod -> prefiks kod -> artikul boshi -> nom boshi -> qolgani.
+        val ql = q.lowercase(); val qzl = qz.lowercase()
+        fun score(p: JSONObject): Int {
+            val code = p.optString("code").lowercase()
+            val art = p.optString("article").lowercase()
+            val nm = p.optString("name").lowercase()
+            if (code == ql || (qzl.isNotEmpty() && code == qzl)) return 0
+            if (code.startsWith(ql) || (qzl.isNotEmpty() && code.startsWith(qzl))) return 1
+            if (art.startsWith(ql)) return 2
+            if (nm.startsWith(ql)) return 3
+            return 4
+        }
+        val arr = JSONArray()
+        rows.sortedWith(compareBy({ score(it) }, { it.optString("name").lowercase() }))
+            .take(limit).forEach { arr.put(it) }
         return JSONObject().put("ok", true).put("products", arr)
     }
 
