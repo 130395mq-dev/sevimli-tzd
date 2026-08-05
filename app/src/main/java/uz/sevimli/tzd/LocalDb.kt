@@ -252,14 +252,18 @@ class LocalDb private constructor(ctx: Context) :
         // Tarozi PLU kodlari nol'siz saqlansa ham topilsin (masalan "00123" -> "123").
         val qz = q.trimStart('0')
         val hasZ = qz.isNotEmpty() && qz != q
+        // Shtrix — faqat BOSHLANISHI bo'yicha ("%...%" emas: qisqa raqam ko'p
+        // shtrix o'rtasida uchrab, aloqasiz tovarlar chiqadi).
         val where = StringBuilder(
             "name LIKE ? OR code LIKE ? OR article LIKE ? " +
                 "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?)")
-        val args = arrayListOf("%$q%", "$q%", "$q%", "%$q%")
+        val args = arrayListOf("%$q%", "$q%", "$q%", "$q%")
         if (hasZ) {
-            where.append(" OR code LIKE ? OR article LIKE ? OR code = ? " +
-                "OR moysklad_id IN (SELECT product_id FROM barcode WHERE barcode LIKE ?)")
-            args.add("$qz%"); args.add("$qz%"); args.add(qz); args.add("%$qz%")
+            // Nol'siz variant FAQAT kod/artikul bo'yicha — shtrix ichidan emas
+            // (aks holda "352" kabi qisqa raqam ko'p shtrix o'rtasida uchrab,
+            // aloqasiz tovarlar chiqadi).
+            where.append(" OR code LIKE ? OR article LIKE ? OR code = ?")
+            args.add("$qz%"); args.add("$qz%"); args.add(qz)
         }
         args.add("80")  // muvofiqlik saralashdan oldin biroz ko'proq nomzod olamiz
 
@@ -282,8 +286,17 @@ class LocalDb private constructor(ctx: Context) :
             }
         }
 
-        // Muvofiqlik: aniq kod -> prefiks kod -> artikul boshi -> nom boshi -> qolgani.
+        // ANIQ moslik: kiritilgan matn kod/artikulga AYNAN teng bo'lsa —
+        // faqat o'sha tovar(lar) qoladi, kod davomlari chiqmaydi.
         val ql = q.lowercase(); val qzl = qz.lowercase()
+        val exact = rows.filter { p ->
+            val code = p.optString("code").lowercase()
+            val art = p.optString("article").lowercase()
+            (code.isNotEmpty() && (code == ql || code == qzl)) || (art.isNotEmpty() && art == ql)
+        }
+        val pool = if (exact.isNotEmpty()) exact else rows
+
+        // Muvofiqlik: aniq kod -> prefiks kod -> artikul boshi -> nom boshi -> qolgani.
         fun score(p: JSONObject): Int {
             val code = p.optString("code").lowercase()
             val art = p.optString("article").lowercase()
@@ -295,7 +308,7 @@ class LocalDb private constructor(ctx: Context) :
             return 4
         }
         val arr = JSONArray()
-        rows.sortedWith(compareBy({ score(it) }, { it.optString("name").lowercase() }))
+        pool.sortedWith(compareBy({ score(it) }, { it.optString("name").lowercase() }))
             .take(limit).forEach { arr.put(it) }
         return JSONObject().put("ok", true).put("products", arr)
     }
