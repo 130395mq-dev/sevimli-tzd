@@ -61,10 +61,36 @@ jobs:
           cat version.json
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.ver.outputs.name }}-${{ steps.ver.outputs.code }}
-          name: Sevimli TZD ${{ steps.ver.outputs.name }}
-          files: |
-            sevimli-tzd.apk
-            version.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.ver.outputs.name }}-${{ steps.ver.outputs.code }}
+          RELEASE_NAME: Sevimli TZD ${{ steps.ver.outputs.name }}
+        run: |
+          set -e
+
+          # GitHub API vaqtincha 503 qaytarsa, workflow darhol yiqilmasligi uchun
+          # release yaratishni bir necha marta qayta urinib ko'ramiz.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            echo "GitHub Release urinish: $attempt/10"
+
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Release allaqachon mavjud: $TAG"
+              gh release edit "$TAG" --title "$RELEASE_NAME"
+              gh release upload "$TAG" sevimli-tzd.apk version.json --clobber
+              exit 0
+            fi
+
+            if gh release create "$TAG"               --target "$GITHUB_SHA"               --title "$RELEASE_NAME"               --generate-notes               sevimli-tzd.apk               version.json; then
+              echo "GitHub Release muvaffaqiyatli yaratildi: $TAG"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              WAIT=$((attempt * 15))
+              echo "GitHub API vaqtincha xato berdi. $WAIT soniya kutib qayta uriniladi..."
+              sleep "$WAIT"
+            fi
+          done
+
+          echo "GitHub Release yaratish 10 ta urinishdan keyin ham muvaffaqiyatsiz."
+          exit 1
