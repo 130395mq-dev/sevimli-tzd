@@ -3,6 +3,7 @@ package uz.sevimli.tzd
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -25,6 +26,13 @@ class MoveReceiveActivity : AppCompatActivity() {
     private lateinit var b: ActivityMoveReceiveBinding
     private val items = mutableListOf<RecvItem>()
     private var moveId: String = ""
+
+    // Miqdor oynasi ochiq turganda kelgan skanni ushlash uchun (Приёмка kabi)
+    private var qtyDialog: AlertDialog? = null
+    private var qtyConfirmWith: ((Double) -> Unit)? = null
+    private var qtyPrefill: Double = 0.0
+    private val scanBuf = StringBuilder()
+    private var lastScanKey = 0L
 
     data class RecvItem(
         val productMoyskladId: String,
@@ -95,19 +103,24 @@ class MoveReceiveActivity : AppCompatActivity() {
         b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "product", mapOf("barcode" to code))
+            // Internet bo'lmasa — mahalliy (offline) bazadan qidiramiz (Приёмка kabi)
+            val json: JSONObject? = when (result) {
+                is ApiResult.Success -> result.json
+                is ApiResult.Error -> if (result.offline) OfflineLookup.lookup(this, code) else null
+            }
+            val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
                 b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> {
-                        val j = result.json
-                        if (!j.optBoolean("found", false)) {
-                            Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
-                        } else {
-                            matchScan(j)
-                        }
+                when {
+                    serverErr != null -> {
+                        ScanFeedback.fail(this)
+                        Toast.makeText(this, serverErr, Toast.LENGTH_SHORT).show()
                     }
-                    is ApiResult.Error ->
-                        Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                    json == null || !json.optBoolean("found", false) -> {
+                        ScanFeedback.fail(this)
+                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> matchScan(json)
                 }
             }
         }
@@ -117,28 +130,126 @@ class MoveReceiveActivity : AppCompatActivity() {
         val mid = product.optString("moysklad_id")
         val item = items.find { it.productMoyskladId == mid }
         if (item == null) {
+            ScanFeedback.fail(this)
             Toast.makeText(this, "Bu tovar dokumentda yo'q:\n${product.optString("name")}",
                 Toast.LENGTH_LONG).show()
             return
         }
-        // Blok (upakovka) skanlansa — ichidagi dona soni qo'shiladi
+        ScanFeedback.ok(this)
+        askQuantity(item, product)
+    }
+
+    /**
+     * Miqdor oynasi — Приёмка (SupplyActivity) bilan bir xil ko'rinish.
+     * Skanerdan kelgan blok/tarozi qiymati avtomatik to'ldiriladi,
+     * xodim −/+ bilan yoki qo'lda o'zgartira oladi.
+     */
+    private fun askQuantity(item: RecvItem, product: JSONObject) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
+        val qName = view.findViewById<TextView>(R.id.qName)
+        val qPrice = view.findViewById<TextView>(R.id.qPrice)
+        val qPackInfo = view.findViewById<TextView>(R.id.qPackInfo)
+        val qWas = view.findViewById<TextView>(R.id.qWas)
+        val qWill = view.findViewById<TextView>(R.id.qWill)
+        val qInput = view.findViewById<EditText>(R.id.qInput)
+        val btnMinus = view.findViewById<TextView>(R.id.btnMinus)
+        val btnPlus = view.findViewById<TextView>(R.id.btnPlus)
+        val btnOk = view.findViewById<View>(R.id.btnOk)
+
+        val was = item.scanned
+        qName.text = item.name
+        // Приёмка'да narx turadi; bu yerda muhimi — KUTILGAN miqdor
+        qPrice.text = "Kutilgan: ${trimNum(item.expected)} dona"
+        qWas.text = "Было: ${trimNum(was)}"
+
+        // Blok (upakovka) yoki tarozi shtrixi — avtomatik to'ldiramiz
         val packQty = product.optDouble("pack_qty", 0.0)
-        val add = if (product.optBoolean("is_pack", false) && packQty > 0) packQty else 1.0
-        item.scanned += add
-        Toast.makeText(this, "${item.name}  +${trimNum(add)}", Toast.LENGTH_SHORT).show()
-        renderList()
+        val scaleWeight = product.optDouble("scale_weight", 0.0)
+        when {
+            product.optBoolean("scale", false) && scaleWeight > 0 -> {
+                qPackInfo.visibility = View.VISIBLE
+                qPackInfo.text = "\u2696 Tarozi: ${trimNum(scaleWeight)} kg"
+                qInput.setText(trimNum(scaleWeight))
+            }
+            product.optBoolean("is_pack", false) && packQty > 0 -> {
+                qPackInfo.visibility = View.VISIBLE
+                qPackInfo.text = "\uD83D\uDCE6 Upakovka (blok): ${trimNum(packQty)} dona"
+                qInput.setText(trimNum(packQty))
+            }
+            else -> {
+                qPackInfo.visibility = View.GONE
+                qInput.setText("1")
+            }
+        }
+
+        fun currentQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
+        fun updateWill() {
+            val will = was + currentQty()
+            qWill.text = "Будет: ${trimNum(will)}"
+            // Kutilgandan oshsa — ogohlantirib rangini o'zgartiramiz
+            qWill.setTextColor(getColor(
+                if (will > item.expected) R.color.warning else R.color.brand))
+        }
+        updateWill()
+        qInput.setSelection(qInput.text.length)
+
+        btnMinus.setOnClickListener {
+            val v = (currentQty() - 1).coerceAtLeast(0.0)
+            qInput.setText(trimNum(v)); updateWill()
+        }
+        btnPlus.setOnClickListener {
+            qInput.setText(trimNum(currentQty() + 1)); updateWill()
+        }
+
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+        qInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) { updateWill() }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+        })
+
+        val confirmWith: (Double) -> Unit = { addQty ->
+            if (addQty > 0) {
+                item.scanned = round3(item.scanned + addQty)
+                renderList()
+            }
+            dialog.dismiss()
+        }
+        btnOk.setOnClickListener { confirmWith(currentQty()) }
+
+        qtyPrefill = currentQty()
+        qtyConfirmWith = confirmWith
+        qtyDialog = dialog
+        dialog.setOnDismissListener { qtyDialog = null; qtyConfirmWith = null }
+        dialog.show()
     }
 
     private fun renderList() {
         b.list.removeAllViews()
         var checked = 0
-        for (item in items) {
+        for ((index, item) in items.withIndex()) {
             if (item.scanned > 0) checked++
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(16f).toInt(), dp(13f).toInt(), dp(16f).toInt(), dp(13f).toInt())
+                setPadding(dp(12f).toInt(), dp(13f).toInt(), dp(16f).toInt(), dp(13f).toInt())
             }
+
+            // ---- TARTIB RAQAMI (1, 2, 3 ...) ----
+            // Skan qilingan qator raqami brend rangida — qaysilari bo'lganini
+            // bir qarashda ko'rish uchun.
+            val numTv = TextView(this).apply {
+                text = "${index + 1}"
+                textSize = 13f
+                gravity = android.view.Gravity.CENTER
+                minWidth = dp(26f).toInt()
+                setPadding(dp(4f).toInt(), 0, dp(6f).toInt(), 0)
+                setTextColor(getColor(
+                    if (item.scanned > 0) R.color.brand else R.color.text_gray))
+                if (item.scanned > 0) setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+            row.addView(numTv)
+
             val nameCol = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0,
@@ -278,6 +389,9 @@ class MoveReceiveActivity : AppCompatActivity() {
     private fun trimNum(d: Double): String =
         if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
 
+    /** Kasr xatolarini oldini olish (0.1 + 0.2 muammosi) — 3 xonaga yaxlitlaymiz. */
+    private fun round3(d: Double): Double = Math.round(d * 1000.0) / 1000.0
+
     private fun dp(v: Float) = v * resources.displayMetrics.density
 
     override fun onResume() {
@@ -288,5 +402,32 @@ class MoveReceiveActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) b.scanInput.requestFocus()
+    }
+
+    /**
+     * Miqdor oynasi ochiq turganda kelgan SKAN (tez ketma-ketlik + Enter) ni ushlaymiz.
+     * Aks holda skaner raqamlari miqdor maydoniga tushib ketardi.
+     * Приёмка'дagi mantiqning aynan o'zi.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (qtyDialog?.isShowing == true && event.action == KeyEvent.ACTION_DOWN) {
+            val now = System.currentTimeMillis()
+            if (now - lastScanKey > 150) scanBuf.setLength(0)
+            lastScanKey = now
+            val kc = event.keyCode
+            if (kc == KeyEvent.KEYCODE_ENTER || kc == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                val code = scanBuf.toString().trim()
+                scanBuf.setLength(0)
+                if (code.length >= 6) {                    // barcode — yangi mahsulot
+                    qtyConfirmWith?.invoke(qtyPrefill)     // joriyni standart miqdor bilan tasdiqlaymiz
+                    onScan(code)
+                    return true
+                }
+            } else {
+                val ch = event.unicodeChar
+                if (ch != 0) scanBuf.append(ch.toChar())
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 }
