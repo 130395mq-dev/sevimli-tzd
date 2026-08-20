@@ -179,16 +179,27 @@ class MoveActivity : AppCompatActivity() {
 
         // Upakovka (blok) shtrixi skanlangan bo'lsa — miqdorni avtomatik to'ldiramiz
         val packQty = product.optDouble("pack_qty", 0.0)
-        if (product.optBoolean("is_pack", false) && packQty > 0) {
+        val isPack = product.optBoolean("is_pack", false) && packQty > 0
+        val packUom = product.optString("uom", "").let { if (it.isBlank()) "" else " $it" }
+        if (isPack) {
             qPackInfo.visibility = View.VISIBLE
-            qPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
-            qInput.setText(trimNum(packQty))
+            qInput.setText("1")
         } else {
             qPackInfo.visibility = View.GONE
             qInput.setText("1")
         }
 
-        fun currentQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
+        fun typedQty(): Double = qInput.text.toString().toDoubleOrNull() ?: 0.0
+        // UPAKOVKA: kiritilgan raqam — upakovka SONI. Hujjatga esa ichidagi
+        // jami miqdor yoziladi: 1 upakovka x 3 kg = 3 kg.
+        fun currentQty(): Double {
+            val typed = typedQty()
+            if (!isPack) return typed
+            val total = round3(typed * packQty)
+            qPackInfo.text =
+                "\uD83D\uDCE6 ${trimNum(typed)} upakovka x ${trimNum(packQty)} = ${trimNum(total)}$packUom"
+            return total
+        }
         fun updateWill() {
             val will = was + currentQty()
             qWill.text = "Будет: ${trimNum(will)}"
@@ -199,10 +210,10 @@ class MoveActivity : AppCompatActivity() {
         qInput.setSelection(qInput.text.length)
 
         btnMinus.setOnClickListener {
-            val v = (currentQty() - 1).coerceAtLeast(0.0); qInput.setText(trimNum(v)); updateWill()
+            val v = (typedQty() - 1).coerceAtLeast(0.0); qInput.setText(trimNum(v)); updateWill()
         }
         btnPlus.setOnClickListener {
-            qInput.setText(trimNum(currentQty() + 1)); updateWill()
+            qInput.setText(trimNum(typedQty() + 1)); updateWill()
         }
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
@@ -380,6 +391,10 @@ class MoveActivity : AppCompatActivity() {
         put("barcode", data.getStringExtra("p_barcode") ?: "")
         put("price", data.getLongExtra("p_price", 0))
         put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
+        put("uom", data.getStringExtra("p_uom") ?: "")
+        put("store_qty", data.getDoubleExtra("p_store_qty", 0.0))
+        val pq = data.getDoubleExtra("p_pack_qty", 0.0)
+        if (pq > 0) { put("pack_qty", pq); put("is_pack", true) }
     }
 
     override fun onResume() {

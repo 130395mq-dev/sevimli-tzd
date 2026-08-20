@@ -286,13 +286,34 @@ class LocalDb private constructor(ctx: Context) :
             }
         }
 
-        // ANIQ moslik: kiritilgan matn kod/artikulga AYNAN teng bo'lsa —
-        // faqat o'sha tovar(lar) qoladi, kod davomlari chiqmaydi.
+        // AYNAN shtrix terilgan bo'lsa — o'sha shtrixni (upakovka bo'lsa,
+        // ichidagi miqdori bilan) qatorga biriktiramiz.
+        var exactBcOwner: String? = null
+        readableDatabase.rawQuery(
+            "SELECT product_id,pack_qty FROM barcode WHERE barcode=? LIMIT 1",
+            arrayOf(q)).use { c ->
+            if (c.moveToFirst()) {
+                exactBcOwner = c.getString(0)
+                val pq = if (c.isNull(1)) 0.0 else c.getDouble(1)
+                rows.forEach { p ->
+                    if (p.optString("moysklad_id") == exactBcOwner) {
+                        p.put("barcode", q)
+                        if (pq > 0) { p.put("pack_qty", pq); p.put("is_pack", true) }
+                    }
+                }
+            }
+        }
+
+        // ANIQ moslik: kiritilgan matn kod/artikulga (yoki shtrixga) AYNAN teng
+        // bo'lsa — faqat o'sha tovar(lar) qoladi, kod davomlari chiqmaydi.
         val ql = q.lowercase(); val qzl = qz.lowercase()
-        val exact = rows.filter { p ->
+        var exact = rows.filter { p ->
             val code = p.optString("code").lowercase()
             val art = p.optString("article").lowercase()
             (code.isNotEmpty() && (code == ql || code == qzl)) || (art.isNotEmpty() && art == ql)
+        }
+        if (exact.isEmpty() && exactBcOwner != null) {
+            exact = rows.filter { it.optString("moysklad_id") == exactBcOwner }
         }
         val pool = if (exact.isNotEmpty()) exact else rows
 

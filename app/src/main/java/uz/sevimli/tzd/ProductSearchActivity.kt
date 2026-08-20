@@ -182,6 +182,14 @@ class ProductSearchActivity : AppCompatActivity() {
             if (inStock) R.color.green_tint else R.color.pill_gray,
             if (inStock) R.color.green_ok else R.color.text_gray
         ).apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(6f) })
+        // Upakovka (blok) shtrixi bo'yicha topilgan bo'lsa — belgisini ko'rsatamiz
+        val packQty = p.optDouble("pack_qty", 0.0)
+        if (packQty > 0) {
+            chips.addView(pill(
+                "📦 1 × ${trimNum(packQty)}",
+                R.color.brand_tint, R.color.brand_dark
+            ).apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(6f) })
+        }
         col.addView(chips)
         row.addView(col)
 
@@ -202,6 +210,9 @@ class ProductSearchActivity : AppCompatActivity() {
                 putExtra("p_code", p.optString("code"))
                 putExtra("p_barcode", p.optString("barcode"))
                 putExtra("p_store_qty", qty)
+                // Upakovka (blok) shtrixi bo'yicha topilgan bo'lsa — miqdorni
+                // hisoblash uchun upakovka ichidagi sonni ham uzatamiz.
+                putExtra("p_pack_qty", p.optDouble("pack_qty", 0.0))
             }
             setResult(RESULT_OK, data)
             finish()

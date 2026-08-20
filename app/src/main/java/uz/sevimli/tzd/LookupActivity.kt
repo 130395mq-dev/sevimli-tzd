@@ -121,7 +121,8 @@ class LookupActivity : AppCompatActivity() {
             }
             json.optBoolean("is_pack", false) && packQty > 0 -> {
                 b.pPackInfo.visibility = View.VISIBLE
-                b.pPackInfo.text = "📦 Upakovka (blok): ${trimNum(packQty)} dona"
+                val u = json.optString("uom", "").let { if (it.isBlank()) "dona" else it }
+                b.pPackInfo.text = "📦 Upakovka: 1 × ${trimNum(packQty)} $u"
             }
             else -> b.pPackInfo.visibility = View.GONE
         }
@@ -177,6 +178,8 @@ class LookupActivity : AppCompatActivity() {
         put("store_name", Config.storeName(this@LookupActivity) ?: "")
         put("store_qty", data.getDoubleExtra("p_store_qty", 0.0))
         put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
+        val pq = data.getDoubleExtra("p_pack_qty", 0.0)
+        if (pq > 0) { put("pack_qty", pq); put("is_pack", true) }
     }
 
     override fun onResume() {
