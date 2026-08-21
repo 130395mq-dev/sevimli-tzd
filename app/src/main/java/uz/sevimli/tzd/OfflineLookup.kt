@@ -21,11 +21,15 @@ object OfflineLookup {
         var packQty: Double? = null
         var usedScale = false
 
-        // 1) To'liq shtrix mosligi
-        val byBc = db.productByBarcode(code)
-        if (byBc != null) {
+        // 1) To'liq shtrix mosligi — shtrixning boshqa yozilishlari bilan birga.
+        //    Skaner bitta tovarni EAN-13, GTIN-14 (oldida qo'shimcha raqam) yoki
+        //    nol'lar bilan yuborishi mumkin. Ilgari aynan moslik topilmay,
+        //    har skan serverga borardi va 1–2 soniya kutilardi.
+        for (v in barcodeVariants(code)) {
+            val byBc = db.productByBarcode(v) ?: continue
             product = byBc
             if (byBc.has("pack_qty")) packQty = byBc.optDouble("pack_qty")
+            break
         }
 
         // 2) Tarozi shtrixi (29-prefiks) — PLU bo'yicha
@@ -72,6 +76,25 @@ object OfflineLookup {
             resp.put("scale_price", Math.round(weight * price).toInt())
         }
         return resp
+    }
+
+    /**
+     * Bitta shtrixning mumkin bo'lgan yozilishlari (server tomondagi
+     * tzd/barcodes.py bilan bir xil mantiq).
+     */
+    fun barcodeVariants(code: String): List<String> {
+        val c = code.trim()
+        val out = ArrayList<String>()
+        fun add(v: String) { if (v.isNotEmpty() && !out.contains(v)) out.add(v) }
+        add(c)
+        if (!c.all { it.isDigit() }) return out
+        val s = c.trimStart('0')
+        if (c.length == 14) add(c.substring(1))          // GTIN-14 -> EAN-13
+        if (c.length == 13 && c.startsWith("0")) add(c.substring(1))  // -> UPC-A
+        if (c.length == 12) add("0$c")                    // UPC-A -> EAN-13
+        add(s)
+        if (s.isNotEmpty() && s.length < 13) add(s.padStart(13, '0'))
+        return out.take(6)
     }
 
     /**

@@ -63,22 +63,45 @@ class ProductSearchActivity : AppCompatActivity() {
         b.hint.visibility = View.GONE
         b.loading.visibility = View.VISIBLE
         thread {
+            // 1) TEZLIK: avval mahalliy bazadan — natija bir zumda chiqadi.
+            //    Ilgari har harfda serverni kutardik (0.4–1 soniya) va qidiruv
+            //    "kechikayapti" degan shikoyatlar shundan edi.
+            val local = try { LocalDb.get(this).searchProductsResult(q) } catch (e: Exception) { null }
+            val localHas = (local?.optJSONArray("products")?.length() ?: 0) > 0
+            if (localHas) runOnUiThread {
+                if (currentQuery() == q) {
+                    b.loading.visibility = View.GONE
+                    render(local!!)
+                }
+            }
+
+            // 2) Keyin serverdan — narx/qoldiq yangi bo'lsin va bazada yo'q
+            //    (yangi kiritilgan) tovar ham topilsin. Kelgach ro'yxat almashadi.
             val result = Api.get(this, "product-search", mapOf("q" to q))
             val json: org.json.JSONObject? = when (result) {
                 is ApiResult.Success -> result.json
-                is ApiResult.Error -> if (result.offline) LocalDb.get(this).searchProductsResult(q) else null
+                is ApiResult.Error -> if (result.offline) local else null
             }
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
+            val srvCount = json?.optJSONArray("products")?.length() ?: 0
             runOnUiThread {
+                if (currentQuery() != q) return@runOnUiThread   // odam boshqa narsa yozdi
                 b.loading.visibility = View.GONE
-                when {
-                    serverErr != null -> Toast.makeText(this, serverErr, Toast.LENGTH_SHORT).show()
-                    json != null -> render(json)
-                    else -> render(org.json.JSONObject().put("products", org.json.JSONArray()))
+                if (json != null && (srvCount > 0 || !localHas)) {
+                    render(json)
+                } else if (!localHas) {
+                    render(org.json.JSONObject().put("products", org.json.JSONArray()))
+                }
+                // Mahalliy natija ko'rinib turibdi — server xatosi bilan uni yo'qotmaymiz
+                if (serverErr != null && !localHas) {
+                    Toast.makeText(this, serverErr, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
+
+    /** Ayni damda qidiruv maydonida turgan matn (eskirgan javobni tashlash uchun). */
+    private fun currentQuery(): String = b.search.text?.toString()?.trim() ?: ""
 
     private fun showHint(title: String, sub: String) {
         b.hintTitle.text = title

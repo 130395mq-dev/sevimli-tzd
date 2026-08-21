@@ -16,6 +16,11 @@ object CatalogSync {
     private const val PREFS = "sevimli_tzd_sync"
     private const val KEY_CP_AT = "counterparties_at"
     private const val KEY_PROD_AT = "products_at"
+    // Server katalog reviziyasi. Serverda shtrixlar (masalan upakovka shtrixlari)
+    // mahsulotning `updated` vaqtiga tegmasdan to'ldirilsa, delta ularni OLIB
+    // KELMAYDI — natijada skan har safar serverga borib sekinlashardi.
+    // Raqam o'zgarganini ko'rsak — katalogni bir marta to'liq qayta yuklaymiz.
+    private const val KEY_REV = "catalog_rev"
     private const val PAGE = 500
 
     private fun prefs(ctx: Context) =
@@ -78,7 +83,10 @@ object CatalogSync {
             pageJson = fetchPage(ctx, offset, null) ?: break
         }
         syncStock(ctx)
-        prefs(ctx).edit().putLong(KEY_PROD_AT, System.currentTimeMillis()).apply()
+        prefs(ctx).edit()
+            .putLong(KEY_PROD_AT, System.currentTimeMillis())
+            .putInt(KEY_REV, first.optInt("catalog_rev", 0))
+            .apply()
         return true
     }
 
@@ -92,6 +100,15 @@ object CatalogSync {
         }
         var offset = 0
         var pageJson = fetchPage(ctx, 0, since) ?: return false
+
+        // Serverda shtrixlar qayta to'ldirilgan bo'lsa — delta yetarli emas,
+        // to'liq yuklab olamiz (shundan keyin skan yana mahalliy bazadan, bir zumda).
+        val srvRev = pageJson.optInt("catalog_rev", 0)
+        val myRev = prefs(ctx).getInt(KEY_REV, 0)
+        if (srvRev != 0 && srvRev != myRev) {
+            return syncProductsFull(ctx) { _, _ -> }
+        }
+
         // Server bergan "o'chgan tovarlar" ro'yxatini mahalliy bazadan ham olib tashlaymiz
         val deleted = pageJson.optJSONArray("deleted")
         if (deleted != null && deleted.length() > 0) db.deleteProducts(deleted)
