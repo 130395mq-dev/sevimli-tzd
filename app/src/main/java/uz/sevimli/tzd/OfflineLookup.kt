@@ -13,8 +13,19 @@ import org.json.JSONObject
  */
 object OfflineLookup {
 
-    fun lookup(ctx: Context, code: String): JSONObject {
+    fun lookup(ctx: Context, raw: String): JSONObject {
         val db = LocalDb.get(ctx)
+
+        // QR / DataMatrix bo'lsa — ichidan tovar kodini (GTIN) ajratamiz.
+        // Oddiy shtrix bo'lsa hech narsa o'zgarmaydi.
+        val scan = ScanCode.parse(raw)
+        val code = if (scan.code.isNotEmpty()) scan.code else raw
+        if (scan.kind == "url" && scan.code.isEmpty()) {
+            return JSONObject().put("found", false).put("barcode", raw)
+                .put("offline", true).put("scan_kind", "url")
+                .put("hint", "Bu QR — sayt havolasi, tovar kodi emas")
+        }
+
         val (scalePlu, scaleValue) = parseScaleBarcode(code)
 
         var product: JSONObject? = null
@@ -49,8 +60,13 @@ object OfflineLookup {
         }
 
         if (product == null) {
-            return JSONObject().put("found", false).put("barcode", code).put("offline", true)
+            return JSONObject().put("found", false).put("barcode", code)
+                .put("offline", true).put("scan_kind", scan.kind)
         }
+
+        // BLOK/QUTI QR kodida ichidagi dona soni yozilgan bo'lishi mumkin.
+        // Bazada upakovka shtrixi bo'lmasa ham, shu son bo'yicha hisoblaymiz.
+        if (packQty == null && scan.count != null) packQty = scan.count.toDouble()
 
         val price = product.optLong("price", 0)
         val resp = JSONObject()
@@ -58,6 +74,7 @@ object OfflineLookup {
             .put("found", true)
             .put("offline", true)
             .put("barcode", code)
+            .put("scan_kind", scan.kind)
             .put("moysklad_id", product.optString("moysklad_id"))
             .put("name", product.optString("name"))
             .put("price", price)
