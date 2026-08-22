@@ -14,6 +14,16 @@ sealed class ApiResult {
 
 object Api {
 
+    /** Qurilma va skaner ma'lumoti — bir marta hisoblanadi (paketlar ro'yxati og'ir). */
+    @Volatile private var devInfo: String? = null
+
+    private fun deviceInfo(ctx: Context): String {
+        devInfo?.let { return it }
+        val v = try { ScannerBridge.deviceInfo(ctx) } catch (e: Exception) { "?" }
+        devInfo = v
+        return v
+    }
+
     /** Obuna to'xtatilgan/muddati tugagan bo'lsa server 403 "blocked" qaytaradi.
      *  Shu global bayroq o'rnatiladi; muvaffaqiyatli javobda tozalanadi. */
     @Volatile var blocked: String? = null
@@ -64,6 +74,9 @@ object Api {
                 setRequestProperty("X-Device-Token", token)
                 setRequestProperty("X-Device-Id", Config.deviceId(ctx))
                 setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)
+                // Terminal modeli va undagi skaner dasturlari — serverda log qilinadi,
+                // shunda qaysi qurilma ekanini so'ramasdan bilamiz
+                setRequestProperty("X-Device-Info", deviceInfo(ctx))
                 setRequestProperty("Accept", "application/json")
                 // SaaS (kabinet) endpointlari menejer sessiya tokeni bilan ishlaydi
                 if (apiSeg == "api/saas") {

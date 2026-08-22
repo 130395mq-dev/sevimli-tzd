@@ -2,9 +2,7 @@ package uz.sevimli.tzd
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
@@ -42,20 +40,9 @@ class LookupActivity : AppCompatActivity() {
         b.btnManualSearch.setOnClickListener {
             pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
         }
-        b.scanInput.showSoftInputOnFocus = false
-
-        b.scanInput.setOnEditorActionListener { _, actionId, event ->
-            val enter = actionId == EditorInfo.IME_ACTION_DONE ||
-                    actionId == EditorInfo.IME_ACTION_NEXT ||
-                    (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER &&
-                            event.action == KeyEvent.ACTION_DOWN)
-            if (enter) {
-                val code = b.scanInput.text.toString().trim()
-                if (code.isNotEmpty()) handleScan(code)
-                b.scanInput.setText("")
-                true
-            } else false
-        }
+        // Skan uch kanaldan qabul qilinadi: Enter, Enter'siz (jimlik) va
+        // qurilma skaner signali. Tafsilot — ScanInput.kt
+        ScanInput.bind(this, b.scanInput) { code -> handleScan(code) }
     }
 
     private fun handleScan(code: String) {

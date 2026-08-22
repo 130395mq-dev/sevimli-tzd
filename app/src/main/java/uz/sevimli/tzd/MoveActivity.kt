@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -94,19 +93,9 @@ class MoveActivity : AppCompatActivity() {
         b.btnManualAdd.setOnClickListener {
             pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
         }
-        b.scanInput.showSoftInputOnFocus = false
-
-        b.scanInput.setOnEditorActionListener { _, actionId, event ->
-            val enter = actionId == EditorInfo.IME_ACTION_DONE ||
-                    (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER &&
-                            event.action == KeyEvent.ACTION_DOWN)
-            if (enter) {
-                val code = b.scanInput.text.toString().trim()
-                if (code.isNotEmpty()) onScan(code)
-                b.scanInput.setText("")
-                true
-            } else false
-        }
+        // Skan uch kanaldan qabul qilinadi: Enter, Enter'siz (jimlik) va
+        // qurilma skaner signali. Tafsilot — ScanInput.kt
+        ScanInput.bind(this, b.scanInput) { code -> onScan(code) }
 
         // Avval "qayerga" skladini tanlash (o'z skladidan tashqari)
         pickStore.launch(Intent(this, StorePickerActivity::class.java).apply {
