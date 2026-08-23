@@ -140,6 +140,13 @@ class WriteoffActivity : AppCompatActivity() {
                 qPackInfo.visibility = View.VISIBLE
                 qInput.setText("1")
             }
+            // QR dagi GTIN-14 BLOK ekanini ko'rsatyapti, lekin ichida nechta
+            // dona ekani MoySklad'da ro'yxatdan o'tmagan — xodim o'zi kiritadi.
+            product.optBoolean("pack_unknown", false) -> {
+                qPackInfo.visibility = View.VISIBLE
+                qPackInfo.text = "\uD83D\uDCE6 BLOK kodi \u2014 ichidagi DONA sonini kiriting"
+                qInput.setText("")
+            }
             else -> {
                 qPackInfo.visibility = View.GONE
                 qInput.setText("1")

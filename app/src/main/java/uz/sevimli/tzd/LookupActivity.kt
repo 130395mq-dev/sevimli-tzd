@@ -111,6 +111,10 @@ class LookupActivity : AppCompatActivity() {
                 val u = json.optString("uom", "").let { if (it.isBlank()) "dona" else it }
                 b.pPackInfo.text = "📦 Upakovka: 1 × ${trimNum(packQty)} $u"
             }
+            json.optBoolean("pack_unknown", false) -> {
+                b.pPackInfo.visibility = View.VISIBLE
+                b.pPackInfo.text = "\uD83D\uDCE6 BLOK kodi (ichidagi dona soni ko'rsatilmagan)"
+            }
             else -> b.pPackInfo.visibility = View.GONE
         }
 

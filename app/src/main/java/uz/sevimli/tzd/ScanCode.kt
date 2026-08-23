@@ -35,7 +35,34 @@ object ScanCode {
         val expiry: String? = null,
         /** BLOK/QUTI ichidagi dona soni (GS1 "37"/"30") — bo'lsa */
         val count: Int? = null,
+        /** GTIN-14 ning birinchi raqami: 1-8 bo'lsa BLOK/QUTI, aks holda null */
+        val packLevel: Int? = null,
     )
+
+    /** EAN-13 nazorat raqami (12 xonali asosdan). */
+    private fun ean13Check(base12: String): String {
+        var total = 0
+        for ((i, c) in base12.withIndex()) total += (c - '0') * (if (i % 2 == 0) 1 else 3)
+        return ((10 - total % 10) % 10).toString()
+    }
+
+    /**
+     * GTIN-14 dan EAN-13 ga TO'G'RI o'tkazish.
+     * Birinchi raqamni shunchaki tashlash NOTO'G'RI — nazorat raqami boshqacha.
+     * Masalan 14780012960099 -> 4780012960092 (sodda usul ...099 berardi).
+     */
+    fun gtin14ToEan13(g: String): String? {
+        if (g.length != 14 || !g.all { it.isDigit() }) return null
+        val base = g.substring(1, 13)
+        return base + ean13Check(base)
+    }
+
+    /** Qadoqlash darajasi: 0 = dona, 1-8 = BLOK/QUTI, 9 = o'zgaruvchan og'irlik. */
+    fun packLevelOf(g: String): Int? {
+        if (g.length != 14 || !g.all { it.isDigit() }) return null
+        val d = g[0] - '0'
+        return if (d in 1..8) d else null
+    }
 
     /** Uzunligi qat'iy belgilangan AI'lar */
     private val FIXED_AI = mapOf(
@@ -120,6 +147,7 @@ object ScanCode {
                 batch = ai["10"],
                 expiry = ai["17"],
                 count = cnt,
+                packLevel = packLevelOf(ai["01"] ?: ai["02"] ?: ""),
             )
         }
 

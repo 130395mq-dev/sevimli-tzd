@@ -170,9 +170,15 @@ class MoveActivity : AppCompatActivity() {
         val packQty = product.optDouble("pack_qty", 0.0)
         val isPack = product.optBoolean("is_pack", false) && packQty > 0
         val packUom = product.optString("uom", "").let { if (it.isBlank()) "" else " $it" }
+        val packUnknown = product.optBoolean("pack_unknown", false)
         if (isPack) {
             qPackInfo.visibility = View.VISIBLE
             qInput.setText("1")
+        } else if (packUnknown) {
+            // QR BLOK ekanini ko'rsatyapti, lekin ichidagi dona soni noma'lum
+            qPackInfo.visibility = View.VISIBLE
+            qPackInfo.text = "\uD83D\uDCE6 BLOK kodi \u2014 ichidagi DONA sonini kiriting"
+            qInput.setText("")
         } else {
             qPackInfo.visibility = View.GONE
             qInput.setText("1")

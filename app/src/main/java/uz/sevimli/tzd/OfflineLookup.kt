@@ -68,6 +68,10 @@ object OfflineLookup {
         // Bazada upakovka shtrixi bo'lmasa ham, shu son bo'yicha hisoblaymiz.
         if (packQty == null && scan.count != null) packQty = scan.count.toDouble()
 
+        // QR dagi GTIN-14 birinchi raqami 1-8 bo'lsa — bu BLOK kodi, dona emas.
+        // Ichida nechta ekani noma'lum bo'lsa, xodim o'zi kiritadi.
+        val packUnknown = scan.packLevel != null && (packQty == null || packQty <= 0)
+
         val price = product.optLong("price", 0)
         val resp = JSONObject()
             .put("ok", true)
@@ -84,7 +88,8 @@ object OfflineLookup {
             .put("uom", product.optString("uom"))
             .put("store_qty", product.optDouble("store_qty", 0.0))
             .put("pack_qty", packQty ?: JSONObject.NULL)
-            .put("is_pack", packQty != null && packQty > 0)
+            .put("is_pack", (packQty != null && packQty > 0) || packUnknown)
+            .put("pack_unknown", packUnknown)
 
         if (usedScale) {
             val weight = Math.round(scaleValue / 1000.0 * 1000.0) / 1000.0  // gramm -> kg
@@ -106,12 +111,15 @@ object OfflineLookup {
         add(c)
         if (!c.all { it.isDigit() }) return out
         val s = c.trimStart('0')
-        if (c.length == 14) add(c.substring(1))          // GTIN-14 -> EAN-13
+        if (c.length == 14) {
+            add(c.substring(1))                          // sodda (qoidaga xilof, uchraydi)
+            ScanCode.gtin14ToEan13(c)?.let { add(it) }   // to'g'ri hisoblangan
+        }
         if (c.length == 13 && c.startsWith("0")) add(c.substring(1))  // -> UPC-A
         if (c.length == 12) add("0$c")                    // UPC-A -> EAN-13
         add(s)
         if (s.isNotEmpty() && s.length < 13) add(s.padStart(13, '0'))
-        return out.take(6)
+        return out.take(8)
     }
 
     /**
