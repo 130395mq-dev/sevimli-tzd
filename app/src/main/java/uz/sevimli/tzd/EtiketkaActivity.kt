@@ -4,10 +4,9 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import org.json.JSONArray
 import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivityEtiketkaBinding
@@ -24,16 +23,24 @@ class EtiketkaActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityEtiketkaBinding
 
+
     // printer kodi: "godex" | "xprinter" | "opt"
     private var printer = "godex"
 
     data class Lab(val barcode: String, val moyskladId: String, val name: String, var count: Int)
     private val items = mutableListOf<Lab>()
+    /** Ro'yxat adapteri — qatorlarni qayta ishlatadi (RecyclerView). */
+    private val rowAdapter = DocRowAdapter { pos ->
+        items.getOrNull(pos)?.let { editItem(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityEtiketkaBinding.inflate(layoutInflater)
         setContentView(b.root)
+        b.list.layoutManager = LinearLayoutManager(this)
+        b.list.adapter = rowAdapter
+        b.list.setHasFixedSize(true)
 
         b.btnBack.setOnClickListener { finish() }
         b.pGodex.setOnClickListener { setPrinter("godex") }
@@ -70,6 +77,7 @@ class EtiketkaActivity : AppCompatActivity() {
             }
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when {
                     serverErr != null -> {
@@ -123,39 +131,16 @@ class EtiketkaActivity : AppCompatActivity() {
     }
 
     private fun renderList() {
-        b.list.removeAllViews()
         b.emptyHint.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         val total = items.sumOf { it.count }
         b.totalCount.text = "Mahsulot: ${items.size} · Yorliq: $total"
         b.btnPrint.isEnabled = items.isNotEmpty()
         b.btnPrint.alpha = if (items.isEmpty()) 0.5f else 1f
-        for (item in items) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(16f), dp(14f), dp(16f), dp(14f))
-            }
-            val nameTv = TextView(this).apply {
-                text = item.name; textSize = 15f
-                setTextColor(getColor(R.color.text_dark))
-                layoutParams = LinearLayout.LayoutParams(0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val qtyTv = TextView(this).apply {
-                text = "×${item.count}"; textSize = 18f
-                setTextColor(getColor(R.color.brand))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            }
-            row.addView(nameTv); row.addView(qtyTv)
-            row.setOnClickListener { editItem(item) }
-            b.list.addView(row)
-            val div = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 1)
-                setBackgroundColor(getColor(R.color.card_stroke))
-            }
-            b.list.addView(div)
-        }
+        // Ro'yxat adapterga beriladi — RecyclerView faqat ko'rinib
+        // turgan qatorlarni chizadi (ilgari hammasi qayta yasalardi).
+        rowAdapter.submit(items.map { item ->
+            DocRowAdapter.Row(item.name, "\u00D7${item.count}")
+        })
     }
 
     private fun editItem(item: Lab) {
@@ -176,8 +161,16 @@ class EtiketkaActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Yuborish qulfi — ikki marta bosilsa ikkinchi so'rov ketmaydi. */
+    private val busy = Busy()
+
+    /** Shu chop buyrug'ining yagona kaliti (takror-himoya uchun).
+     *  Muvaffaqiyatdan keyin yangilanadi — keyingi chop alohida buyruq. */
+    private var printUuid = java.util.UUID.randomUUID().toString()
+
     private fun sendPrint() {
         if (items.isEmpty()) return
+        if (!busy.start(b.btnPrint)) return    // allaqachon yuborilyapti
         val arr = JSONArray()
         for (it in items) {
             arr.put(JSONObject().apply {
@@ -187,6 +180,9 @@ class EtiketkaActivity : AppCompatActivity() {
             })
         }
         val body = JSONObject().apply {
+            // TAKROR-HIMOYA: shu chop buyrug'ining yagona kaliti. Tarmoq uzilib
+            // ilova qayta yuborsa ham, server yorliqlarni IKKI MARTA bosmaydi.
+            put("client_uuid", printUuid)
             put("printer", printer)
             put("price_mode", Config.priceMode(this@EtiketkaActivity))  // chakana / ulgurji
             put("items", arr)
@@ -195,11 +191,15 @@ class EtiketkaActivity : AppCompatActivity() {
         thread {
             val result = Api.post(this, "print-label", body)
             runOnUiThread {
+                busy.stop(b.btnPrint)
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
                         Toast.makeText(this, "Chopga yuborildi ✓", Toast.LENGTH_SHORT).show()
                         items.clear(); renderList()
+                        // Keyingi chop — ALOHIDA buyruq, yangi kalit bilan
+                        printUuid = java.util.UUID.randomUUID().toString()
                     }
                     is ApiResult.Error -> {
                         Toast.makeText(this,
@@ -211,7 +211,6 @@ class EtiketkaActivity : AppCompatActivity() {
         }
     }
 
-    private fun dp(v: Float) = (v * resources.displayMetrics.density).toInt()
 
     override fun onResume() {
         super.onResume()

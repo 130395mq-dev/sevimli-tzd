@@ -42,7 +42,15 @@ object ScannerBridge {
         "com.honeywell.decode.DecodeResult",             // Honeywell
         "scan.rcv.message",                              // umumiy
         "com.scanner.broadcast",                         // umumiy
-        "uz.jamlov.SCAN",                                // o'zimiz sozlashimiz mumkin
+        // "uz.jamlov.SCAN" OLIB TASHLANDI (xavfsizlik).
+        //
+        // Bu bizning O'Z signalimiz edi va uni HECH KIM yubormasdi — ya'ni
+        // hech qanday foyda bermasdi. Lekin skaner signallarini tinglash
+        // uchun qabul qiluvchi "eksport" qilingan bo'lishi shart, ya'ni
+        // terminalga o'rnatilgan ISTALGAN dastur shu signalni yuborib,
+        // ochiq turgan hujjatga o'zi xohlagan tovarni "skanerlab" qo'yishi
+        // mumkin edi. Nomi bizga tegishli bo'lgani uchun uni topish ham
+        // oson edi. Endi u yo'q.
     )
 
     /** Kod qaysi maydonda kelishi mumkin — mos kelmasa ham hammasi ko'riladi. */
@@ -95,19 +103,38 @@ object ScannerBridge {
 
     /** Signal ichidan tovar kodini topadi (maydon nomi turlicha bo'lishi mumkin). */
     private fun extractCode(intent: Intent?): String? {
-        val ex = intent?.extras ?: return null
-        // 1) Avval ma'lum maydon nomlari
+        val action = intent?.action ?: return null
+        // XAVFSIZLIK: faqat ro'yxatdagi ISHLAB CHIQARUVCHI signallari qabul
+        // qilinadi. Bu qabul qiluvchi "eksport" bo'lishi shart (skaner
+        // xizmati boshqa jarayondan yuboradi), shuning uchun kelgan
+        // signalning turini qat'iy tekshiramiz.
+        if (action !in RESULT_ACTIONS) return null
+        val ex = intent.extras ?: return null
+        // 1) Avval ma'lum maydon nomlari.
+        //    DIQQAT: `sane()` null qaytarsa QIDIRUV DAVOM ETADI. Ilgari shu
+        //    yerda `return sane(v)` turgan edi — bitta g'alati maydon
+        //    (masalan juda uzun matn) butun skanni yo'q qilib yuborardi,
+        //    holbuki keyingi maydonda haqiqiy shtrix turgan bo'lishi mumkin.
         for (k in KNOWN_KEYS) {
-            val v = readString(ex.get(k))
-            if (!v.isNullOrBlank()) return v
+            sane(readString(ex.get(k)))?.let { return it }
         }
-        // 2) Topilmasa — barcha maydonlarni ko'rib chiqamiz
+        // 2) Topilmasa — barcha maydonlarni ko'rib chiqamiz.
+        //    (Bu KERAK: har terminal ishlab chiqaruvchisi maydonni o'zicha
+        //     nomlaydi va hammasini oldindan bilib bo'lmaydi.)
         for (k in ex.keySet()) {
             if (k.contains("type", true) || k.contains("label", true)) continue
             val v = readString(ex.get(k))
-            if (!v.isNullOrBlank() && v.length >= 4) return v
+            if (!v.isNullOrBlank() && v.length >= 4) sane(v)?.let { return it }
         }
         return null
+    }
+
+    /** Shtrix koddan kutilmagan uzun/ko'p qatorli matnni kesib tashlaydi. */
+    private fun sane(v: String?): String? {
+        if (v.isNullOrBlank()) return null
+        val one = v.lineSequence().firstOrNull()?.trim() ?: return null
+        if (one.isEmpty() || one.length > 256) return null
+        return one
     }
 
     private fun readString(v: Any?): String? = when (v) {

@@ -57,6 +57,44 @@ object ScanCode {
         return base + ean13Check(base)
     }
 
+    /**
+     * Nazorat raqami to'g'rimi — EAN-8, UPC-A, EAN-13, GTIN-14 uchun.
+     * Har bir GTIN ning oxirgi raqami qolganlaridan hisoblanadi, shuning uchun
+     * "bu haqiqiy shtrixmi yoki tasodifiy raqammi" degan savolga javob beradi.
+     */
+    fun gtinCheckOk(code: String?): Boolean {
+        val c = code ?: return false
+        if (!c.all { it.isDigit() } || c.length !in listOf(8, 12, 13, 14)) return false
+        var total = 0
+        val body = c.substring(0, c.length - 1)
+        for ((i, ch) in body.reversed().withIndex()) {
+            total += (ch - '0') * (if (i % 2 == 0) 3 else 1)
+        }
+        return ((10 - total % 10) % 10).toString() == c.last().toString()
+    }
+
+    /**
+     * Aralash matn ichidan HAQIQIY shtrixni topadi.
+     *
+     * Ba'zi korxonalar QR ichiga o'z formatini yozadi, masalan:
+     *   GBS-020-4780069000192-BE644-05f09676-24dc-4765-ac16-56dbe4b5ce27
+     * Bu GS1 ham emas, havola ham emas. Lekin ichida haqiqiy EAN-13
+     * (4780069000192) turibdi — atrofi ichki raqamlar va UUID.
+     *
+     * XAVFSIZLIK: faqat nazorat raqami TO'G'RI keladigan bo'lak olinadi,
+     * aks holda UUID ichidagi tasodifiy raqam noto'g'ri tovar chiqarib qo'yardi.
+     * Ataylab faqat ajratgich bilan bo'lingan BUTUN bo'laklar ko'riladi.
+     */
+    fun embeddedBarcode(text: String?): String? {
+        val s = (text ?: "").trim()
+        if (s.isEmpty() || s.all { it.isDigit() }) return null
+        var best: String? = null
+        for (tok in s.split(Regex("\\D+"))) {
+            if (gtinCheckOk(tok) && (best == null || tok.length > best!!.length)) best = tok
+        }
+        return best
+    }
+
     /** Qadoqlash darajasi: 0 = dona, 1-8 = BLOK/QUTI, 9 = o'zgaruvchan og'irlik. */
     fun packLevelOf(g: String): Int? {
         if (g.length != 14 || !g.all { it.isDigit() }) return null
@@ -152,11 +190,18 @@ object ScanCode {
         }
 
         if (s.length >= 4 && s.substring(0, 4).lowercase() == "http") {
-            return Result(codeFromUrl(s) ?: "", "url")
+            return Result(codeFromUrl(s) ?: embeddedBarcode(s) ?: "", "url")
         }
 
         val clean = clean2d(s)
         if (clean.isNotEmpty() && clean.all { it.isDigit() }) return Result(clean, "barcode")
+
+        // Korxonaning o'z QR formati — ichida shtrix bor
+        // ("GBS-020-4780069000192-BE644-..." kabi)
+        embeddedBarcode(clean)?.let {
+            return Result(it, "embedded", packLevel = packLevelOf(it))
+        }
+
         return Result(clean, "unknown")
     }
 }

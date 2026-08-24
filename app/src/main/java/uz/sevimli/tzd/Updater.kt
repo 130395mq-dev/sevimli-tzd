@@ -28,6 +28,17 @@ object Updater {
     private const val VERSION_URL =
         "https://github.com/130395mq-dev/sevimli-tzd/releases/latest/download/version.json"
 
+    // APK FAQAT shu manzildan yuklanadi.
+    //
+    // XAVFSIZLIK: ilgari yuklab olish manzili version.json ICHIDAN olinardi
+    // va hech tekshirilmasdi. Ya'ni o'sha faylni o'zgartira olgan har kim
+    // (relizga yozish huquqi, GitHub Actions'dagi uchinchi tomon amali)
+    // butun parkka ISTALGAN manzildan APK yuklatib, o'rnatish oynasini
+    // ochtira olardi — majburiy yangilanish oynasi esa xodimni "Ha" bosishga
+    // o'rgatib qo'ygan.
+    private const val ALLOWED_APK_PREFIX =
+        "https://github.com/130395mq-dev/sevimli-tzd/releases/"
+
     private data class Info(
         val versionCode: Int,
         val versionName: String,
@@ -142,12 +153,32 @@ object Updater {
         val dlg = AlertDialog.Builder(activity).setView(box).setCancelable(false).create()
         dlg.show()
 
+        // Manzil o'zimizning reliz sahifamizdan bo'lmasa — umuman yuklamaymiz.
+        if (!info.url.startsWith(ALLOWED_APK_PREFIX)) {
+            dlg.dismiss()
+            busy = false
+            AlertDialog.Builder(activity)
+                .setTitle("Yangilanish bloklandi")
+                .setMessage("Yangilanish manbasi ishonchsiz. Administratorga xabar bering.")
+                .setCancelable(false)
+                .setPositiveButton("Yopish", null)
+                .show()
+            return
+        }
         thread {
             val file = try {
                 download(activity, info.url) { pct ->
                     activity.runOnUiThread {
-                        bar.progress = pct
-                        label.text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda... $pct%"
+                        if (activity.isFinishing) return@runOnUiThread
+                        if (pct >= 0) {
+                            bar.isIndeterminate = false
+                            bar.progress = pct
+                            label.text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda... $pct%"
+                        } else {
+                            // Hajm noma'lum — aylanuvchi indikator
+                            bar.isIndeterminate = true
+                            label.text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda..."
+                        }
                     }
                 }
             } catch (e: Exception) { null }
@@ -178,14 +209,20 @@ object Updater {
             readTimeout = 8000
             instanceFollowRedirects = true
         }
-        conn.inputStream.bufferedReader().use { r ->
-            val j = JSONObject(r.readText())
-            return Info(
-                j.optInt("versionCode"),
-                j.optString("versionName"),
-                j.optString("notes"),
-                j.optString("url"),
-            )
+        // Ulanish har doim yopiladi — ilgari `disconnect()` chaqirilmasdi va
+        // har tekshiruvda ochiq soket qolib ketardi.
+        try {
+            conn.inputStream.bufferedReader().use { r ->
+                val j = JSONObject(r.readText())
+                return Info(
+                    j.optInt("versionCode"),
+                    j.optString("versionName"),
+                    j.optString("notes"),
+                    j.optString("url"),
+                )
+            }
+        } finally {
+            try { conn.disconnect() } catch (_: Exception) {}
         }
     }
 
@@ -199,30 +236,107 @@ object Updater {
             readTimeout = 30000
             instanceFollowRedirects = true
         }
-        val total = conn.contentLength
-        conn.inputStream.use { input ->
-            out.outputStream().use { output ->
-                val buf = ByteArray(16 * 1024)
-                var read: Int
-                var done = 0L
-                var lastPct = -1
-                while (input.read(buf).also { read = it } != -1) {
-                    output.write(buf, 0, read)
-                    done += read
-                    if (total > 0) {
-                        val pct = (done * 100 / total).toInt()
-                        if (pct != lastPct) {
-                            lastPct = pct
-                            onProgress(pct)
+        // GitHub APK'ni "chunked" holda yuborsa contentLength = -1 bo'ladi.
+        // ILGARI shunda foiz umuman ko'rsatilmasdi va MAJBURIY yangilanish
+        // oynasida "Yuklanmoqda... 0%" butun yuklash davomida turib qolardi.
+        // DIQQAT: contentLengthLong faqat Android 7.0 (API 24) dan bor,
+        // ilovaning eng past versiyasi esa API 21. Eski terminalda u
+        // NoSuchMethodError bilan yiqilardi — va bu MAJBURIY yangilanish
+        // yo'li bo'lgani uchun ilova umuman ishlamay qolardi.
+        val total: Long =
+            if (android.os.Build.VERSION.SDK_INT >= 24) conn.contentLengthLong
+            else conn.contentLength.toLong()
+        try {
+            conn.inputStream.use { input ->
+                out.outputStream().use { output ->
+                    val buf = ByteArray(16 * 1024)
+                    var read: Int
+                    var done = 0L
+                    var lastPct = -1
+                    var lastMb = -1
+                    while (input.read(buf).also { read = it } != -1) {
+                        output.write(buf, 0, read)
+                        done += read
+                        if (total > 0) {
+                            val pct = (done * 100 / total).toInt()
+                            if (pct != lastPct) {
+                                lastPct = pct
+                                onProgress(pct)
+                            }
+                        } else {
+                            // Hajm noma'lum — har megabaytda belgi beramiz,
+                            // shunda oyna "qotib qolgan"dek ko'rinmaydi.
+                            val mb = (done / (1024 * 1024)).toInt()
+                            if (mb != lastMb) {
+                                lastMb = mb
+                                onProgress(-1)
+                            }
                         }
                     }
                 }
             }
+        } finally {
+            try { conn.disconnect() } catch (_: Exception) {}
         }
         return out
     }
 
+    /**
+     * Yuklab olingan APK HAQIQATAN ham shu ilovaning yangi versiyasimi?
+     *
+     * Ikkita narsa tekshiriladi:
+     *   1) paket nomi bir xilmi (aks holda u ALOHIDA ilova bo'lib o'rnatiladi —
+     *      Android'ning "bir xil imzo" qoidasi bunga to'sqinlik qilmaydi);
+     *   2) imzolovchi sertifikat aynan bizniki-mi.
+     *
+     * Ikkalasi ham mos kelmasa — o'rnatish OCHILMAYDI.
+     */
+    private fun verifyApk(activity: Activity, file: File): Boolean {
+        return try {
+            val pm = activity.packageManager
+            @Suppress("DEPRECATION")
+            val flag = if (Build.VERSION.SDK_INT >= 28)
+                android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+            else
+                android.content.pm.PackageManager.GET_SIGNATURES
+            val info = pm.getPackageArchiveInfo(file.absolutePath, flag) ?: return false
+            if (info.packageName != activity.packageName) return false
+
+            @Suppress("DEPRECATION")
+            val newSigs: Array<android.content.pm.Signature>? =
+                if (Build.VERSION.SDK_INT >= 28)
+                    (info.signingInfo?.apkContentsSigners ?: info.signatures)
+                else info.signatures
+            @Suppress("DEPRECATION")
+            val cur = pm.getPackageInfo(activity.packageName, flag)
+            @Suppress("DEPRECATION")
+            val curSigs: Array<android.content.pm.Signature>? =
+                if (Build.VERSION.SDK_INT >= 28)
+                    (cur.signingInfo?.apkContentsSigners ?: cur.signatures)
+                else cur.signatures
+            if (newSigs.isNullOrEmpty() || curSigs.isNullOrEmpty()) return false
+            val a = newSigs.map { it.toCharsString() }.toHashSet()
+            val b = curSigs.map { it.toCharsString() }.toHashSet()
+            a == b
+        } catch (e: Throwable) {
+            false
+        }
+    }
+
     private fun install(activity: Activity, file: File) {
+        if (!verifyApk(activity, file)) {
+            try { file.delete() } catch (_: Exception) {}
+            AlertDialog.Builder(activity)
+                .setTitle("Yangilanish bloklandi")
+                .setMessage(
+                    "Yuklab olingan fayl imzosi mos kelmadi — o'rnatish to'xtatildi.\n" +
+                    "Administratorga xabar bering."
+                )
+                .setCancelable(false)
+                .setPositiveButton("Yopish", null)
+                .show()
+            return
+        }
         val uri = FileProvider.getUriForFile(
             activity, "${activity.packageName}.fileprovider", file
         )

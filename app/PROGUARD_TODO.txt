@@ -1,29 +1,27 @@
-DEFERRED HARDENING TASKS (require a full build + on-device test before shipping)
+BAJARILDI — v6.1 (bu fayl tarix uchun qoldirildi)
 ================================================================================
 
-The following two changes were intentionally NOT applied during the audit
-hardening pass because they cannot be validated without a real build and a
-device test against the live warehouse-terminal fleet. Applying them blind
-risks breaking already-configured production terminals.
+1) Kod tozalash (minifyEnabled + R8)  —  BAJARILDI
+   Holati: `minifyEnabled true` + `shrinkResources true`, qoidalar
+   `app/proguard-rules.pro` da.
 
-1) Enable code shrinking / obfuscation (minifyEnabled + R8/ProGuard)
-   - Recommended: set `minifyEnabled true` (and `shrinkResources true`) in the
-     release buildType, add a proguard-rules.pro with keep rules.
-   - RISK: R8 can strip/obfuscate reflection-based code (Gson/Moshi models,
-     view-binding, any JSON (de)serialization, EncryptedSharedPreferences /
-     Tink keysets). Without keep rules and a device smoke test this can
-     silently corrupt network payloads or crash at runtime.
-   - Action: add keep rules, build a release APK, run the full flow (setup,
-     login, lookup, supply, move, documents, labels) on a test terminal.
+   Qanday XAVFSIZ qilingani:
+     * `-dontobfuscate` — sinf NOMLARI o'zgartirilmaydi. R8 ning eng xavfli
+       qismi shu edi (refleksiya nom bo'yicha ishlaydi). Ishlatilmaydigan
+       kodni olib tashlash esa qoladi — asosiy foyda shunda.
+     * `-keep class uz.sevimli.tzd.** { *; }` — ilovaning O'Z kodiga
+       umuman tegilmaydi.
+     * Tink / androidx.security uchun aniq keep qoidalari — token
+       shifrlash buzilmaydi.
+     * `resources.getIdentifier(...)` butunlay olib tashlandi
+       (MenuFunctions.icon endi `@DrawableRes Int`) — shusiz resurs
+       tozalash dashboard ikonkalarini o'chirib yuborardi.
+     * `proguard-android.txt` (optimize varianti EMAS) — ehtiyot uchun.
 
-2) Raise minSdk
-   - Current minSdk = 21. EncryptedSharedPreferences (androidx.security) is
-     supported on API 23+; on API 21-22 the MasterKey/Tink path can behave
-     differently. Bumping minSdk to 23 would simplify the crypto story.
-   - RISK: any live terminal running Android 5.x (API 21/22) would stop
-     receiving updates / fail to install. Must confirm the fleet's minimum
-     OS version first.
-   - Action: audit deployed OS versions, then bump minSdk and re-test.
+   QOLGAN ISH: birinchi release APK bitta terminalda to'liq sinalsin
+   (sozlash, kirish, skan, приёмка, перемещение, hujjatlar, etiketka).
+   Shundan keyin butun parkga tarqatilsin.
 
-Both are recommended for the government cybersecurity audit but are DEFERRED
-pending a proper build + device test.
+2) minSdk ni ko'tarish  —  QILINMADI (ataylab)
+   minSdk = 21. Parkda Android 9 (m71) terminallar bor, ular ishlayapti.
+   minSdk ni ko'tarish ularni yangilanishdan uzib qo'yadi. Zarurat yo'q.

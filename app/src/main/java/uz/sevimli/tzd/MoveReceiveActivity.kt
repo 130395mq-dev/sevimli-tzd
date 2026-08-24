@@ -6,10 +6,10 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import org.json.JSONArray
 import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivityMoveReceiveBinding
@@ -24,6 +24,11 @@ class MoveReceiveActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityMoveReceiveBinding
     private val items = mutableListOf<RecvItem>()
+
+    /** Ro'yxat adapteri — qatorlarni qayta ishlatadi (RecyclerView). */
+    private val rowAdapter = RecvRowAdapter { pos ->
+        items.getOrNull(pos)?.let { editItem(it) }
+    }
     private var moveId: String = ""
 
     // Miqdor oynasi ochiq turganda kelgan skanni ushlash uchun (Приёмка kabi)
@@ -45,6 +50,9 @@ class MoveReceiveActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         b = ActivityMoveReceiveBinding.inflate(layoutInflater)
         setContentView(b.root)
+        b.list.layoutManager = LinearLayoutManager(this)
+        b.list.adapter = rowAdapter
+        b.list.setHasFixedSize(true)
 
         moveId = intent.getStringExtra("move_id") ?: ""
         b.headerName.text = intent.getStringExtra("move_name") ?: "Перемещение"
@@ -63,15 +71,18 @@ class MoveReceiveActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "move-detail", mapOf("id" to moveId))
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
+                        b.btnConfirm.isEnabled = true
+                        b.btnConfirm.alpha = 1f
                         val j = result.json
                         b.headerRoute.text = "${j.optString("source_store")} → ${j.optString("target_store")}"
                         items.clear()
                         val arr = j.optJSONArray("positions") ?: JSONArray()
                         for (i in 0 until arr.length()) {
-                            val p = arr.getJSONObject(i)
+                            val p = arr.optJSONObject(i) ?: continue
                             items.add(RecvItem(
                                 p.optString("product_moysklad_id"),
                                 p.optString("product_type", "product"),
@@ -81,8 +92,13 @@ class MoveReceiveActivity : AppCompatActivity() {
                         }
                         renderList()
                     }
-                    is ApiResult.Error ->
+                    is ApiResult.Error -> {
+                        // ILGARI: ro'yxat bo'sh qolib, "Qabul qilish" tugmasi
+                        // faol turardi — xodim bo'sh hujjatni tasdiqlashi mumkin edi.
+                        b.btnConfirm.isEnabled = false
+                        b.btnConfirm.alpha = 0.5f
                         Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -99,6 +115,7 @@ class MoveReceiveActivity : AppCompatActivity() {
             }
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when {
                     serverErr != null -> {
@@ -232,82 +249,49 @@ class MoveReceiveActivity : AppCompatActivity() {
     }
 
     private fun renderList() {
-        b.list.removeAllViews()
+        // Ro'yxat adapterga beriladi — RecyclerView faqat ko'rinib turgan
+        // qatorlarni chizadi. Ilgari har skandan keyin butun ro'yxat
+        // (kelgan ko'chirishda yuzlab qator bo'lishi mumkin) qayta yasalardi.
         var checked = 0
+        val rows = ArrayList<RecvRowAdapter.Row>(items.size)
         for ((index, item) in items.withIndex()) {
-            if (item.scanned > 0) checked++
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(12f).toInt(), dp(13f).toInt(), dp(16f).toInt(), dp(13f).toInt())
-            }
+            val scanned = item.scanned > 0
+            if (scanned) checked++
 
-            // ---- TARTIB RAQAMI (1, 2, 3 ...) ----
-            // Skan qilingan qator raqami brend rangida — qaysilari bo'lganini
-            // bir qarashda ko'rish uchun.
-            val numTv = TextView(this).apply {
-                text = "${index + 1}"
-                textSize = 13f
-                gravity = android.view.Gravity.CENTER
-                minWidth = dp(26f).toInt()
-                setPadding(dp(4f).toInt(), 0, dp(6f).toInt(), 0)
-                setTextColor(getColor(
-                    if (item.scanned > 0) R.color.brand else R.color.text_gray))
-                if (item.scanned > 0) setTypeface(typeface, android.graphics.Typeface.BOLD)
-            }
-            row.addView(numTv)
-
-            val nameCol = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val nameTv = TextView(this).apply {
-                text = item.name; textSize = 15f
-                setTextColor(getColor(R.color.text_dark))
-            }
-            val statusTv = TextView(this).apply {
-                textSize = 12f
-                setPadding(0, dp(2f).toInt(), 0, 0)
-                when {
-                    item.scanned == 0.0 -> {
-                        text = "Kutilyapti · ${trimNum(item.expected)} dona"
-                        setTextColor(getColor(R.color.text_gray))
-                    }
-                    item.scanned == item.expected -> {
-                        text = "✓ To'liq keldi"
-                        setTextColor(getColor(R.color.brand))
-                    }
-                    item.scanned < item.expected -> {
-                        text = "⚠ Kam keldi (${trimNum(item.expected - item.scanned)} yetmadi)"
-                        setTextColor(getColor(R.color.warning))
-                    }
-                    else -> {
-                        text = "⚠ Ortiq keldi (+${trimNum(item.scanned - item.expected)})"
-                        setTextColor(getColor(R.color.warning))
-                    }
+            val status: String
+            val statusColor: Int
+            when {
+                item.scanned == 0.0 -> {
+                    status = "Kutilyapti \u00B7 ${trimNum(item.expected)} dona"
+                    statusColor = R.color.text_gray
+                }
+                item.scanned == item.expected -> {
+                    status = "\u2713 To'liq keldi"
+                    statusColor = R.color.brand
+                }
+                item.scanned < item.expected -> {
+                    status = "\u26A0 Kam keldi (${trimNum(item.expected - item.scanned)} yetmadi)"
+                    statusColor = R.color.warning
+                }
+                else -> {
+                    status = "\u26A0 Ortiq keldi (+${trimNum(item.scanned - item.expected)})"
+                    statusColor = R.color.warning
                 }
             }
-            nameCol.addView(nameTv); nameCol.addView(statusTv)
 
-            val qtyTv = TextView(this).apply {
-                text = "${trimNum(item.expected)} / ${trimNum(item.scanned)}"
-                textSize = 17f
-                setTextColor(getColor(
-                    if (item.scanned == item.expected && item.scanned > 0) R.color.brand
-                    else R.color.text_dark))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            }
-            row.addView(nameCol); row.addView(qtyTv)
-            row.setOnClickListener { editItem(item) }
-            b.list.addView(row)
-            val div = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 1)
-                setBackgroundColor(getColor(R.color.card_stroke))
-            }
-            b.list.addView(div)
+            rows.add(RecvRowAdapter.Row(
+                num = "${index + 1}",
+                name = item.name,
+                status = status,
+                statusColor = statusColor,
+                qty = "${trimNum(item.expected)} / ${trimNum(item.scanned)}",
+                qtyColor = if (item.scanned == item.expected && item.scanned > 0)
+                    R.color.brand else R.color.text_dark,
+                numColor = if (scanned) R.color.brand else R.color.text_gray,
+                numBold = scanned,
+            ))
         }
+        rowAdapter.submit(rows)
         b.progressText.text = "Tekshirilgan: $checked / ${items.size}"
     }
 
@@ -329,7 +313,14 @@ class MoveReceiveActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Yuborish qulfi — ikki marta bosilsa ikkinchi so'rov ketmaydi. */
+    private val busy = Busy()
+
+    /** Shu qabul qilishning yagona kaliti (takror-himoya uchun). */
+    private val confirmUuid = java.util.UUID.randomUUID().toString()
+
     private fun confirm() {
+        if (busy.isRunning) return               // allaqachon yuborilyapti
         val scannedItems = items.filter { it.scanned > 0 }
         if (scannedItems.isEmpty()) {
             Toast.makeText(this, "Hech qanday tovar skan qilinmadi", Toast.LENGTH_SHORT).show(); return
@@ -351,6 +342,7 @@ class MoveReceiveActivity : AppCompatActivity() {
     }
 
     private fun send(scannedItems: List<RecvItem>) {
+        if (!busy.start(b.btnConfirm)) return    // allaqachon yuborilyapti
         b.loading.visibility = View.VISIBLE
         val lines = JSONArray()
         for (item in scannedItems) {
@@ -361,12 +353,18 @@ class MoveReceiveActivity : AppCompatActivity() {
             })
         }
         val body = JSONObject().apply {
+            // TAKROR-HIMOYA: bitta ko'chirish ikki marta o'tkazilmasin.
+            // Kalit ekran ochilganda yaratiladi va qayta urinishda o'zgarmaydi —
+            // ya'ni tarmoq uzilib qayta yuborilsa ham hujjat bitta bo'ladi.
+            put("client_uuid", confirmUuid)
             put("move_id", moveId)
             put("lines", lines)
         }
         thread {
             val result = Api.post(this, "move-confirm", body)
             runOnUiThread {
+                busy.stop(b.btnConfirm)
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
@@ -399,7 +397,6 @@ class MoveReceiveActivity : AppCompatActivity() {
     /** Kasr xatolarini oldini olish (0.1 + 0.2 muammosi) — 3 xonaga yaxlitlaymiz. */
     private fun round3(d: Double): Double = Math.round(d * 1000.0) / 1000.0
 
-    private fun dp(v: Float) = v * resources.displayMetrics.density
 
     override fun onResume() {
         super.onResume()

@@ -35,7 +35,8 @@ class DocumentsActivity : AppCompatActivity() {
         b.headerDate.text = Config.storeName(this) ?: ""
 
         b.btnBack.setOnClickListener { finish() }
-        b.btnRefresh.setOnClickListener { load() }
+        // Ikki marta bosilsa ikkita so'rov ketmasin
+        b.btnRefresh.setOnClickListener { if (!loading) load() }
 
         val createTarget = when (type) {
             "supply" -> SupplyActivity::class.java
@@ -49,16 +50,38 @@ class DocumentsActivity : AppCompatActivity() {
         if (createTarget != null) {
             b.btnNew.visibility = View.VISIBLE
             b.btnNewText.text = "＋  Yangi hujjat yaratish"
-            b.btnNew.setOnClickListener { startActivity(Intent(this, createTarget)) }
+            // ILGARI: tez ikki marta bosilsa IKKITA hujjat ekrani ochilardi,
+            // har biri o'z raqami bilan — natijada ikkita haqiqiy hujjat.
+            b.btnNew.setOnClickListener {
+                val now = System.currentTimeMillis()
+                if (now - lastNewAt < 1000L) return@setOnClickListener
+                lastNewAt = now
+                loadedAt = 0L    // qaytganda ro'yxat albatta yangilanadi
+                startActivity(Intent(this, createTarget))
+            }
         }
     }
 
+    /** Oxirgi "Yangi hujjat" bosilgan vaqt — takror ochilmasligi uchun. */
+    private var lastNewAt = 0L
+
+    /** Ro'yxat yuklanyaptimi — takror so'rov ketmasligi uchun. */
+    @Volatile private var loading = false
+
+    /** Ro'yxat oxirgi marta qachon olingan. */
+    private var loadedAt = 0L
+
     override fun onResume() {
         super.onResume()
-        load()
+        // ILGARI: ekranga har qaytishda (hujjat oynasini yopganda ham)
+        // ro'yxat qaytadan serverdan olinardi. Endi 20 soniya ichida
+        // qayta so'ralmaydi — "Yangilash" tugmasi doim ishlaydi.
+        if (System.currentTimeMillis() - loadedAt > 20_000L) load()
     }
 
     private fun load() {
+        if (loading) return
+        loading = true
         b.loading.visibility = View.VISIBLE
         b.emptyHint.visibility = View.GONE
         b.list.removeAllViews()
@@ -66,6 +89,11 @@ class DocumentsActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "documents", query)
             runOnUiThread {
+                loading = false
+                // Vaqt belgisi FAQAT muvaffaqiyatda yangilanadi — aks holda
+                // xato bo'lgan ro'yxat 20 soniya qayta so'ralmasdi.
+                if (result is ApiResult.Success) loadedAt = System.currentTimeMillis()
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> render(result.json)
@@ -87,7 +115,8 @@ class DocumentsActivity : AppCompatActivity() {
             return
         }
         for (i in 0 until arr.length()) {
-            b.list.addView(buildCard(arr.getJSONObject(i)))
+            val doc = arr.optJSONObject(i) ?: continue
+            b.list.addView(buildCard(doc))
         }
     }
 
@@ -175,6 +204,7 @@ class DocumentsActivity : AppCompatActivity() {
         thread {
             val r = Api.get(this, "document-detail", mapOf("type" to tcode, "id" to id.toString()))
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (r) {
                     is ApiResult.Success -> showDetailDialog(tcode, id, statusCode, name, r.json)
@@ -220,7 +250,8 @@ class DocumentsActivity : AppCompatActivity() {
         var dlg: AlertDialog? = null
         if (lines != null) {
             for (i in 0 until lines.length()) {
-                listCol.addView(detailRow(lines.getJSONObject(i), i + 1, editable) { lineId, lineName ->
+                val lnObj = lines.optJSONObject(i) ?: continue
+                listCol.addView(detailRow(lnObj, i + 1, editable) { lineId, lineName ->
                     removeLine(tcode, id, lineId, lineName) {
                         dlg?.dismiss()
                         openDetail(tcode, id, name, statusCode, "")
@@ -328,6 +359,7 @@ class DocumentsActivity : AppCompatActivity() {
                 thread {
                     val r = Api.post(this, "document-remove-line", body)
                     runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
                         b.loading.visibility = View.GONE
                         when (r) {
                             is ApiResult.Success -> {
@@ -356,11 +388,15 @@ class DocumentsActivity : AppCompatActivity() {
     }
 
     private fun doRetry(tcode: String, id: Int) {
+        if (loading) return          // allaqachon so'rov ketyapti
+        loading = true
         b.loading.visibility = View.VISIBLE
         val body = JSONObject().put("type", tcode).put("id", id)
         thread {
             val r = Api.post(this, "retry-document", body)
             runOnUiThread {
+                loading = false
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (r) {
                     is ApiResult.Success -> {

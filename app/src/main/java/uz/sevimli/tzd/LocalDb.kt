@@ -13,6 +13,42 @@ import org.json.JSONObject
 class LocalDb private constructor(ctx: Context) :
     SQLiteOpenHelper(ctx.applicationContext, NAME, null, VERSION) {
 
+    /**
+     * Baza tutqichi BIR MARTA olinadi (`warm()` da, obyekt boshqa oqimlarga
+     * ko'rinishidan OLDIN).
+     *
+     * MUAMMO 1: `readableDatabase` / `writableDatabase` xossalari
+     * SQLiteOpenHelper ning O'ZIDA `synchronized(this)` — ya'ni har o'qishda
+     * ham o'sha umumiy qulf olinardi. WAL yoqilgan bo'lsa ham, skan uchun
+     * o'qish so'rovi fondagi yozuv tranzaksiyasini kutib turardi.
+     *
+     * MUAMMO 2 (agar `by lazy` ishlatilsa): yozish metodlari `@Synchronized`
+     * bo'lgani uchun avval `this` qulfini, so'ng lazy qulfini olardi; o'qish
+     * metodlari esa teskari tartibda. Ikki oqim bir vaqtda birinchi marta
+     * bazaga tegsa — o'zaro kutib qotib qolish (deadlock) ehtimoli bor edi.
+     *
+     * YECHIM: tutqich `get()` ichida, obyekt e'lon qilinishidan oldin
+     * ochiladi. Shu payt boshqa oqim bu obyektni ko'rmaydi, ya'ni hech
+     * qanday qulf to'qnashuvi bo'lmaydi.
+     */
+    private lateinit var db: SQLiteDatabase
+
+    /** Bazani ochadi. FAQAT get() dan, obyekt e'lon qilinishidan oldin chaqiriladi. */
+    private fun warm() {
+        db = writableDatabase
+    }
+
+    init {
+        // WAL (Write-Ahead Logging) — O'QISH va YOZISH bir vaqtda ishlaydi.
+        //
+        // MUAMMO: fonda katalog sinxroni 500 tadan mahsulot yozayotganda
+        // skan uchun kerak bo'lgan o'qish so'rovi navbatda kutib turardi.
+        // Sinx har 2 daqiqada ishlagani uchun xodim vaqti-vaqti bilan
+        // "skan kechikdi" holatiga tushardi. WAL bilan o'qish yozishni
+        // kutmaydi.
+        setWriteAheadLoggingEnabled(true)
+    }
+
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE counterparty (id INTEGER PRIMARY KEY, name TEXT)")
         db.execSQL("CREATE INDEX idx_cp_name ON counterparty(name)")
@@ -42,19 +78,22 @@ class LocalDb private constructor(ctx: Context) :
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prod_code ON product(code)")
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prod_art ON product(article)")
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_bc_prod ON barcode(product_id)")
+        // Delta sinx har safar MAX(ms_updated) so'raydi. Indekssiz bu butun
+        // jadvalni o'qish edi — 20 000 tovarda sezilarli, va u har 2 daqiqada
+        // bazani band qilib turardi.
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_prod_upd ON product(ms_updated)")
     }
 
     // ---------------- Kontragentlar ----------------
 
     @Synchronized
     fun replaceCounterparties(arr: JSONArray) {
-        val db = writableDatabase
         db.beginTransaction()
         try {
             db.execSQL("DELETE FROM counterparty")
             val stmt = db.compileStatement("INSERT INTO counterparty(id,name) VALUES(?,?)")
             for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
+                val o = arr.optJSONObject(i) ?: continue
                 stmt.clearBindings()
                 stmt.bindLong(1, o.optInt("id").toLong())
                 stmt.bindString(2, o.optString("name"))
@@ -66,21 +105,21 @@ class LocalDb private constructor(ctx: Context) :
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun counterpartyCount(): Int {
-        readableDatabase.rawQuery("SELECT COUNT(*) FROM counterparty", null).use { c ->
+        db.rawQuery("SELECT COUNT(*) FROM counterparty", null).use { c ->
             return if (c.moveToFirst()) c.getInt(0) else 0
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun searchCounterparties(q: String, limit: Int = 200): JSONArray {
         val out = JSONArray()
         val cur = if (q.isBlank())
-            readableDatabase.rawQuery(
+            db.rawQuery(
                 "SELECT id,name FROM counterparty ORDER BY name LIMIT ?", arrayOf(limit.toString()))
         else
-            readableDatabase.rawQuery(
+            db.rawQuery(
                 "SELECT id,name FROM counterparty WHERE name LIKE ? ORDER BY name LIMIT ?",
                 arrayOf("%$q%", limit.toString()))
         cur.use { c ->
@@ -94,14 +133,13 @@ class LocalDb private constructor(ctx: Context) :
 
     @Synchronized
     fun clearProducts() {
-        writableDatabase.execSQL("DELETE FROM product")
-        writableDatabase.execSQL("DELETE FROM barcode")
+        db.execSQL("DELETE FROM product")
+        db.execSQL("DELETE FROM barcode")
     }
 
     /** MoySklad'da o'chgan tovarlarni (server bergan id ro'yxati) bazadan olib tashlaydi. */
     @Synchronized
     fun deleteProducts(ids: JSONArray) {
-        val db = writableDatabase
         db.beginTransaction()
         try {
             val delP = db.compileStatement("DELETE FROM product WHERE moysklad_id=?")
@@ -120,7 +158,6 @@ class LocalDb private constructor(ctx: Context) :
 
     @Synchronized
     fun upsertProducts(arr: JSONArray) {
-        val db = writableDatabase
         db.beginTransaction()
         try {
             val pStmt = db.compileStatement(
@@ -131,7 +168,7 @@ class LocalDb private constructor(ctx: Context) :
             val insBc = db.compileStatement(
                 "INSERT OR REPLACE INTO barcode(barcode,product_id,pack_qty) VALUES(?,?,?)")
             for (i in 0 until arr.length()) {
-                val p = arr.getJSONObject(i)
+                val p = arr.optJSONObject(i) ?: continue
                 val mid = p.optString("moysklad_id")
                 if (mid.isBlank()) continue
                 pStmt.clearBindings()
@@ -170,7 +207,6 @@ class LocalDb private constructor(ctx: Context) :
 
     @Synchronized
     fun updateStock(stock: JSONObject) {
-        val db = writableDatabase
         db.beginTransaction()
         try {
             db.execSQL("UPDATE product SET store_qty=0")
@@ -189,16 +225,16 @@ class LocalDb private constructor(ctx: Context) :
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun productCount(): Int {
-        readableDatabase.rawQuery("SELECT COUNT(*) FROM product", null).use { c ->
+        db.rawQuery("SELECT COUNT(*) FROM product", null).use { c ->
             return if (c.moveToFirst()) c.getInt(0) else 0
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun maxMsUpdated(): String {
-        readableDatabase.rawQuery(
+        db.rawQuery(
             "SELECT MAX(ms_updated) FROM product WHERE ms_updated IS NOT NULL AND ms_updated<>''",
             null).use { c ->
             return if (c.moveToFirst() && c.getString(0) != null) c.getString(0) else ""
@@ -219,9 +255,9 @@ class LocalDb private constructor(ctx: Context) :
         .put("uom", uom)
         .put("store_qty", qty)
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun productByBarcode(bc: String): JSONObject? {
-        readableDatabase.rawQuery(
+        db.rawQuery(
             "SELECT p.moysklad_id,p.name,p.code,p.article,p.price,p.buy_price,p.uom,p.store_qty,b.pack_qty " +
                 "FROM barcode b JOIN product p ON p.moysklad_id=b.product_id WHERE b.barcode=? LIMIT 1",
             arrayOf(bc)).use { c ->
@@ -234,9 +270,9 @@ class LocalDb private constructor(ctx: Context) :
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun productByCodeOrArticle(code: String): JSONObject? {
-        readableDatabase.rawQuery(
+        db.rawQuery(
             "SELECT moysklad_id,name,code,article,price,buy_price,uom,store_qty FROM product " +
                 "WHERE code=? OR article=? LIMIT 1", arrayOf(code, code)).use { c ->
             if (!c.moveToFirst()) return null
@@ -246,7 +282,7 @@ class LocalDb private constructor(ctx: Context) :
         }
     }
 
-    @Synchronized
+    // O'qish — qulfsiz (WAL tufayli yozish bilan bir vaqtda ishlaydi)
     fun searchProductsResult(q: String, limit: Int = 30): JSONObject {
         // Kod/artikul — PREFIKS (boshlanishi) bo'yicha, nom/shtrix — "ichiga oladi".
         // Tarozi PLU kodlari nol'siz saqlansa ham topilsin (masalan "00123" -> "123").
@@ -268,7 +304,7 @@ class LocalDb private constructor(ctx: Context) :
         args.add("80")  // muvofiqlik saralashdan oldin biroz ko'proq nomzod olamiz
 
         val rows = ArrayList<JSONObject>()
-        readableDatabase.rawQuery(
+        db.rawQuery(
             "SELECT moysklad_id,name,code,article,price,buy_price,uom,store_qty FROM product " +
                 "WHERE $where LIMIT ?",
             args.toTypedArray()).use { c ->
@@ -289,7 +325,7 @@ class LocalDb private constructor(ctx: Context) :
         // AYNAN shtrix terilgan bo'lsa — o'sha shtrixni (upakovka bo'lsa,
         // ichidagi miqdori bilan) qatorga biriktiramiz.
         var exactBcOwner: String? = null
-        readableDatabase.rawQuery(
+        db.rawQuery(
             "SELECT product_id,pack_qty FROM barcode WHERE barcode=? LIMIT 1",
             arrayOf(q)).use { c ->
             if (c.moveToFirst()) {
@@ -343,7 +379,10 @@ class LocalDb private constructor(ctx: Context) :
 
         fun get(ctx: Context): LocalDb =
             INSTANCE ?: synchronized(this) {
-                INSTANCE ?: LocalDb(ctx).also { INSTANCE = it }
+                // warm() E'LON QILISHDAN OLDIN — shu payt obyektni boshqa
+                // oqim ko'rmaydi, ya'ni ochilish paytida qulf to'qnashuvi
+                // bo'lishi mumkin emas.
+                INSTANCE ?: LocalDb(ctx).also { it.warm(); INSTANCE = it }
             }
     }
 }

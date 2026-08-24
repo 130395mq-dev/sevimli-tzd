@@ -36,19 +36,27 @@ object ScanInput {
     /** Shu muddat ichida kelgan bir xil kod — takror deb hisoblanadi. */
     private const val DEDUP_MS = 400L
 
-    @Volatile private var lastCode = ""
-    @Volatile private var lastAt = 0L
+    /**
+     * Takror-himoya holati HAR EKRAN uchun alohida.
+     *
+     * ILGARI: holat butun ilova uchun umumiy edi. Приёмкада bir tovarni
+     * skanerlab, chiqib, Просмотр'da o'sha tovarni darrov skanerlasa —
+     * ikkinchi skan "takror" deb jimgina tashlab yuborilardi.
+     */
+    private class Dedup {
+        private var lastCode = ""
+        private var lastAt = 0L
 
-    /** Kodni bir marta o'tkazadi — qaysi kanaldan kelganidan qat'i nazar. */
-    @Synchronized
-    private fun accept(code: String, onScan: (String) -> Unit) {
-        val c = code.trim()
-        if (c.isEmpty()) return
-        val now = System.currentTimeMillis()
-        if (c == lastCode && now - lastAt < DEDUP_MS) return
-        lastCode = c
-        lastAt = now
-        onScan(c)
+        @Synchronized
+        fun accept(code: String, onScan: (String) -> Unit) {
+            val c = code.trim()
+            if (c.isEmpty()) return
+            val now = System.currentTimeMillis()
+            if (c == lastCode && now - lastAt < DEDUP_MS) return
+            lastCode = c
+            lastAt = now
+            onScan(c)
+        }
     }
 
     /**
@@ -59,6 +67,7 @@ object ScanInput {
      */
     fun bind(act: AppCompatActivity, input: EditText, onScan: (String) -> Unit) {
         val handler = Handler(Looper.getMainLooper())
+        val dedup = Dedup()
         input.showSoftInputOnFocus = false
 
         // --- 1-kanal: Enter ---
@@ -69,7 +78,7 @@ object ScanInput {
             if (isEnterUp) return@setOnEditorActionListener true   // takror hodisa
             val code = input.text.toString().trim()
             input.setText("")
-            if (code.isNotEmpty()) accept(code, onScan)
+            if (code.isNotEmpty()) dedup.accept(code, onScan)
             true
         }
 
@@ -78,7 +87,7 @@ object ScanInput {
             val code = input.text.toString().trim()
             if (code.length >= 4) {
                 input.setText("")
-                accept(code, onScan)
+                dedup.accept(code, onScan)
             }
         }
         input.addTextChangedListener(object : TextWatcher {
@@ -97,7 +106,7 @@ object ScanInput {
             when (e) {
                 Lifecycle.Event.ON_RESUME ->
                     ScannerBridge.setListener { code ->
-                        act.runOnUiThread { accept(code, onScan) }
+                        act.runOnUiThread { dedup.accept(code, onScan) }
                     }
                 Lifecycle.Event.ON_PAUSE -> ScannerBridge.setListener(null)
                 Lifecycle.Event.ON_DESTROY -> handler.removeCallbacks(quiet)

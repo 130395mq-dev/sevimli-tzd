@@ -10,6 +10,14 @@ import uz.sevimli.tzd.databinding.ActivitySplashBinding
 
 class SplashActivity : AppCompatActivity() {
 
+    private val handler = Handler(Looper.getMainLooper())
+    private var goNext: Runnable? = null
+
+    override fun onDestroy() {
+        super.onDestroy()
+        goNext?.let { handler.removeCallbacks(it) }   // ekran yopilsa — o'tish bekor
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val b = ActivitySplashBinding.inflate(layoutInflater)
@@ -30,11 +38,16 @@ class SplashActivity : AppCompatActivity() {
         b.splashVersion.alpha = 0f
         b.splashVersion.animate().alpha(1f).setStartDelay(400).setDuration(500).start()
 
-        Handler(Looper.getMainLooper()).postDelayed({
+        // ILGARI 1400 ms kutilardi — har ochilishda shuncha bekor vaqt.
+        // Logotip animatsiyasi 650 ms, versiya matni 900 ms da tugaydi;
+        // 500 ms yetarli va ilova sezilarli tez ochiladi.
+        goNext = Runnable {
+            if (isFinishing || isDestroyed) return@Runnable
             val next = if (Config.isConfigured(this)) MenuActivity::class.java else SetupActivity::class.java
             startActivity(Intent(this, next))
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
-        }, 1400)
+        }
+        handler.postDelayed(goNext!!, 500)
     }
 }

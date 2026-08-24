@@ -7,10 +7,10 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import org.json.JSONArray
 import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivityMoveBinding
@@ -26,8 +26,13 @@ import kotlin.concurrent.thread
 class MoveActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityMoveBinding
+
     private val fmt = NumberFormat.getInstance(Locale("uz"))
     private val items = mutableListOf<SupplyItem>()
+    /** Ro'yxat adapteri — qatorlarni qayta ishlatadi (RecyclerView). */
+    private val rowAdapter = DocRowAdapter { pos ->
+        items.getOrNull(pos)?.let { editItem(it) }
+    }
     private val clientUuid = UUID.randomUUID().toString()
 
     // Skaner (miqdor oynasi ochiq turganda) uchun holat
@@ -87,6 +92,9 @@ class MoveActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         b = ActivityMoveBinding.inflate(layoutInflater)
         setContentView(b.root)
+        b.list.layoutManager = LinearLayoutManager(this)
+        b.list.adapter = rowAdapter
+        b.list.setHasFixedSize(true)
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnFinish.setOnClickListener { finishDocument() }
@@ -115,6 +123,7 @@ class MoveActivity : AppCompatActivity() {
             }
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when {
                     serverErr != null -> {
@@ -237,35 +246,13 @@ class MoveActivity : AppCompatActivity() {
     }
 
     private fun renderList() {
-        b.list.removeAllViews()
         b.emptyHint.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         b.totalCount.text = "Товар, всего: ${items.size}"
-        for (item in items) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(16f).toInt(), dp(14f).toInt(), dp(16f).toInt(), dp(14f).toInt())
-            }
-            val nameTv = TextView(this).apply {
-                text = item.name; textSize = 15f
-                setTextColor(getColor(R.color.text_dark))
-                layoutParams = LinearLayout.LayoutParams(0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val qtyTv = TextView(this).apply {
-                text = trimNum(item.quantity); textSize = 18f
-                setTextColor(getColor(R.color.brand))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            }
-            row.addView(nameTv); row.addView(qtyTv)
-            row.setOnClickListener { editItem(item) }
-            b.list.addView(row)
-            val div = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 1)
-                setBackgroundColor(getColor(R.color.card_stroke))
-            }
-            b.list.addView(div)
-        }
+        // Ro'yxat adapterga beriladi — RecyclerView faqat ko'rinib
+        // turgan qatorlarni chizadi (ilgari hammasi qayta yasalardi).
+        rowAdapter.submit(items.map { item ->
+            DocRowAdapter.Row(item.name, trimNum(item.quantity))
+        })
     }
 
     private fun editItem(item: SupplyItem) {
@@ -305,7 +292,11 @@ class MoveActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Yuborish qulfi — ikki marta bosilsa ikkinchi so'rov ketmaydi. */
+    private val busy = Busy()
+
     private fun sendDocument() {
+        if (!busy.start(b.btnFinish)) return    // allaqachon yuborilyapti
         b.loading.visibility = View.VISIBLE
         val lines = JSONArray()
         for (item in items) {
@@ -325,6 +316,8 @@ class MoveActivity : AppCompatActivity() {
         thread {
             val result = Api.post(this, "move", body)
             runOnUiThread {
+                busy.stop(b.btnFinish)
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
@@ -377,7 +370,6 @@ class MoveActivity : AppCompatActivity() {
         return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
     }
 
-    private fun dp(v: Float) = v * resources.displayMetrics.density
 
     /** ProductSearchActivity'dan qaytgan tanlovni product_lookup javobi kabi JSON'ga aylantiradi. */
     private fun productFromIntent(data: Intent): JSONObject = JSONObject().apply {

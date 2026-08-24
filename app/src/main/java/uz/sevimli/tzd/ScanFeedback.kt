@@ -27,14 +27,27 @@ object ScanFeedback {
         vibrate(ctx, 200)
     }
 
+    /**
+     * Signal generatori BIR MARTA yaratiladi va saqlanadi.
+     *
+     * ILGARI: har skanda yangi ToneGenerator yaratilib, 150 ms dan keyin
+     * o'chirilardi. Uni yaratish arzon emas (audio kanal ochiladi) va bu
+     * asosiy oqimda bo'lardi. Tez skanerlashda ular ustma-ust to'planib,
+     * skan sekinlashardi.
+     */
+    @Volatile private var toneGen: ToneGenerator? = null
+
+    @Synchronized
+    private fun generator(): ToneGenerator? {
+        if (toneGen == null) {
+            toneGen = try { ToneGenerator(AudioManager.STREAM_MUSIC, 90) } catch (_: Exception) { null }
+        }
+        return toneGen
+    }
+
     private fun beep(tone: Int, ms: Int) {
         try {
-            val tg = ToneGenerator(AudioManager.STREAM_MUSIC, 90)
-            tg.startTone(tone, ms)
-            // Ton tugagach resursni bo'shatamiz
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                try { tg.release() } catch (_: Exception) {}
-            }, (ms + 150).toLong())
+            generator()?.startTone(tone, ms)
         } catch (_: Exception) {
             // ba'zi qurilmalarda ToneGenerator ishlamasligi mumkin — jim o'tkazamiz
         }

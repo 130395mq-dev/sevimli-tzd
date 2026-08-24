@@ -43,7 +43,7 @@ object OfflineQueue {
         val arr = load(ctx)
         val out = JSONArray()
         for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
+            val o = arr.optJSONObject(i) ?: continue
             if (o.optString("uuid") != uuid) out.put(o)
         }
         save(ctx, out)
@@ -53,7 +53,7 @@ object OfflineQueue {
     private fun setError(ctx: Context, uuid: String, msg: String) {
         val arr = load(ctx)
         for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
+            val o = arr.optJSONObject(i) ?: continue
             if (o.optString("uuid") == uuid) o.put("error", msg)
         }
         save(ctx, arr)

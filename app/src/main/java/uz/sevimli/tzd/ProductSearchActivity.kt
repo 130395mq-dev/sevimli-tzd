@@ -67,16 +67,27 @@ class ProductSearchActivity : AppCompatActivity() {
             //    Ilgari har harfda serverni kutardik (0.4–1 soniya) va qidiruv
             //    "kechikayapti" degan shikoyatlar shundan edi.
             val local = try { LocalDb.get(this).searchProductsResult(q) } catch (e: Exception) { null }
-            val localHas = (local?.optJSONArray("products")?.length() ?: 0) > 0
+            val localCount = local?.optJSONArray("products")?.length() ?: 0
+            val localHas = localCount > 0
             if (localHas) runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 if (currentQuery() == q) {
                     b.loading.visibility = View.GONE
                     render(local!!)
                 }
             }
 
-            // 2) Keyin serverdan — narx/qoldiq yangi bo'lsin va bazada yo'q
-            //    (yangi kiritilgan) tovar ham topilsin. Kelgach ro'yxat almashadi.
+            // 2) Serverga FAQAT mahalliy bazada hech narsa topilmaganda boramiz.
+            //
+            //    ILGARI: mahalliy natija chiqqan bo'lsa ham server so'rovi
+            //    baribir ketardi va javob kelganda ro'yxat qayta chizilardi.
+            //    Foydalanuvchi ro'yxat ko'rinib, so'ng bir soniyadan keyin
+            //    sakrab o'zgarganini ko'rardi — va har harf uchun yana bitta
+            //    tarmoq so'rovi ketardi.
+            // Mahalliy bazada YETARLI natija bo'lsa — serverga bormaymiz.
+            // Kam natija bo'lsa (yoki umuman yo'q bo'lsa) serverdan so'raymiz:
+            // MoySklad'ga hozirgina kiritilgan tovar shu yo'l bilan topiladi.
+            if (localCount >= 3) return@thread
             val result = Api.get(this, "product-search", mapOf("q" to q))
             val json: org.json.JSONObject? = when (result) {
                 is ApiResult.Success -> result.json
@@ -85,6 +96,7 @@ class ProductSearchActivity : AppCompatActivity() {
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             val srvCount = json?.optJSONArray("products")?.length() ?: 0
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 if (currentQuery() != q) return@runOnUiThread   // odam boshqa narsa yozdi
                 b.loading.visibility = View.GONE
                 if (json != null && (srvCount > 0 || !localHas)) {
@@ -118,7 +130,7 @@ class ProductSearchActivity : AppCompatActivity() {
         }
         b.hint.visibility = View.GONE
         for (i in 0 until arr.length()) {
-            val p = arr.getJSONObject(i)
+            val p = arr.optJSONObject(i) ?: continue
             b.list.addView(buildRow(p))
         }
     }

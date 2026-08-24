@@ -63,6 +63,7 @@ class SetupActivity : AppCompatActivity() {
             val r = Api.saasPost(this, "login",
                 JSONObject().put("email", email).put("password", pass))
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.btnLogin.isEnabled = true
                 when (r) {
                     is ApiResult.Success -> {
@@ -88,6 +89,7 @@ class SetupActivity : AppCompatActivity() {
         thread {
             val r = Api.saasGet(this, "devices")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.licLoading.visibility = View.GONE
                 when (r) {
                     is ApiResult.Success -> renderLicenses(r.json)
@@ -108,7 +110,7 @@ class SetupActivity : AppCompatActivity() {
         }
         val myId = Config.deviceId(this)
         for (i in 0 until arr.length()) {
-            val d = arr.getJSONObject(i)
+            val d = arr.optJSONObject(i) ?: continue
             val name = d.optString("name")
             val token = d.optString("token")
             val store = d.optString("store_name", "")
@@ -158,6 +160,7 @@ class SetupActivity : AppCompatActivity() {
         thread {
             val r = Api.get(this, "ping")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 when (r) {
                     is ApiResult.Success -> { msg(b.msgLicense, ""); loadStores() }
                     is ApiResult.Error -> msg(b.msgLicense, r.message)
@@ -176,6 +179,7 @@ class SetupActivity : AppCompatActivity() {
         thread {
             val r = Api.get(this, "ping")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.btnToken.isEnabled = true
                 when (r) {
                     is ApiResult.Success -> { msg(b.msgToken, ""); loadStores() }
@@ -194,6 +198,7 @@ class SetupActivity : AppCompatActivity() {
         thread {
             val r = Api.get(this, "stores")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.storeLoading.visibility = View.GONE
                 when (r) {
                     is ApiResult.Success -> renderStores(r.json)
@@ -208,7 +213,7 @@ class SetupActivity : AppCompatActivity() {
         val arr = json.optJSONArray("stores")
         if (arr == null || arr.length() == 0) { msg(b.msgStore, "Filial topilmadi"); return }
         for (i in 0 until arr.length()) {
-            val s = arr.getJSONObject(i)
+            val s = arr.optJSONObject(i) ?: continue
             val id = s.optInt("id")
             val name = s.optString("name")
             val card = CardView(this).apply {
@@ -231,11 +236,17 @@ class SetupActivity : AppCompatActivity() {
         }
     }
 
+    /** Sklad tanlash qulfi — ikkita sklad ketma-ket bosilib qolmasin. */
+    private val storeBusy = Busy()
+
     private fun pickStore(id: Int, name: String) {
+        if (!storeBusy.start()) return
         msg(b.msgStore, "Saqlanmoqda...")
         thread {
             val r = Api.post(this, "set-store", JSONObject().put("store_id", id))
             runOnUiThread {
+                storeBusy.stop()
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 when (r) {
                     is ApiResult.Success -> { Config.setStore(this, id, name); doSync() }
                     is ApiResult.Error -> msg(b.msgStore, r.message)
@@ -255,6 +266,7 @@ class SetupActivity : AppCompatActivity() {
             }
             Config.setConfigured(this, true)
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 Toast.makeText(this, "Tayyor! Ilova ishga tushdi ✓", Toast.LENGTH_LONG).show()
                 startActivity(Intent(this, MenuActivity::class.java))
                 finish()

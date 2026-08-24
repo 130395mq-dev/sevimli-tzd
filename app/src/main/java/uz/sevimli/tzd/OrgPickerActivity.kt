@@ -34,20 +34,35 @@ class OrgPickerActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "organizations")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> render(result.json)
-                    is ApiResult.Error -> Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                    is ApiResult.Error -> showError(result.message)
                 }
             }
         }
+    }
+
+    /** Xato holati: sabab ko'rinadi va "Qayta urinish" tugmasi bo'ladi. */
+    private fun showError(msg: String) {
+        b.list.removeAllViews()
+        b.list.addView(android.widget.TextView(this).apply {
+            text = "Tashkilotlar olinmadi.\n$msg"
+            textSize = 14f
+            setPadding(40, 60, 40, 20)
+        })
+        b.list.addView(android.widget.Button(this).apply {
+            text = "Qayta urinish"
+            setOnClickListener { load() }
+        })
     }
 
     private fun render(json: org.json.JSONObject) {
         b.list.removeAllViews()
         val arr = json.optJSONArray("organizations") ?: return
         for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
+            val o = arr.optJSONObject(i) ?: continue
             val id = o.optString("id")
             val name = o.optString("name")
             val card = CardView(this).apply {

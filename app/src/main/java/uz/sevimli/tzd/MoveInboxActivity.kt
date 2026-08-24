@@ -45,6 +45,7 @@ class MoveInboxActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "move-incoming")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> render(result.json)
@@ -66,7 +67,7 @@ class MoveInboxActivity : AppCompatActivity() {
             return
         }
         for (i in 0 until arr.length()) {
-            val m = arr.getJSONObject(i)
+            val m = arr.optJSONObject(i) ?: continue
             val id = m.optString("id")
             val name = m.optString("name")
             val source = m.optString("source_store")

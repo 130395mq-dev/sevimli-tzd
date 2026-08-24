@@ -62,6 +62,7 @@ class SettingsActivity : AppCompatActivity() {
         thread {
             val result = Api.post(this, "manager-login", body)
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 b.btnLogin.isEnabled = true
                 when (result) {
@@ -105,6 +106,7 @@ class SettingsActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "stores")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> renderStores(result.json)
@@ -133,7 +135,7 @@ class SettingsActivity : AppCompatActivity() {
         val currentId = Config.storeId(this)
 
         for (i in 0 until stores.length()) {
-            val s = stores.getJSONObject(i)
+            val s = stores.optJSONObject(i) ?: continue
             val id = s.optInt("id")
             val name = s.optString("name")
             val selected = id == currentId
@@ -161,12 +163,21 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** Sklad tanlash qulfi — ikkita sklad ketma-ket bosilib qolmasin. */
+    private val storeBusy = Busy()
+
     private fun selectStore(id: Int, name: String) {
+        // ILGARI: so'rov ketayotganda boshqa sklad ham bosilishi mumkin edi.
+        // Ikkala javob kelganda qurilma ko'rsatilganidan BOSHQA skladga
+        // bog'lanib qolishi mumkin edi.
+        if (!storeBusy.start()) return
         b.loading.visibility = View.VISIBLE
         val body = JSONObject().put("store_id", id)
         thread {
             val result = Api.post(this, "set-store", body)
             runOnUiThread {
+                storeBusy.stop()
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {

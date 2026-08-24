@@ -19,7 +19,10 @@ object Api {
 
     private fun deviceInfo(ctx: Context): String {
         devInfo?.let { return it }
-        val v = try { ScannerBridge.deviceInfo(ctx) } catch (e: Exception) { "?" }
+        var v = try { ScannerBridge.deviceInfo(ctx) } catch (e: Exception) { "?" }
+        // Shifrlangan saqlash ishlamay qolgan bo'lsa — buni serverga bildiramiz.
+        // Aks holda bu holat jimgina davom etardi va hech kim bilmasdi.
+        if (Config.plaintextFallback) v = "$v; KEYSTORE-YO'Q"
         devInfo = v
         return v
     }
@@ -27,6 +30,19 @@ object Api {
     /** Obuna to'xtatilgan/muddati tugagan bo'lsa server 403 "blocked" qaytaradi.
      *  Shu global bayroq o'rnatiladi; muvaffaqiyatli javobda tozalanadi. */
     @Volatile var blocked: String? = null
+
+    // --- KUTISH VAQTLARI ---
+    //
+    // ILGARI POST uchun 125 SONIYA turardi. Ya'ni "Yakunlash" bosilganda ilova
+    // eng yomon holatda 8 + 125 = 133 soniya qotib turishi mumkin edi. Xodimlar
+    // "ilova qotib qoldi" deganda ko'pincha aynan shu bo'lgan.
+    //
+    // Server tomonda MoySklad'ga yozish 45 soniyada uziladi (DOC_TIMEOUT), ya'ni
+    // server har holda 45-50 soniyada javob beradi. 60 soniya — server javobini
+    // kutish uchun yetarli, lekin cheksiz kutish emas.
+    private const val CONNECT_MS = 8000
+    private const val POST_READ_MS = 60000
+    private const val GET_READ_MS = 12000
 
     /** GET so'rov (TZD API, token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
@@ -69,8 +85,8 @@ object Api {
             val url = URL("$base/$apiSeg/$path")
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = method
-                connectTimeout = 8000
-                readTimeout = if (body != null) 125000 else 12000
+                connectTimeout = CONNECT_MS
+                readTimeout = if (body != null) POST_READ_MS else GET_READ_MS
                 setRequestProperty("X-Device-Token", token)
                 setRequestProperty("X-Device-Id", Config.deviceId(ctx))
                 setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)

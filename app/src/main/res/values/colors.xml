@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ===== JAMLOV BREND ===== -->
-    <color name="brand">#7C3AED</color>
-    <color name="brand_dark">#6D28D9</color>
-    <color name="brand_soft">#8B5CF6</color>
-    <color name="brand_tint">#EDE9FE</color>
+    <!-- ===== JAMLOV BREND =====
+         Rasmiy palette:
+           #051F20  #0B2B26  #163832  #235347  #8EB69B  #DAF1DE
+         Nomlar O'ZGARMADI (brand, brand_dark, ...) — shu sababli
+         layout va kod fayllarining birortasiga tegilmadi.
+    -->
+    <color name="brand">#235347</color>
+    <color name="brand_dark">#163832</color>
+    <color name="brand_soft">#2F6A57</color>
+    <color name="brand_tint">#DAF1DE</color>
 
     <!-- Neytral -->
-    <color name="bg_light">#F7F8FA</color>
+    <color name="bg_light">#F5F9F6</color>
     <color name="white">#FFFFFF</color>
     <color name="white70">#B3FFFFFF</color>
-    <color name="text_dark">#111827</color>
-    <color name="text_gray">#6B7280</color>
-    <color name="card_stroke">#ECEAF3</color>
-    <color name="pill_gray">#EDE9FE</color>
+    <color name="text_dark">#051F20</color>
+    <color name="text_gray">#6B8078</color>
+    <color name="card_stroke">#E2ECE5</color>
+    <color name="pill_gray">#DAF1DE</color>
 
-    <!-- Holat ranglari -->
+    <!-- Holat ranglari — bular BREND emas, MA'NO ranglari.
+         Muvaffaqiyat/xato/kutish uchun ishlatiladi va shu sababli
+         yashil brenddan farq qilib turishi kerak. -->
     <color name="green_ok">#16A34A</color>
     <color name="green_tint">#DCFCE7</color>
     <color name="amber_wait">#C98A00</color>

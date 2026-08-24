@@ -2,6 +2,7 @@ package uz.sevimli.tzd
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 
 /**
  * Qurilma sozlamalari: backend domeni, qurilma tokeni, tanlangan sklad.
@@ -125,6 +126,19 @@ object Config {
         }
     }
 
+    /**
+     * Shifrlash ishlamay, oddiy (ochiq) prefs'ga tushib qolganmi.
+     *
+     * NEGA KERAK: ilgari bu holat JIMGINA yuz berardi — token ochiq XML'ga
+     * yozilib qolar, buni na xodim, na server bilardi. Endi bayroq qo'yiladi,
+     * u serverga `X-Device-Info` bilan birga yuboriladi (ya'ni qaysi
+     * terminalda shunday bo'lgani loglardan ko'rinadi) va har ishga
+     * tushishда shifrlashga QAYTA urinib ko'riladi.
+     */
+    @Volatile
+    var plaintextFallback: Boolean = false
+        private set
+
     private fun buildPrefs(ctx: Context): SharedPreferences {
         val enc = try {
             val masterKey = androidx.security.crypto.MasterKey.Builder(ctx)
@@ -139,16 +153,42 @@ object Config {
             )
         } catch (e: Throwable) {
             // Shifrlash ishlamadi — ilova qulamasin, eski oddiy prefs bilan davom etamiz.
+            // Lekin bu holat endi KO'RINADI (yuqoridagi izohga qarang).
+            plaintextFallback = true
             return plainPrefs(ctx)
         }
+        plaintextFallback = false
 
         // Birinchi ishga tushishda: eski oddiy prefs'da qiymat bor, lekin shifrlangan
         // do'kon hali bo'sh bo'lsa — barcha sozlamalarni ko'chiramiz (live fleet
         // o'z sozlamasini yo'qotmasin).
         try {
             val old = plainPrefs(ctx)
-            if (enc.all.isEmpty() && old.all.isNotEmpty()) {
+            // Ko'chirish SHARTI: shifrlangan do'konda YETISHMAYOTGAN kalitlar
+            // bo'lsa bas.
+            //
+            // Ilgari sharti "shifrlangan do'kon BUTUNLAY bo'sh bo'lsa" edi.
+            // Bu bir holatда ma'lumot yo'qotardi: agar biror ishga tushishда
+            // shifrlash ishlamay (Keystore xatosi) ilova oddiy prefs'ga
+            // tushib qolsa, o'sha seansdagi yozuvlar (yangi token, sklad)
+            // faqat ochiq faylda qolardi — keyingi safar esa shifrlangan
+            // do'kon "bo'sh emas" bo'lgani uchun ular KO'CHIRILMASDAN
+            // o'chib ketardi.
+            if (old.all.isNotEmpty()) {
                 migratePlainToEncrypted(old, enc)
+            }
+            // KO'CHIRISHDAN KEYIN ESKI FAYLNI O'CHIRAMIZ.
+            //
+            // ILGARIGI JIDDIY KAMCHILIK: qiymatlar shifrlangan do'konga
+            // NUSXALANARDI, lekin eski `sevimli_tzd_prefs.xml` fayli joyida
+            // QOLARDI — ichida device_token va session_token OCHIQ matn
+            // holida. Ya'ni shifrlash aynan o'sha terminallar uchun (butun
+            // mavjud park) hech narsa bermasdi: qurilmaga jismonan ega
+            // bo'lgan odam faylni o'qib tokenni olardi.
+            //
+            // Endi ko'chirish MUVAFFAQIYATLI tugagach eski fayl o'chiriladi.
+            if (old.all.isNotEmpty() && enc.all.isNotEmpty()) {
+                clearPlain(ctx, old)
             }
         } catch (e: Throwable) {
             // Migratsiya muvaffaqiyatsiz bo'lsa ham shifrlangan do'kondan foydalanamiz;
@@ -157,12 +197,33 @@ object Config {
         return enc
     }
 
+    /** Eski ochiq prefs faylini butunlay yo'q qiladi. */
+    private fun clearPlain(ctx: Context, old: SharedPreferences) {
+        try {
+            // commit() — apply() emas: fayl AYNAN shu yerda tozalanishi kerak.
+            old.edit().clear().commit()
+        } catch (e: Throwable) { /* pastdagi o'chirish baribir urinadi */ }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ctx.deleteSharedPreferences(PREFS)
+            } else {
+                // API 21–23 da deleteSharedPreferences yo'q — faylni qo'lda o'chiramiz.
+                val dir = java.io.File(ctx.applicationInfo.dataDir, "shared_prefs")
+                java.io.File(dir, "$PREFS.xml").delete()
+                java.io.File(dir, "$PREFS.xml.bak").delete()
+            }
+        } catch (e: Throwable) { /* o'chmasa ham ichi allaqachon bo'sh */ }
+    }
+
     // Eski oddiy prefs'dagi BARCHA kalitlarni shifrlangan do'konga ko'chiradi
     // (device_token, session_token, store_id, store_name, org_id/org_name,
     // base_url, fn_*, price_mode, configured, device_hw_id va h.k.).
     private fun migratePlainToEncrypted(old: SharedPreferences, enc: SharedPreferences) {
         val editor = enc.edit()
+        val mavjud = enc.all.keys
         for ((key, value) in old.all) {
+            // Shifrlangan do'kondagi qiymat DOIM ustun turadi — u yangiroq.
+            if (key in mavjud) continue
             when (value) {
                 is String -> editor.putString(key, value)
                 is Int -> editor.putInt(key, value)
@@ -176,6 +237,9 @@ object Config {
                 else -> { /* noma'lum tur — o'tkazib yuboriladi */ }
             }
         }
-        editor.apply()
+        // commit() — ko'chirish TUGAGANIGA ishonch hosil qilamiz, chunki
+        // shundan keyin eski fayl o'chiriladi. apply() bilan bo'lsa,
+        // shu orada ilova yopilib qolsa token butunlay yo'qolishi mumkin edi.
+        editor.commit()
     }
 }

@@ -60,6 +60,7 @@ class LookupActivity : AppCompatActivity() {
             }
             val serverErr = (result as? ApiResult.Error)?.takeIf { !it.offline }?.message
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when {
                     serverErr != null -> showError(serverErr)
@@ -134,7 +135,7 @@ class LookupActivity : AppCompatActivity() {
             b.otherLabel.visibility = View.VISIBLE
             b.divider.visibility = View.VISIBLE
             for (i in 0 until others.length()) {
-                val o = others.getJSONObject(i)
+                val o = others.optJSONObject(i) ?: continue
                 val row = TextView(this).apply {
                     text = "• ${o.optString("store")}: ${trimNum(o.optDouble("qty", 0.0))}"
                     textSize = 14f

@@ -31,12 +31,36 @@ class CounterpartyActivity : AppCompatActivity() {
         setContentView(b.root)
 
         b.btnBack.setOnClickListener { finish() }
-        load("")   // mahalliy bazadan — internetsiz ham ishlaydi
+        b.loading.visibility = View.VISIBLE
 
-        // Internet bo'lsa — kontragentlarni jimgina yangilab olamiz
+        // Kontragentlarni yuklab olish.
+        //
+        // ILGARI: bu ekran HAR ochilganda butun kontragent ro'yxati serverdan
+        // to'liq qayta yuklanardi (?all=1, sahifalashsiz). Приёмка boshlanganda
+        // bu ekran avtomatik ochilgani uchun — har приёмкада to'liq yuklash.
+        // Endi: faqat baza bo'sh bo'lganda. Odatdagi yangilashni
+        // CatalogSync.autoRefresh (10 daqiqada bir) qiladi.
+        //
+        // Baza so'rovi ham FON oqimida — u fondagi sinx bilan bir qulfni
+        // ishlatishi mumkin va UI oqimida chaqirilsa ekran muzlab qolardi.
         thread {
-            val ok = CatalogSync.syncCounterparties(this)
-            if (ok) runOnUiThread { load(b.search.text.toString().trim()) }
+            val db = LocalDb.get(this)
+            if (db.counterpartyCount() == 0) {
+                val ok = CatalogSync.syncCounterparties(this)
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    if (ok) load(b.search.text.toString().trim())
+                    else {
+                        b.loading.visibility = View.GONE
+                        showHint("Kontragentlar yuklanmadi — internetni tekshiring.")
+                    }
+                }
+            } else {
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    load("")   // mahalliy bazadan — internetsiz ham ishlaydi
+                }
+            }
         }
 
         b.search.addTextChangedListener(object : TextWatcher {
@@ -52,13 +76,27 @@ class CounterpartyActivity : AppCompatActivity() {
     }
 
     private fun load(q: String) {
-        b.loading.visibility = View.GONE
-        val db = LocalDb.get(this)
-        if (db.counterpartyCount() == 0) {
-            showHint("Kontragentlar hali yuklanmagan.\nBir marta internet bilan oching — keyin offline ham ishlaydi.")
-            return
+        // BAZA SO'ROVI FON OQIMIDA.
+        //
+        // ILGARI bu asosiy (UI) oqimda bajarilardi. Baza obyekti bir vaqtda
+        // faqat bitta amalni bajaradi, ya'ni fonda katalog sinxroni ketayotgan
+        // bo'lsa — ekran o'sha tugaguncha muzlab turardi.
+        thread {
+            // LocalDb.get() BIRINCHI chaqirilganda bazani ochadi (kerak
+            // bo'lsa jadval yaratadi). Uni ham fon oqimida chaqiramiz.
+            val db = LocalDb.get(this)
+            val empty = db.counterpartyCount() == 0
+            val rows = if (empty) null else db.searchCounterparties(q)
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                b.loading.visibility = View.GONE
+                if (empty) {
+                    showHint("Kontragentlar hali yuklanmagan.\nBir marta internet bilan oching — keyin offline ham ishlaydi.")
+                } else {
+                    render(rows!!)
+                }
+            }
         }
-        render(db.searchCounterparties(q))
     }
 
     private fun showHint(text: String) {
@@ -75,7 +113,7 @@ class CounterpartyActivity : AppCompatActivity() {
     private fun render(arr: JSONArray) {
         b.list.removeAllViews()
         for (i in 0 until arr.length()) {
-            val c = arr.getJSONObject(i)
+            val c = arr.optJSONObject(i) ?: continue
             val id = c.optInt("id")
             val name = c.optString("name")
             val card = CardView(this).apply {

@@ -39,13 +39,32 @@ class StorePickerActivity : AppCompatActivity() {
         thread {
             val result = Api.get(this, "stores")
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> render(result.json)
-                    is ApiResult.Error -> Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                    // ILGARI faqat qisqa Toast chiqardi va ekran bo'sh qolardi —
+                    // xodim nima bo'lganini bilmasdi va qayta urinish yo'li yo'q edi.
+                    is ApiResult.Error -> showError(result.message)
                 }
             }
         }
+    }
+
+    /** Xato holati: sabab ko'rinadi va "Qayta urinish" tugmasi bo'ladi. */
+    private fun showError(msg: String) {
+        b.list.removeAllViews()
+        val tv = android.widget.TextView(this).apply {
+            text = "Sklad ro'yxati olinmadi.\n$msg"
+            textSize = 14f
+            setPadding(40, 60, 40, 20)
+        }
+        val btn = android.widget.Button(this).apply {
+            text = "Qayta urinish"
+            setOnClickListener { load() }
+        }
+        b.list.addView(tv)
+        b.list.addView(btn)
     }
 
     private fun render(json: org.json.JSONObject) {
@@ -53,7 +72,7 @@ class StorePickerActivity : AppCompatActivity() {
         val arr = json.optJSONArray("stores") ?: return
         var shown = 0
         for (i in 0 until arr.length()) {
-            val s = arr.getJSONObject(i)
+            val s = arr.optJSONObject(i) ?: continue
             val id = s.optInt("id")
             val name = s.optString("name")
             if (id == excludeId) continue
