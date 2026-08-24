@@ -11,8 +11,8 @@ android {
         applicationId "uz.sevimli.tzd"
         minSdk 21
         targetSdk 34
-        versionCode 63
-        versionName "6.3"
+        versionCode 64
+        versionName "6.4"
     }
 
     signingConfigs {
@@ -45,8 +45,32 @@ android {
             // default bo'yicha ham debug rejimida emas, lekin buni kod ichida
             // ko'rinadigan qilish auditorning birinchi savoliga javob beradi.
             debuggable false
-            minifyEnabled true
-            shrinkResources true
+
+            // KOD TOZALASH (R8) O'CHIRILDI — v6.4 da qaytarildi.
+            //
+            // SABAB: v6.1 da uni yoqqan edik (APK kichrayadi, majburiy
+            // yangilanish ombor Wi-Fi'sida tezroq yuklanadi). Lekin
+            // amalda Google Play Protect yangi APK'ni "Вредоносное
+            // приложение заблокировано" deb BLOKLAB qo'ydi va har bir
+            // terminalda qo'lda "Baribir o'rnatish" bosishga majbur qildi.
+            //
+            // Play Protect uchun eng shubhali kombinatsiya shu:
+            //   Play Store'dan tashqarida tarqatilgan APK
+            //   + kodi siqilgan (minify)
+            //   + ilova o'zi APK o'rnata oladi (REQUEST_INSTALL_PACKAGES)
+            //
+            // v5.8 da `minifyEnabled false` edi va hech qanday ogohlantirish
+            // chiqmasdi. Ya'ni farq aynan shu yerda.
+            //
+            // NIMA YO'QOTAMIZ: APK biroz kattaroq bo'ladi (ishlatilmaydigan
+            // kod olib tashlanmaydi). Ishlash tezligiga, funksiyalarga va
+            // xavfsizlikka TA'SIRI YO'Q — `-dontobfuscate` tufayli R8
+            // baribir nom o'zgartirmayotgan edi.
+            //
+            // NIMA YUTAMIZ: parkdagi har terminal yangilanishni jimgina
+            // qabul qiladi.
+            minifyEnabled false
+            shrinkResources false
             // ATAYLAB `proguard-android.txt` — "optimize" varianti EMAS.
             // Optimize varianti `-allowaccessmodification` va qo'shimcha
             // optimizatsiya bosqichlarini yoqadi; ular `-dontobfuscate` bilan
