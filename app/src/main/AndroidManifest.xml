@@ -57,6 +57,16 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".InventoryInboxActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".InventoryCountActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".MoveInboxActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

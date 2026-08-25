@@ -124,6 +124,9 @@ class MenuActivity : AppCompatActivity() {
         }
         when (fn.key) {
             "move" -> startActivity(Intent(this, MoveInboxActivity::class.java))
+            // Инвентаризация endi MoySklad'da yaratilgan ochiq sanoqlar
+            // ro'yxatini ochadi. "Yangi sanoq" va "Hujjatlar" o'sha ekranda.
+            "inventory" -> startActivity(Intent(this, InventoryInboxActivity::class.java))
             "etiketka" -> startActivity(Intent(this, EtiketkaActivity::class.java))
             else -> openDocs(fn.key, fn.title)
         }
