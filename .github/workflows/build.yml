@@ -12,24 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # XAVFSIZLIK — UCHINCHI TOMON AMALLARINI SHA GA BOG'LASH (qo'lda qilinadi)
-      #
-      # Quyidagi `@v3` / `@v4` — O'ZGARUVCHAN belgilar. Ularning egasi (yoki
-      # o'sha repozitoriyni buzgan odam) belgini boshqa kodga ko'chirsa, o'sha
-      # kod SHU ISHDA, IMZO KALITI bilan bir joyda ishlaydi. Ya'ni kalit ham,
-      # chiqarilayotgan APK ham xavf ostida.
-      #
-      # To'g'ri yechim — har bir uchinchi tomon amalini AYNIQ commit SHA ga
-      # bog'lash. Kerakli SHA ni shunday olasiz:
-      #
-      #   gh api repos/android-actions/setup-android/git/refs/tags/v3 --jq .object.sha
-      #   gh api repos/gradle/actions/git/refs/tags/v4            --jq .object.sha
-      #
-      # va shu ko'rinishda yozasiz:
-      #   uses: android-actions/setup-android@<40-belgili-sha>  # v3
-      #
-      # (`actions/*` va `github/*` — GitHub'ning o'z amallari, ular uchun
-      #  bu talab yumshoqroq, lekin ularni ham bog'lash mumkin.)
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -54,8 +36,6 @@ jobs:
 
       - name: Decode signing keystore
         # Sir buyruq QATORIGA emas, muhit o'zgaruvchisi orqali beriladi.
-        # ${{ secrets.* }} to'g'ridan-to'g'ri `run:` ichiga qo'yilsa, u skript
-        # matniga aylanadi — bu buyruq ichiga kod kiritish (injection) yo'li.
         env:
           KS_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
         run: |
@@ -110,7 +90,12 @@ jobs:
               exit 0
             fi
 
-            if gh release create "$TAG"               --target "$GITHUB_SHA"               --title "$RELEASE_NAME"               --generate-notes               sevimli-tzd.apk               version.json; then
+            if gh release create "$TAG" \
+                 --target "$GITHUB_SHA" \
+                 --title "$RELEASE_NAME" \
+                 --generate-notes \
+                 sevimli-tzd.apk \
+                 version.json; then
               echo "GitHub Release muvaffaqiyatli yaratildi: $TAG"
               exit 0
             fi
