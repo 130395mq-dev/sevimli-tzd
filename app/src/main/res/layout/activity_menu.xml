@@ -7,8 +7,8 @@
     android:background="@color/bg_light">
 
     <!-- ==================== HEADER ====================
-         Logo markazda. Ostida sklad yorlig'i — keng, ikonka va strelka bilan:
-         bosilsa Sozlamalar ochiladi (sklad o'sha yerdan tanlanadi).
+         Logo markazda. Ostida sklad yorlig'i — bosilganda AVVALGIDEK
+         navbatdagi hujjatlar yuboriladi va yangi versiya tekshiriladi.
          O'ng yuqorida qo'ng'iroqcha — yangilik bo'lsa yonida nuqta chiqadi.
          "Yangilash" tugmasi OLIB TASHLANDI: sinx endi fonda o'zi ketadi. -->
     <FrameLayout
@@ -76,12 +76,16 @@
                     android:textSize="15.5sp"
                     android:textStyle="bold" />
 
+                <!-- Strelka EMAS, yangilash belgisi: bu yorliq bosilganda
+                     navbatdagi hujjatlar yuboriladi va yangi versiya
+                     tekshiriladi. Pastga qaragan strelka "ro'yxat ochiladi"
+                     degan noto'g'ri taassurot berardi. -->
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/j_ic_chevron_down"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_refresh"
                     app:tint="@color/white70"
-                    android:contentDescription="Tanlash" />
+                    android:contentDescription="Yangilash" />
             </LinearLayout>
         </LinearLayout>
 

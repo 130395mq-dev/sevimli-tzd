@@ -1,6 +1,9 @@
 package uz.sevimli.tzd
 
 import android.content.Context
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * QO'NG'IROQCHA ostidagi ma'lumot.
@@ -11,6 +14,10 @@ import android.content.Context
  *
  * Maqsad: xodim har bo'limni ochib "bormikan" deb tekshirib yurmasin.
  * Yangilik bo'lsa — qo'ng'iroqcha yonida nuqta chiqadi.
+ *
+ * FAQAT BUGUNGI hujjatlar sanaladi. Ilgari butun tarix qo'shilardi va
+ * qo'ng'iroqchada oylik eski hujjatlar ham turaverardi — xodim uni
+ * o'qishni tashlab qo'yardi. Endi u faqat bugun kelgan ishni ko'rsatadi.
  *
  * Raqamlar HAQIQIY. So'rov o'tmasa — o'sha bo'lim umuman ko'rsatilmaydi.
  */
@@ -50,18 +57,33 @@ object Notices {
             return cached
         }
 
-        val moves = count(ctx, "move-incoming", "moves")
-        val invs = count(ctx, "inventory-open", "inventories")
+        val moves = countToday(ctx, "move-incoming", "moves")
+        val invs = countToday(ctx, "inventory-open", "inventories")
         cached = Data(moves = moves, inventories = invs,
                       pending = pending, updateName = upd)
         cachedAt = now
         return cached
     }
 
-    /** Xato bo'lsa 0 — bo'lim shunchaki ko'rsatilmaydi, xato oynasi chiqmaydi. */
-    private fun count(ctx: Context, path: String, key: String): Int =
-        when (val r = Api.get(ctx, path)) {
-            is ApiResult.Success -> r.json.optJSONArray(key)?.length() ?: 0
-            is ApiResult.Error -> 0
+    /**
+     * Faqat BUGUNGI yozuvlarni sanaydi.
+     *
+     * Server har hujjatni `moment` ("YYYY-MM-DD HH:MM") bilan qaytaradi —
+     * shu maydonning sana qismi bugungi kunga to'g'ri kelsa hisoblanadi.
+     * Yangi so'rov ham, backend o'zgarishi ham kerak emas.
+     *
+     * Xato bo'lsa 0 — bo'lim shunchaki ko'rsatilmaydi, xato oynasi chiqmaydi.
+     */
+    private fun countToday(ctx: Context, path: String, key: String): Int {
+        val r = Api.get(ctx, path)
+        if (r !is ApiResult.Success) return 0
+        val arr = r.json.optJSONArray(key) ?: return 0
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        var n = 0
+        for (i in 0 until arr.length()) {
+            val moment = arr.optJSONObject(i)?.optString("moment") ?: continue
+            if (moment.startsWith(today)) n++
         }
+        return n
+    }
 }

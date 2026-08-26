@@ -33,11 +33,12 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Jamlov"
-        // Sklad yorlig'i — bosilganda Sozlamalar ochiladi (sklad o'sha yerda
-        // tanlanadi). "Yangilash" tugmasi OLIB TASHLANDI: katalog fonda
-        // o'zi yangilanadi (SyncEngine).
+        // Sklad yorlig'i — AVVALGIDEK ishlaydi: navbatda hujjat bo'lsa yuboradi,
+        // bo'lmasa yangi versiyani tekshiradi. Sozlamalarga bu yerdan
+        // kirilmaydi (u pastdagi "Sozlamalar" kartochkasida).
         b.storeBar.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+            if (OfflineQueue.size(this) > 0) flushQueue(manual = true)
+            else Updater.check(this, silent = false)
         }
         b.btnBell.setOnClickListener { showNotices() }
 
@@ -273,14 +274,14 @@ class MenuActivity : AppCompatActivity() {
         }
         if (d.moves > 0) list.add(Notice(
             icon = R.drawable.ic_move,
-            title = "Kelgan ko'chirish",
+            title = "Bugun kelgan ko'chirish",
             sub = "Qabul qilish kutilmoqda",
             count = d.moves.toString(), warn = false,
             action = { startActivity(Intent(this, MoveInboxActivity::class.java)) }))
 
         if (d.inventories > 0) list.add(Notice(
             icon = R.drawable.ic_inventory,
-            title = "Ochiq sanoq",
+            title = "Bugungi sanoq",
             sub = "Davom ettirish mumkin",
             count = d.inventories.toString(), warn = false,
             action = { startActivity(Intent(this, InventoryInboxActivity::class.java)) }))
