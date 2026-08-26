@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  JAMLOV DIZAYN TIZIMI — o'lchamlar.
+
+  NEGA KERAK: ilgari har layoutda o'lchamlar qo'lda yozilgan edi —
+  bir ekranda padding 16dp, boshqasida 14dp, uchinchisida 18dp.
+  Natijada ilova bir butun ko'rinmasdi.
+
+  Endi hamma joy shu qiymatlarga tayanadi. Bittasini o'zgartirsak,
+  butun ilova birdan o'zgaradi.
+
+  DIQQAT: bu FAQAT ko'rinish. Hech qanday mantiqqa aloqasi yo'q.
+-->
+<resources>
+
+    <!-- ===== Oraliqlar (4dp qadam) ===== -->
+    <dimen name="sp_1">4dp</dimen>
+    <dimen name="sp_2">8dp</dimen>
+    <dimen name="sp_3">12dp</dimen>
+    <dimen name="sp_4">16dp</dimen>
+    <dimen name="sp_5">20dp</dimen>
+    <dimen name="sp_6">24dp</dimen>
+    <dimen name="sp_7">32dp</dimen>
+
+    <!-- Ekran cheti -->
+    <dimen name="screen_pad">14dp</dimen>
+
+    <!-- ===== Burchak radiusi ===== -->
+    <dimen name="r_sm">10dp</dimen>
+    <dimen name="r_md">14dp</dimen>
+    <dimen name="r_lg">18dp</dimen>
+    <dimen name="r_pill">100dp</dimen>
+
+    <!-- ===== Matn o'lchamlari =====
+         TSD terminalida qo'lqop bilan, harakatda o'qiladi —
+         shuning uchun odatdagi Android'dan bir oz kattaroq. -->
+    <dimen name="ts_title">22sp</dimen>      <!-- ekran sarlavhasi -->
+    <dimen name="ts_section">16sp</dimen>    <!-- bo'lim sarlavhasi -->
+    <dimen name="ts_body">15sp</dimen>       <!-- asosiy matn -->
+    <dimen name="ts_sub">13sp</dimen>        <!-- ikkilamchi -->
+    <dimen name="ts_micro">11.5sp</dimen>    <!-- eng kichik (yorliq) -->
+    <dimen name="ts_btn">15sp</dimen>
+
+    <!-- ===== Teginish maydonlari =====
+         Android tavsiyasi 48dp. Omborda qo'lqop bilan bosiladi,
+         shuning uchun asosiy tugmalar undan kattaroq. -->
+    <dimen name="touch_min">48dp</dimen>
+    <dimen name="btn_h">52dp</dimen>
+    <dimen name="row_h">56dp</dimen>
+
+    <!-- ===== Ikonka o'lchamlari ===== -->
+    <dimen name="ic_sm">18dp</dimen>
+    <dimen name="ic_md">22dp</dimen>
+    <dimen name="ic_lg">26dp</dimen>
+    <dimen name="ic_box">42dp</dimen>        <!-- ikonka atrofidagi kvadrat -->
+
+</resources>

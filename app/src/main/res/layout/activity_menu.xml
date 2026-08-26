@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  BOSH SAHIFA.
+
+  Tuzilishi:
+    1. Header  = logo (MARKAZDA, katta) + izoh + sklad yorlig'i.
+                 Sozlamalar o'ng yuqori burchakda, logoni markazda
+                 qoldirish uchun.
+    2. Bugungi ishlar = ixcham lenta, o'zi chapga siljib turadi.
+    3. Asosiy funksiyalar = 2 ustunli kartochkalar (KODDAN yasaladi).
+
+  Funksiyalar tarkibi va tartibi O'ZGARMADI.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,174 +18,161 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
-    <LinearLayout
+    <!-- ==================== HEADER ==================== -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/bg_header"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingTop="18dp"
-        android:paddingBottom="24dp">
-
-        <ImageView
-            android:layout_width="150dp"
-            android:layout_height="60dp"
-            android:src="@drawable/logo_wide"
-            android:scaleType="fitStart"
-            android:contentDescription="TSD" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Ombor boshqaruv tizimi"
-            android:textColor="@color/white70"
-            android:textSize="13sp"
-            android:letterSpacing="0.04" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_icon_circle_dark"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp">
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:background="@drawable/bg_icon_circle"
-                    android:backgroundTint="#7CFC9A" />
-
-                <TextView
-                    android:id="@+id/statusChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="7dp"
-                    android:text="Sklad tanlanmagan"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <LinearLayout
-                android:id="@+id/btnRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_icon_circle_dark"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:foreground="?attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:src="@drawable/ic_refresh"
-                    android:tint="@color/white"
-                    android:contentDescription="Yangilash" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="Yangilash"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:overScrollMode="never">
+        android:background="@drawable/bg_header">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:gravity="center_horizontal"
+            android:paddingStart="@dimen/sp_4"
+            android:paddingEnd="@dimen/sp_4"
+            android:paddingTop="@dimen/sp_3"
+            android:paddingBottom="@dimen/sp_4">
+
+            <ImageView
+                android:layout_width="172dp"
+                android:layout_height="56dp"
+                android:src="@drawable/logo_wide"
+                android:scaleType="fitCenter"
+                android:contentDescription="Jamlov" />
 
             <TextView
+                style="@style/T.Sub.OnBrand"
+                android:layout_marginTop="1dp"
+                android:text="Ombor boshqaruv tizimi" />
+
+            <!-- Sklad yorlig'i. Bosilganda avvalgi mantiq ishlaydi:
+                 navbatda hujjat bo'lsa yuboradi, bo'lmasa ilova
+                 yangilanishini tekshiradi. -->
+            <LinearLayout
+                android:id="@+id/storeBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="10dp"
-                android:text="Bo'limlar"
-                android:textColor="@color/text_gray"
-                android:textSize="13sp"
-                android:letterSpacing="0.05" />
+                android:layout_marginTop="@dimen/sp_2"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_store_chip"
+                android:paddingStart="@dimen/sp_3"
+                android:paddingEnd="@dimen/sp_3"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:foreground="?attr/selectableItemBackground">
 
-            <!-- Bo'limlar shu yerga KODDAN (dinamik) qo'yiladi -->
+                <View
+                    android:id="@+id/storeDot"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:background="@drawable/bg_dot_ok" />
+
+                <TextView
+                    android:id="@+id/statusChip"
+                    style="@style/T.Micro"
+                    android:layout_marginStart="@dimen/sp_2"
+                    android:textColor="@color/white"
+                    android:text="Sklad tanlanmagan" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnSettings"
+            android:layout_width="@dimen/touch_min"
+            android:layout_height="@dimen/touch_min"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="2dp"
+            android:padding="@dimen/sp_3"
+            android:src="@drawable/ic_settings"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Sozlamalar" />
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_pad"
+            android:paddingEnd="@dimen/screen_pad"
+            android:paddingTop="@dimen/sp_3"
+            android:paddingBottom="@dimen/sp_3">
+
+            <!-- ============ BUGUNGI ISHLAR ============
+                 Yangi funksiya EMAS. Bu mavjud hujjatlar ro'yxatidan
+                 (/api/tzd/documents) bugungi kun bo'yicha sanab chiqarilgan
+                 ko'rsatkich. Hech qanday raqam o'ylab topilmaydi. -->
+            <LinearLayout
+                android:id="@+id/todayBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/T.Section"
+                    android:layout_marginStart="@dimen/sp_1"
+                    android:layout_marginBottom="@dimen/sp_2"
+                    android:text="Bugungi ishlar" />
+
+                <androidx.cardview.widget.CardView
+                    style="@style/Card"
+                    android:layout_marginBottom="@dimen/sp_4">
+
+                    <!-- Lenta. Foydalanuvchi teginmaydi — o'zi siljiydi.
+                         Shuning uchun scrollbar ham, chetdagi porlash ham yo'q. -->
+                    <HorizontalScrollView
+                        android:id="@+id/todayScroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:overScrollMode="never"
+                        android:paddingStart="@dimen/sp_4"
+                        android:paddingEnd="@dimen/sp_4"
+                        android:paddingTop="11dp"
+                        android:paddingBottom="11dp">
+
+                        <LinearLayout
+                            android:id="@+id/todayTrack"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical" />
+                    </HorizontalScrollView>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <TextView
+                style="@style/T.Section"
+                android:layout_marginStart="@dimen/sp_1"
+                android:layout_marginBottom="@dimen/sp_2"
+                android:text="Asosiy funksiyalar" />
+
+            <!-- Kartochkalar KODDAN qo'yiladi: MenuActivity.buildGrid() -->
             <LinearLayout
                 android:id="@+id/gridContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardScannerTest"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/white"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="16dp">
-
-                    <FrameLayout style="@style/MenuIconWrap" android:background="@drawable/bg_icon_circle">
-                        <ImageView style="@style/MenuIcon" android:src="@drawable/ic_settings" app:tint="@color/brand"/>
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="14dp"
-                        android:orientation="vertical">
-
-                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="Sozlamalar"/>
-                        <TextView style="@style/MenuCardSub" android:text="Menejer · sklad · bo'limlarni sozlash"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
         </LinearLayout>
     </ScrollView>
 
     <TextView
         android:id="@+id/footerVersion"
+        style="@style/T.Micro"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="8dp"
-        android:text="v0.5 · Sevimli Market"
-        android:textColor="@color/text_gray"
-        android:textSize="12sp" />
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="Jamlov" />
 </LinearLayout>

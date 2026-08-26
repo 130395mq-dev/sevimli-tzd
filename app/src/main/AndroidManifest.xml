@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
+        android:name=".App"
         android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
@@ -55,6 +56,14 @@
             android:name=".MoveActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- Ilova yopiq bo'lganda ham katalogni yangilaydigan fon ishi.
+             `BIND_JOB_SERVICE` — Android talab qiladigan ruxsat, uni
+             faqat tizimning o'zi bera oladi. -->
+        <service
+            android:name=".SyncJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <activity
             android:name=".InventoryInboxActivity"

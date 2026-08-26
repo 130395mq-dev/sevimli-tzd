@@ -6,35 +6,29 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+    <LinearLayout style="@style/Head">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            style="@style/Head.Back"
+            android:src="@drawable/ic_chevron_right"
+            android:rotation="180"
+            app:tint="@color/white"
+            android:contentDescription="Orqaga" />
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Qayerga (sklad)"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/T.Title.OnBrand"
+            android:layout_marginStart="@dimen/sp_1"
+            android:text="Qayerga (sklad)" />
     </LinearLayout>
+
+    <TextView
+        style="@style/T.Sub"
+        android:layout_marginStart="@dimen/sp_5"
+        android:layout_marginEnd="@dimen/sp_5"
+        android:layout_marginTop="@dimen/sp_4"
+        android:text="Qaysi sklad bilan ishlaysiz?" />
 
     <ProgressBar
         android:id="@+id/loading"
@@ -56,6 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp" />
+            android:padding="@dimen/screen_pad"
+            android:paddingTop="@dimen/sp_2" />
     </ScrollView>
 </LinearLayout>

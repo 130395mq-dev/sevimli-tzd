@@ -290,7 +290,21 @@ object CatalogSync {
         // ILGARI bu tekshiruv mahsulot katalogi bo'sh bo'lsa umuman
         // bajarilmasdi, ya'ni yangi yetkazib beruvchi ko'rinmay qolardi.
         if (now - p.getLong(KEY_CP_AT, 0L) > 10 * 60 * 1000L) syncCounterparties(ctx)
-        if (db.productCount() == 0) return  // hali to'liq yuklanmagan ("To'liq yangilash" kerak)
+        if (db.productCount() == 0) {
+            // BIRINCHI TO'LIQ YUKLASH — endi u ham JIMGINA, fonda bo'ladi.
+            //
+            // ILGARI bu yerdan shunchaki `return` qilinardi va katalogni
+            // xodim "To'liq yangilash" tugmasini bosib yuklashi kerak edi.
+            // Tugma olib tashlangach, bo'sh katalog abadiy bo'sh qolardi.
+            //
+            // Yarim qolgan yuklashni darhol qaytarmaymiz: `failPartial`
+            // qo'ygan belgi 15 daqiqa kutishni bildiradi, aks holda har
+            // 2 daqiqada katalog tozalanib qayta boshlanardi.
+            val partial = p.getLong(KEY_PARTIAL, 0L)
+            if (partial > 0L && now - partial < PARTIAL_RETRY_MS) return
+            syncProductsFull(ctx) { _, _ -> }
+            return
+        }
         // Mahsulot delta — tez-tez (2 daqiqada bir). Qo'lda "Yangilash" bosish shart emas.
         if (now - p.getLong(KEY_PROD_AT, 0L) < 2 * 60 * 1000L) return
         syncProductsDelta(ctx)

@@ -4,13 +4,11 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import uz.sevimli.tzd.databinding.ActivityMenuBinding
 import kotlin.concurrent.thread
 
@@ -29,18 +27,15 @@ class MenuActivity : AppCompatActivity() {
         b = ActivityMenuBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        b.cardScannerTest.setOnClickListener {
+        // Sozlamalar endi header'ning o'ng burchagida (ilgari ro'yxat
+        // oxiridagi kartochka edi). Ochadigan ekran o'sha-o'sha.
+        b.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Jamlov"
-        b.btnRefresh.setOnClickListener {
-            // Ikki marta bosilsa ikkita to'liq yuklash boshlanmasin —
-            // ikkalasi ham katalogni tozalab qayta yozardi.
-            if (CatalogSync.isSyncing) {
-                Toast.makeText(this, "Yangilash allaqachon ketyapti", Toast.LENGTH_SHORT).show()
-            } else fullRefresh()
-        }
-        b.statusChip.setOnClickListener {
+        // Sklad yorlig'i. Bosilganda avvalgi mantiq: navbatda hujjat
+        // bo'lsa yuboradi, bo'lmasa ilova yangilanishini tekshiradi.
+        b.storeBar.setOnClickListener {
             if (OfflineQueue.size(this) > 0) flushQueue(manual = true)
             else Updater.check(this, silent = false)
         }
@@ -48,14 +43,25 @@ class MenuActivity : AppCompatActivity() {
         Updater.forceCheck(this)   // MAJBURIY: yangi versiya bo'lsa so'ramasdan yangilaydi
     }
 
-    /** Dashboard kartalarini KODDAN yasaydi: Просмотр (doim) + yoqilgan bo'limlar. */
+    /**
+     * Bosh sahifa funksiyalarini KODDAN yasaydi — IKKI USTUNLI grid.
+     *
+     * FUNKSIYALAR VA TARTIB O'ZGARMADI:
+     *   Просмотр (doim) -> MenuFunctions.LIST dagi tartib.
+     * Qaysi bo'lim ko'rinishi avvalgidek `Config.isFn(...)` bilan hal
+     * qilinadi, bosilganda o'sha `dispatch(fn)` chaqiriladi.
+     *
+     * O'zgargani faqat ko'rinish: kartochka ichi ixchamlashdi
+     * (ikonka 46->38, padding 16->12), shuning uchun 8 ta funksiya
+     * TSD ekraniga aylantirmasdan sig'adi.
+     */
     private fun buildGrid() {
         val grid = b.gridContainer
         grid.removeAllViews()
 
         val cells = ArrayList<Cell>()
         // Просмотр товара — DOIM ko'rinadi (o'chirib bo'lmaydi)
-        cells.add(Cell("Просмотр товара", "Narx va qoldiq", R.drawable.ic_lookup, true) {
+        cells.add(Cell("Просмотр товара", "Narx va qoldiq", R.drawable.ic_lookup, false) {
             startActivity(Intent(this, LookupActivity::class.java))
         })
         // Sozlamalarда yoqilgan bo'limlar
@@ -71,16 +77,18 @@ class MenuActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { if (grid.childCount > 0) topMargin = dp(10) }
+                ).apply { if (grid.childCount > 0) topMargin = dp(8) }
             }
             for (col in 0 until 2) {
                 if (i < cells.size) {
-                    row.addView(makeCard(cells[i], leftInRow = (col == 0)))
+                    row.addView(makeCell(cells[i], leftInRow = (col == 0)))
                 } else {
-                    val spacer = View(this)
-                    spacer.layoutParams = LinearLayout.LayoutParams(0,
-                        LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-                    row.addView(spacer)
+                    // Toq sonda qolsa — o'ng tomon bo'sh qoladi, lekin
+                    // kartochka kengligi buzilmaydi.
+                    row.addView(View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                    })
                 }
                 i++
             }
@@ -88,31 +96,22 @@ class MenuActivity : AppCompatActivity() {
         }
     }
 
-    private fun makeCard(cell: Cell, leftInRow: Boolean): View {
-        val card = layoutInflater.inflate(R.layout.item_menu_card, b.gridContainer, false)
-        val lp = LinearLayout.LayoutParams(0,
-            LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        if (leftInRow) lp.marginEnd = dp(10)
-        card.layoutParams = lp
+    /** Bitta funksiya kartochkasi. */
+    private fun makeCell(cell: Cell, leftInRow: Boolean): View {
+        val card = layoutInflater.inflate(R.layout.item_menu_cell, b.gridContainer, false)
+        card.layoutParams = LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        ).apply { if (leftInRow) marginEnd = dp(8) }
 
         val icon = card.findViewById<ImageView>(R.id.mIcon)
         val title = card.findViewById<TextView>(R.id.mTitle)
         val sub = card.findViewById<TextView>(R.id.mSub)
-        val wrap = card.findViewById<FrameLayout>(R.id.mIconWrap)
 
-        // Ikonka endi to'g'ridan-to'g'ri havola bo'yicha (nomdan qidirish emas):
+        // Ikonka to'g'ridan-to'g'ri havola bo'yicha (nomdan qidirish emas):
         // kompilyator tekshiradi va R8 resurs tozalashi uni olib tashlamaydi.
         icon.setImageResource(cell.icon)
         title.text = cell.title
         sub.text = cell.sub
-
-        if (cell.brand) {
-            (card as CardView).setCardBackgroundColor(getColor(R.color.brand))
-            wrap.setBackgroundResource(R.drawable.bg_icon_circle_dark)
-            icon.setColorFilter(getColor(R.color.white))
-            title.setTextColor(getColor(R.color.white))
-            sub.setTextColor(getColor(R.color.white70))
-        }
         card.setOnClickListener { cell.action() }
         return card
     }
@@ -146,26 +145,23 @@ class MenuActivity : AppCompatActivity() {
     /** Obuna holati oxirgi marta qachon tekshirilgan (millisekund). */
     private var lastPingAt = 0L
 
-    /** Menyu ekrani hozir ko'rinib turibdimi (taymerni bekorga yoqmaslik uchun). */
-    private var menuVisible = false
 
-    // Menyu ochiq turganda har 2 daqiqada jimgina avto-yangilash (qo'lda "Yangilash" kerak emas)
-    private val syncHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private val syncTick = object : Runnable {
-        override fun run() {
-            thread { CatalogSync.autoRefresh(this@MenuActivity) }
-            syncHandler.postDelayed(this, 2 * 60 * 1000L)
-        }
-    }
+    // AVTO-SINX endi bu yerda EMAS.
+    //
+    // Ilgari taymer shu ekranda turardi va menyu ekrandan ketishi bilan
+    // `onPause()` uni o'chirardi — ya'ni xodim hujjat ichida ishlayotganda
+    // hech narsa yangilanmasdi. Endi buni `SyncEngine` boshqaradi:
+    // ilova ochiq bo'lsa istalgan ekranда, yopiq bo'lsa JobScheduler orqali.
 
     override fun onResume() {
         super.onResume()
-        menuVisible = true
         Updater.resumeIfPending(this)   // ruxsat berib qaytgan bo'lsa — majburiy yangilanish davom etadi
         buildGrid()            // sozlamalar o'zgargan bo'lsa — darrov aks etadi
         updateStatus()
         flushQueue(manual = false)
-        thread { CatalogSync.autoRefresh(this) }
+        loadToday()
+        // Sinxni bu yerda chaqirmaymiz — `SyncEngine` ilova oldinga
+        // chiqqanda o'zi bir marta yurgizadi va davriy taymerni yoqadi.
         // Obuna holati: to'xtatilgan/muddati tugagan bo'lsa — bloklash ekrani.
         //
         // ILGARI: bu so'rov HAR ekran qaytishida ketardi. Hujjat yaratib
@@ -182,15 +178,12 @@ class MenuActivity : AppCompatActivity() {
         } else {
             Api.blocked?.let { showBlocked(it) }
         }
-        // davriy avto-yangilashni yoqamiz
-        syncHandler.removeCallbacks(syncTick)
-        syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
     }
 
     override fun onPause() {
         super.onPause()
-        menuVisible = false
-        syncHandler.removeCallbacks(syncTick)   // orqa fonда behuda ishlamasin
+        // Lenta ekran yopilganda to'xtaydi — fonda batareya yeyilmasin.
+        TodayStrip.stop()
     }
 
     // ---- Obuna to'xtatilganda bloklash ekrani ----
@@ -229,11 +222,39 @@ class MenuActivity : AppCompatActivity() {
         blockDialog?.show()
     }
 
+    /**
+     * "Bugungi ishlar" — mavjud hujjatlar ro'yxatidan bugungi sonlar.
+     *
+     * Yangi funksiya emas: `/api/tzd/documents` allaqachon bor edi va
+     * Hujjatlar ekrani o'shandan foydalanadi. Biz faqat bugungi kun
+     * bo'yicha sanaymiz.
+     *
+     * Ma'lumot kelmasa yoki bugun ish bo'lmasa — butun bo'lim
+     * KO'RSATILMAYDI. Bo'sh joy yoki o'ylab topilgan son chiqmaydi.
+     */
+    private fun loadToday() {
+        thread {
+            val items = TodayStrip.load(this)
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                b.todayBox.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+                if (items.isNotEmpty()) {
+                    TodayStrip.render(b.todayScroll, b.todayTrack, items)
+                }
+            }
+        }
+    }
+
     private fun updateStatus() {
         val store = Config.storeName(this) ?: "Sklad tanlanmagan"
         val pending = OfflineQueue.size(this)
         b.statusChip.text =
-            if (pending > 0) "$store · ⏳ $pending yuborilmagan" else store
+            if (pending > 0) "$store · $pending yuborilmagan" else store
+        // Nuqta rangi holatni aytadi: yashil — hammasi joyida,
+        // sariq — navbatda yuborilmagan hujjat bor. Ilgari bu ma'no
+        // matn ichidagi "⏳" belgisi bilan berilardi, uzoqdan bilinmasdi.
+        b.storeDot.setBackgroundResource(
+            if (pending > 0) R.drawable.bg_dot_warn else R.drawable.bg_dot_ok)
     }
 
     private fun flushQueue(manual: Boolean) {
@@ -253,82 +274,12 @@ class MenuActivity : AppCompatActivity() {
         }
     }
 
-    private fun fullRefresh() {
-        val label = TextView(this).apply {
-            text = "Boshlanmoqda..."
-            val p = (20 * resources.displayMetrics.density).toInt()
-            setPadding(p, p, p, p)
-            textSize = 15f
-        }
-        // ILGARI bu oyna BEKOR QILINMASDI (setCancelable(false)) va ichida
-        // butun katalog yuklanardi. Katta katalog va sekin internetda ilova
-        // o'n daqiqalab qotib turishi mumkin edi — chiqish yo'li yo'q edi.
-        val dlg = AlertDialog.Builder(this)
-            .setTitle("🔄 To'liq yangilash")
-            .setView(label)
-            .setNegativeButton("Bekor qilish") { _, _ -> CatalogSync.cancel() }
-            .setCancelable(false)
-            .create()
-        dlg.show()
-
-        // 2 daqiqalik avto-sinx qulfni olib qo'ymasin — aks holda qo'lda
-        // bosilgan "To'liq yangilash" jimgina hech narsa qilmasdan tugardi.
-        syncHandler.removeCallbacks(syncTick)
-        CatalogSync.beginManual()      // eski "bekor" belgisini tozalaymiz
-
-        thread {
-            var ok = false
-            try {
-                // Fonda endigina boshlangan avto-sinx bo'lsa — tugashini kutamiz.
-                // Faqat `removeCallbacks` yetmaydi: u ALLAQACHON ishga tushgan
-                // oqimni to'xtatmaydi.
-                if (CatalogSync.isSyncing) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kutilmoqda..." }
-                    CatalogSync.waitIdle()
-                }
-                if (!CatalogSync.isCancelRequested) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kontragentlar yuklanmoqda..." }
-                    CatalogSync.syncCounterparties(this)
-                }
-                ok = CatalogSync.syncProductsFull(this) { done, total ->
-                    runOnUiThread {
-                        if (!isFinishing && !isDestroyed) {
-                            label.text = "Mahsulotlar yuklanmoqda...\n$done / $total"
-                        }
-                    }
-                }
-            } catch (t: Throwable) {
-                // Throwable — Exception ham, Error ham (masalan telefon
-                // xotirasi to'lgan holat). Oyna BARIBIR yopilishi kerak,
-                // aks holda "Bekor" tugmasidan boshqa chiqish yo'li qolmaydi.
-                ok = false
-            } finally {
-                CatalogSync.endManual()   // bekor belgisi osilib qolmasin
-            }
-            runOnUiThread {
-                // Oyna HAR DOIM yopiladi — himoyadan OLDIN. Aks holda ekran
-                // yopilib ketgan holatda oyna osilib qolardi (WindowLeaked).
-                try { dlg.dismiss() } catch (_: Exception) {}
-                if (isFinishing || isDestroyed) return@runOnUiThread
-                // Avto-sinx taymerini FAQAT ekran ochiq bo'lsa qaytaramiz.
-                // Aks holda foydalanuvchi menyudan chiqib ketgan bo'lsa ham
-                // fon sinxroni ishlab turaverardi.
-                if (menuVisible) {
-                    syncHandler.removeCallbacks(syncTick)
-                    syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
-                }
-                when {
-                    ok -> Toast.makeText(this, "Yangilandi ✓", Toast.LENGTH_LONG).show()
-                    CatalogSync.isCancelled ->
-                        Toast.makeText(this, "To'xtatildi", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(this,
-                        "Yuklab bo'lmadi — internetni tekshiring. Keyingi avto-sinxda qayta urinadi.",
-                        Toast.LENGTH_LONG).show()
-                }
-                updateStatus()
-            }
-        }
-    }
+    // `fullRefresh()` OLIB TASHLANDI.
+    //
+    // U ekranni bloklaydigan oyna ochib, butun katalogni (22 000+ mahsulot)
+    // qaytadan yuklardi va xodim uni qo'lda bosishi kerak edi. Endi bu ish
+    // `SyncEngine` orqali jimgina, fonda bajariladi — birinchi to'liq
+    // yuklash ham (qarang: CatalogSync.autoRefresh).
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 }

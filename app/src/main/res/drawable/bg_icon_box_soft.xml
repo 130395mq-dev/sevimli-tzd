@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Xira variant — "Nazorat" guruhidagi kamroq ishlatiladigan
+     bo'limlar uchun. Rang bir xil, faqat kuchsizroq. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#EEF5F0"/>
+    <corners android:radius="@dimen/r_sm"/>
+</shape>

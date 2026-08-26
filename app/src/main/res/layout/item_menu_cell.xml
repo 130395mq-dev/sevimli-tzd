@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bosh sahifadagi bitta funksiya kartochkasi (2 ustunli grid).
+
+  Ichi ixcham: ikonka 38dp, matn 15sp/11.5sp, padding 12dp.
+  Shu o'lchamlarda 8 ta funksiya TSD ekraniga aylantirmasdan sig'adi.
+-->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="@dimen/r_md"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/white"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:minHeight="104dp"
+        android:padding="@dimen/sp_3">
+
+        <FrameLayout
+            android:id="@+id/mIconWrap"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_icon_box">
+
+            <ImageView
+                android:id="@+id/mIcon"
+                android:layout_width="@dimen/ic_md"
+                android:layout_height="@dimen/ic_md"
+                android:layout_gravity="center"
+                app:tint="@color/brand"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/mTitle"
+            style="@style/T.Body.Bold"
+            android:layout_marginTop="9dp"
+            android:lineSpacingMultiplier="1.05"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:text="" />
+
+        <TextView
+            android:id="@+id/mSub"
+            style="@style/T.Micro"
+            android:layout_marginTop="2dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:text="" />
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
