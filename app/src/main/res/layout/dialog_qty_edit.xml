@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Qo'lda miqdor kiritish maydoni (oyna ichida).
+
+  Ilgari bu yerga yalang'och `EditText` qo'yilardi: chetlarga yopishib
+  turardi, yozuvi kichkina edi va ilovaning qolgan qismiga o'xshamasdi.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="22dp"
+    android:paddingEnd="22dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <EditText
+        android:id="@+id/qeInput"
+        style="@style/J.Field"
+        android:layout_height="60dp"
+        android:gravity="center"
+        android:inputType="numberDecimal"
+        android:selectAllOnFocus="true"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:fontFeatureSettings="tnum"
+        android:importantForAutofill="no" />
+</LinearLayout>

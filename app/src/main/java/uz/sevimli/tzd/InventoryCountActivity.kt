@@ -347,18 +347,18 @@ class InventoryCountActivity : AppCompatActivity() {
      * degani. Aynan shu holat kamomadni ko'rsatadi.
      */
     private fun editItem(item: InvItem) {
-        val input = EditText(this).apply {
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
-                    android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            setText(trimNum(item.counted))
-        }
+        // Yalang'och EditText o'rniga chetlari joyida turgan, yirik raqamli
+        // maydon — oyna ilovaning qolgan qismi bilan bir uslubda bo'lsin.
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_qty_edit, null)
+        val input = view.findViewById<EditText>(R.id.qeInput)
+        input.setText(trimNum(item.counted))
         AlertDialog.Builder(this)
             .setTitle(item.name)
             .setMessage(if (item.wasInDoc)
                 "Haqiqiy son. 0 = umuman yo'q."
             else
                 "Haqiqiy son. Bu tovar hujjatda yo'q edi.")
-            .setView(input)
+            .setView(view)
             .setPositiveButton("Saqlash") { _, _ ->
                 val v = input.text.toString().toDoubleOrNull()
                 if (v != null && v >= 0) {
@@ -386,6 +386,15 @@ class InventoryCountActivity : AppCompatActivity() {
         val notTouched = items.count { !it.touched }
         val extra = items.count { !it.wasInDoc }
 
+        // SANOQ DAVOMIDA qoldiq ko'rsatilmaydi — xodim unga moslab
+        // yozmasligi uchun. Lekin SAQLASHDAN OLDIN farqlar bir marta
+        // ko'rsatiladi: qo'pol xato (noto'g'ri javon, blokni dona deb
+        // kiritish) shu yerda ushlanadi va xodim qaytib tekshira oladi.
+        // Halollik ham saqlanadi, xato ham menejergacha yetib bormaydi.
+        val diffs = items
+            .filter { it.touched && it.wasInDoc && it.counted != it.expected }
+            .sortedByDescending { kotlin.math.abs(it.counted - it.expected) }
+
         val sb = StringBuilder()
         sb.append("$touched ta tovar sanaldi.")
         if (extra > 0) sb.append("\n⚠ $extra ta tovar hujjatda yo'q edi — qo'shiladi.")
@@ -395,6 +404,17 @@ class InventoryCountActivity : AppCompatActivity() {
             // ularning qiymati o'zgarmaydi, o'chirilmaydi ham.
             sb.append("\n\n$notTouched ta tovar sanalmadi — ular hujjatda o'zgarishsiz qoladi.")
         }
+        if (diffs.isNotEmpty()) {
+            // DIQQAT: bu yerda FARQ SONI ATAYIN yozilmaydi, faqat NOMLAR.
+            // Agar "Guruch: -5" deb yozsak, xodim tizim qoldig'ini bilib
+            // oladi va sanoq yana "raqamga moslash" ga aylanadi — ya'ni
+            // qoldiqni yashirganimizning ma'nosi qolmaydi.
+            // Nom yetarli: xodim o'sha tovarni qaytib sanaydi, xolos.
+            sb.append("\n\n\u26a0 ${diffs.size} ta tovar hujjatdagidan farq qildi:")
+            for (it2 in diffs.take(8)) sb.append("\n  \u2022 ${it2.name}")
+            if (diffs.size > 8) sb.append("\n  \u2026 va yana ${diffs.size - 8} ta")
+            sb.append("\n\nShularni qaytib sanab ko'ring.")
+        }
         sb.append("\n\nHujjat O'TKAZILMAYDI — qoldiqlar o'zgarmaydi. " +
                   "Menejer kompyuterdan ko'rib o'tkazadi.")
 
@@ -402,7 +422,7 @@ class InventoryCountActivity : AppCompatActivity() {
             .setTitle("Sanoqni saqlash")
             .setMessage(sb.toString())
             .setPositiveButton("Ha, saqlayman") { _, _ -> send() }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton("Qaytib tekshiraman", null)
             .show()
     }
 

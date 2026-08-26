@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Oyna foni: oq, burchaklari yumaloq. Standart Android oynasi to'g'ri
+     burchakli va ilovaning qolgan qismidan begona ko'rinardi. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/white"/>
+    <corners android:radius="20dp"/>
+</shape>
