@@ -31,11 +31,8 @@ object MenuFunctions {
         Fn("move",      "Перемещение",        "skladlar orasida",     R.drawable.ic_move, needsStore = true),
         Fn("shipment",  "Отгрузка",           "tovar chiqarish",      R.drawable.ic_pick),
         Fn("writeoff",  "Списание",           "hisobdan chiqarish",   R.drawable.ic_writeoff),
-        // Ilgari bu ikkitasi BOSHQA bo'limlarning ikonkasini takrorlardi
-        // (preturn -> ic_writeoff, etiketka -> ic_receive). Menyuда bir xil
-        // rasm ikki joyda turardi va xodim adashardi. Endi o'z ikonkasi bor.
-        Fn("preturn",   "Возврат поставщику", "yetkazib beruvchiga",  R.drawable.ic_return),
-        Fn("etiketka",  "Этикетка / Ценник",  "narx yorlig'i chop",   R.drawable.ic_label),
+        Fn("preturn",   "Возврат поставщику", "yetkazib beruvchiga",  R.drawable.ic_writeoff),
+        Fn("etiketka",  "Этикетка / Ценник",  "narx yorlig'i chop",   R.drawable.ic_receive),
         // KELAJAKDA: shu yerga yangi qator qo'shsangiz — o'zi menyu va sozlamalarga chiqadi.
     )
 }
