@@ -1,0 +1,111 @@
+name: APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # GitHub Release yaratish uchun
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # GITHUB_TOKEN .git/config ichida QOLMASIN — aks holda undan
+          # keyingi har qanday qadam (jumladan uchinchi tomon amallari)
+          # uni o'qib, repozitoriyga yozish huquqini olardi.
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Decode signing keystore
+        # Sir buyruq QATORIGA emas, muhit o'zgaruvchisi orqali beriladi.
+        env:
+          KS_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          chmod 600 "$RUNNER_TEMP/release.keystore"
+
+      - name: Read version
+        id: ver
+        run: |
+          VC=$(grep -m1 versionCode app/build.gradle | grep -o '[0-9]\+')
+          VN=$(grep -m1 versionName app/build.gradle | grep -o '"[^"]*"' | tr -d '"')
+          echo "code=$VC" >> "$GITHUB_OUTPUT"
+          echo "name=$VN" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          KEY_ALIAS: sevimli
+          KEY_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Prepare release files
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk sevimli-tzd.apk
+          NOTES=$(git log -1 --pretty=%s)
+          jq -n \
+            --argjson vc "${{ steps.ver.outputs.code }}" \
+            --arg vn "${{ steps.ver.outputs.name }}" \
+            --arg notes "$NOTES" \
+            --arg url "https://github.com/${{ github.repository }}/releases/latest/download/sevimli-tzd.apk" \
+            '{versionCode:$vc, versionName:$vn, notes:$notes, url:$url}' > version.json
+          cat version.json
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.ver.outputs.name }}-${{ steps.ver.outputs.code }}
+          RELEASE_NAME: Sevimli TZD ${{ steps.ver.outputs.name }}
+        run: |
+          set -e
+
+          # GitHub API vaqtincha 503 qaytarsa, workflow darhol yiqilmasligi uchun
+          # release yaratishni bir necha marta qayta urinib ko'ramiz.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            echo "GitHub Release urinish: $attempt/10"
+
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Release allaqachon mavjud: $TAG"
+              gh release edit "$TAG" --title "$RELEASE_NAME"
+              gh release upload "$TAG" sevimli-tzd.apk version.json --clobber
+              exit 0
+            fi
+
+            if gh release create "$TAG" \
+                 --target "$GITHUB_SHA" \
+                 --title "$RELEASE_NAME" \
+                 --generate-notes \
+                 sevimli-tzd.apk \
+                 version.json; then
+              echo "GitHub Release muvaffaqiyatli yaratildi: $TAG"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              WAIT=$((attempt * 15))
+              echo "GitHub API vaqtincha xato berdi. $WAIT soniya kutib qayta uriniladi..."
+              sleep "$WAIT"
+            fi
+          done
+
+          echo "GitHub Release yaratish 10 ta urinishdan keyin ham muvaffaqiyatsiz."
+          exit 1
