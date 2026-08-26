@@ -33,13 +33,6 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Jamlov"
-        b.btnRefresh.setOnClickListener {
-            // Ikki marta bosilsa ikkita to'liq yuklash boshlanmasin —
-            // ikkalasi ham katalogni tozalab qayta yozardi.
-            if (CatalogSync.isSyncing) {
-                Toast.makeText(this, "Yangilash allaqachon ketyapti", Toast.LENGTH_SHORT).show()
-            } else fullRefresh()
-        }
         b.statusChip.setOnClickListener {
             if (OfflineQueue.size(this) > 0) flushQueue(manual = true)
             else Updater.check(this, silent = false)
@@ -146,26 +139,22 @@ class MenuActivity : AppCompatActivity() {
     /** Obuna holati oxirgi marta qachon tekshirilgan (millisekund). */
     private var lastPingAt = 0L
 
-    /** Menyu ekrani hozir ko'rinib turibdimi (taymerni bekorga yoqmaslik uchun). */
-    private var menuVisible = false
 
-    // Menyu ochiq turganda har 2 daqiqada jimgina avto-yangilash (qo'lda "Yangilash" kerak emas)
-    private val syncHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private val syncTick = object : Runnable {
-        override fun run() {
-            thread { CatalogSync.autoRefresh(this@MenuActivity) }
-            syncHandler.postDelayed(this, 2 * 60 * 1000L)
-        }
-    }
+    // AVTO-SINX endi bu yerda EMAS.
+    //
+    // Ilgari taymer shu ekranda turardi va menyu ekrandan ketishi bilan
+    // `onPause()` uni o'chirardi — ya'ni xodim hujjat ichida ishlayotganda
+    // hech narsa yangilanmasdi. Endi buni `SyncEngine` boshqaradi:
+    // ilova ochiq bo'lsa istalgan ekranда, yopiq bo'lsa JobScheduler orqali.
 
     override fun onResume() {
         super.onResume()
-        menuVisible = true
         Updater.resumeIfPending(this)   // ruxsat berib qaytgan bo'lsa — majburiy yangilanish davom etadi
         buildGrid()            // sozlamalar o'zgargan bo'lsa — darrov aks etadi
         updateStatus()
         flushQueue(manual = false)
-        thread { CatalogSync.autoRefresh(this) }
+        // Sinxni bu yerda chaqirmaymiz — `SyncEngine` ilova oldinga
+        // chiqqanda o'zi bir marta yurgizadi va davriy taymerni yoqadi.
         // Obuna holati: to'xtatilgan/muddati tugagan bo'lsa — bloklash ekrani.
         //
         // ILGARI: bu so'rov HAR ekran qaytishida ketardi. Hujjat yaratib
@@ -182,15 +171,6 @@ class MenuActivity : AppCompatActivity() {
         } else {
             Api.blocked?.let { showBlocked(it) }
         }
-        // davriy avto-yangilashni yoqamiz
-        syncHandler.removeCallbacks(syncTick)
-        syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        menuVisible = false
-        syncHandler.removeCallbacks(syncTick)   // orqa fonда behuda ishlamasin
     }
 
     // ---- Obuna to'xtatilganda bloklash ekrani ----
@@ -253,82 +233,12 @@ class MenuActivity : AppCompatActivity() {
         }
     }
 
-    private fun fullRefresh() {
-        val label = TextView(this).apply {
-            text = "Boshlanmoqda..."
-            val p = (20 * resources.displayMetrics.density).toInt()
-            setPadding(p, p, p, p)
-            textSize = 15f
-        }
-        // ILGARI bu oyna BEKOR QILINMASDI (setCancelable(false)) va ichida
-        // butun katalog yuklanardi. Katta katalog va sekin internetda ilova
-        // o'n daqiqalab qotib turishi mumkin edi — chiqish yo'li yo'q edi.
-        val dlg = AlertDialog.Builder(this)
-            .setTitle("🔄 To'liq yangilash")
-            .setView(label)
-            .setNegativeButton("Bekor qilish") { _, _ -> CatalogSync.cancel() }
-            .setCancelable(false)
-            .create()
-        dlg.show()
-
-        // 2 daqiqalik avto-sinx qulfni olib qo'ymasin — aks holda qo'lda
-        // bosilgan "To'liq yangilash" jimgina hech narsa qilmasdan tugardi.
-        syncHandler.removeCallbacks(syncTick)
-        CatalogSync.beginManual()      // eski "bekor" belgisini tozalaymiz
-
-        thread {
-            var ok = false
-            try {
-                // Fonda endigina boshlangan avto-sinx bo'lsa — tugashini kutamiz.
-                // Faqat `removeCallbacks` yetmaydi: u ALLAQACHON ishga tushgan
-                // oqimni to'xtatmaydi.
-                if (CatalogSync.isSyncing) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kutilmoqda..." }
-                    CatalogSync.waitIdle()
-                }
-                if (!CatalogSync.isCancelRequested) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kontragentlar yuklanmoqda..." }
-                    CatalogSync.syncCounterparties(this)
-                }
-                ok = CatalogSync.syncProductsFull(this) { done, total ->
-                    runOnUiThread {
-                        if (!isFinishing && !isDestroyed) {
-                            label.text = "Mahsulotlar yuklanmoqda...\n$done / $total"
-                        }
-                    }
-                }
-            } catch (t: Throwable) {
-                // Throwable — Exception ham, Error ham (masalan telefon
-                // xotirasi to'lgan holat). Oyna BARIBIR yopilishi kerak,
-                // aks holda "Bekor" tugmasidan boshqa chiqish yo'li qolmaydi.
-                ok = false
-            } finally {
-                CatalogSync.endManual()   // bekor belgisi osilib qolmasin
-            }
-            runOnUiThread {
-                // Oyna HAR DOIM yopiladi — himoyadan OLDIN. Aks holda ekran
-                // yopilib ketgan holatda oyna osilib qolardi (WindowLeaked).
-                try { dlg.dismiss() } catch (_: Exception) {}
-                if (isFinishing || isDestroyed) return@runOnUiThread
-                // Avto-sinx taymerini FAQAT ekran ochiq bo'lsa qaytaramiz.
-                // Aks holda foydalanuvchi menyudan chiqib ketgan bo'lsa ham
-                // fon sinxroni ishlab turaverardi.
-                if (menuVisible) {
-                    syncHandler.removeCallbacks(syncTick)
-                    syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
-                }
-                when {
-                    ok -> Toast.makeText(this, "Yangilandi ✓", Toast.LENGTH_LONG).show()
-                    CatalogSync.isCancelled ->
-                        Toast.makeText(this, "To'xtatildi", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(this,
-                        "Yuklab bo'lmadi — internetni tekshiring. Keyingi avto-sinxda qayta urinadi.",
-                        Toast.LENGTH_LONG).show()
-                }
-                updateStatus()
-            }
-        }
-    }
+    // `fullRefresh()` OLIB TASHLANDI.
+    //
+    // U ekranni bloklaydigan oyna ochib, butun katalogni (22 000+ mahsulot)
+    // qaytadan yuklardi va xodim uni qo'lda bosishi kerak edi. Endi bu ish
+    // `SyncEngine` orqali jimgina, fonda bajariladi — birinchi to'liq
+    // yuklash ham (qarang: CatalogSync.autoRefresh).
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 }
