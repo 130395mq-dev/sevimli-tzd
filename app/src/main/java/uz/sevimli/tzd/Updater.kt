@@ -48,6 +48,16 @@ object Updater {
 
     // Ruxsat kutayotgan MAJBURIY yangilanish (unknown-sources sozlamasidan qaytilganda davom etadi)
     private var pending: Info? = null
+
+    /**
+     * FON oqimida chaqiriladi (bildirishnomalar uchun): yangi versiya bormi?
+     * Bo'lsa — versiya nomi, bo'lmasa yoki tarmoq yo'q bo'lsa — null.
+     * Hech narsa yuklamaydi, faqat tekshiradi.
+     */
+    fun newerVersionOrNull(): String? {
+        val info = try { fetchInfo() } catch (e: Exception) { return null }
+        return if (info.versionCode > BuildConfig.VERSION_CODE) info.versionName else null
+    }
     private var busy = false
 
     /**

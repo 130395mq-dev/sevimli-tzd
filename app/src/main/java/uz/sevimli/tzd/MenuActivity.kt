@@ -33,17 +33,13 @@ class MenuActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         b.footerVersion.text = "v${BuildConfig.VERSION_NAME} · Jamlov"
-        b.btnRefresh.setOnClickListener {
-            // Ikki marta bosilsa ikkita to'liq yuklash boshlanmasin —
-            // ikkalasi ham katalogni tozalab qayta yozardi.
-            if (CatalogSync.isSyncing) {
-                Toast.makeText(this, "Yangilash allaqachon ketyapti", Toast.LENGTH_SHORT).show()
-            } else fullRefresh()
+        // Sklad yorlig'i — bosilganda Sozlamalar ochiladi (sklad o'sha yerda
+        // tanlanadi). "Yangilash" tugmasi OLIB TASHLANDI: katalog fonda
+        // o'zi yangilanadi (SyncEngine).
+        b.storeBar.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
-        b.statusChip.setOnClickListener {
-            if (OfflineQueue.size(this) > 0) flushQueue(manual = true)
-            else Updater.check(this, silent = false)
-        }
+        b.btnBell.setOnClickListener { showNotices() }
 
         Updater.forceCheck(this)   // MAJBURIY: yangi versiya bo'lsa so'ramasdan yangilaydi
     }
@@ -165,6 +161,7 @@ class MenuActivity : AppCompatActivity() {
         buildGrid()            // sozlamalar o'zgargan bo'lsa — darrov aks etadi
         updateStatus()
         flushQueue(manual = false)
+        refreshNotices()
         thread { CatalogSync.autoRefresh(this) }
         // Obuna holati: to'xtatilgan/muddati tugagan bo'lsa — bloklash ekrani.
         //
@@ -234,6 +231,109 @@ class MenuActivity : AppCompatActivity() {
         val pending = OfflineQueue.size(this)
         b.statusChip.text =
             if (pending > 0) "$store · ⏳ $pending yuborilmagan" else store
+    }
+
+    // ==================== BILDIRISHNOMALAR ====================
+    //
+    // Yangi funksiya emas: mavjud ikkita ro'yxatning (kelgan ko'chirishlar,
+    // ochiq sanoqlar) soni va yuborilmagan hujjatlar navbati. Xodim har
+    // bo'limni ochib "bormikan" deb tekshirib yurmasin.
+
+    private fun refreshNotices() {
+        thread {
+            val d = Notices.refresh(this)
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                b.bellDot.visibility = if (d.isEmpty) View.GONE else View.VISIBLE
+            }
+        }
+    }
+
+    /** Bitta bildirishnoma turi. */
+    private data class Notice(
+        val icon: Int,
+        val title: String,
+        val sub: String,
+        val count: String,
+        val warn: Boolean,
+        val action: () -> Unit,
+    )
+
+    private fun showNotices() {
+        val d = Notices.last()
+        val list = ArrayList<Notice>()
+
+        d.updateName?.let { name ->
+            list.add(Notice(
+                icon = R.drawable.j_ic_download,
+                title = "Yangi versiya $name",
+                sub = "Bosing — darhol yangilanadi",
+                count = "!", warn = true,
+            ) { Updater.check(this, silent = false) })
+        }
+        if (d.moves > 0) list.add(Notice(
+            icon = R.drawable.ic_move,
+            title = "Kelgan ko'chirish",
+            sub = "Qabul qilish kutilmoqda",
+            count = d.moves.toString(), warn = false,
+        ) { startActivity(Intent(this, MoveInboxActivity::class.java)) })
+
+        if (d.inventories > 0) list.add(Notice(
+            icon = R.drawable.ic_inventory,
+            title = "Ochiq sanoq",
+            sub = "Davom ettirish mumkin",
+            count = d.inventories.toString(), warn = false,
+        ) { startActivity(Intent(this, InventoryInboxActivity::class.java)) })
+
+        if (d.pending > 0) list.add(Notice(
+            icon = R.drawable.j_ic_send,
+            title = "Yuborilmagan hujjat",
+            sub = "Internet tiklanganda ketadi",
+            count = d.pending.toString(), warn = true,
+        ) { flushQueue(manual = true) })
+
+        val view = layoutInflater.inflate(R.layout.dialog_notices, null)
+        val holder = view.findViewById<LinearLayout>(R.id.noticeList)
+        val empty = view.findViewById<View>(R.id.noticeEmpty)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(view)
+            .setNegativeButton("Yopish", null)
+            .create()
+
+        if (list.isEmpty()) {
+            empty.visibility = View.VISIBLE
+            // Ma'lumot eskirgan bo'lishi mumkin — jimgina qayta so'raymiz.
+            thread {
+                val fresh = Notices.refresh(this, force = true)
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    b.bellDot.visibility = if (fresh.isEmpty) View.GONE else View.VISIBLE
+                }
+            }
+        } else {
+            for ((i, n) in list.withIndex()) {
+                val row = layoutInflater.inflate(R.layout.item_notice, holder, false)
+                row.findViewById<ImageView>(R.id.nIcon).setImageResource(n.icon)
+                row.findViewById<TextView>(R.id.nTitle).text = n.title
+                row.findViewById<TextView>(R.id.nSub).text = n.sub
+                val badge = row.findViewById<TextView>(R.id.nCount)
+                badge.text = n.count
+                badge.setBackgroundResource(
+                    if (n.warn) R.drawable.j_badge_warn else R.drawable.j_badge)
+                row.setOnClickListener { dialog.dismiss(); n.action() }
+                holder.addView(row)
+                if (i < list.size - 1) {
+                    holder.addView(View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT, 1
+                        ).apply { marginStart = dp(14) ; marginEnd = dp(14) }
+                        setBackgroundColor(getColor(R.color.card_stroke))
+                    })
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun flushQueue(manual: Boolean) {

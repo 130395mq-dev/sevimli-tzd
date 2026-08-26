@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Перемещение (qabul qilish) — 6.7 dizayni.
+
+  Funksiya va ID lar O'ZGARMADI. Faqat ko'rinish: teginish maydonlari 48dp,
+  ro'yxat kartochka ichida, asosiy tugma pastda.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -12,43 +18,43 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="14dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="4dp"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/headerName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Перемещение"
-                android:textColor="@color/white"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                style="@style/J.HeadTitle"
+                android:textSize="18sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Перемещение" />
 
             <TextView
                 android:id="@+id/headerRoute"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="@color/white70"
-                android:textSize="12sp" />
+                style="@style/J.HeadSub"
+                android:layout_marginTop="1dp"
+                android:text="—" />
         </LinearLayout>
+
     </LinearLayout>
 
     <EditText
@@ -64,64 +70,81 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:gravity="center_vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        android:background="@drawable/j_field">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/j_ic_scan"
+            app:tint="#9BB3A7"
+            android:contentDescription="Skan" />
+
+        <TextView
+            style="@style/J.Body"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:textColor="#9BB3A7"
+            android:text="Shtrix-kodni skanerlang" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/progressText"
+            style="@style/J.Sec"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Tekshirilgan: 0 / 0"
-            android:textColor="@color/text_dark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:text="Tekshirilgan: 0 / 0" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Кол-во / Факт"
-            android:textColor="@color/text_gray"
-            android:textSize="12sp" />
+            style="@style/J.Sec"
+            android:text="Кол-во / Факт" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
 
     <ProgressBar
         android:id="@+id/loading"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="16dp"
+        android:layout_margin="10dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
 
-    <!-- Ro'yxat RecyclerView'da: faqat ko'rinib turgan qatorlar
-         chiziladi va surilganda qayta ishlatiladi. Ilgari bu
-         ScrollView ichidagi LinearLayout edi va har skandan keyin
-         BUTUN ro'yxat qaytadan yasalardi. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/j_card"
         android:overScrollMode="never"
         android:scrollbars="vertical" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnConfirm"
-        android:layout_width="match_parent"
-        android:layout_height="54dp"
-        android:layout_margin="14dp"
-        android:text="Далее · qabul qilish"
-        android:textAllCaps="false"
-        android:textSize="16sp"
-        app:backgroundTint="@color/brand"
-        app:cornerRadius="14dp" />
+        style="@style/J.Btn.Primary"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:text="Далее · qabul qilish" />
 </LinearLayout>

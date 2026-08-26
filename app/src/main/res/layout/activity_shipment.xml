@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Отгрузка — 6.7 dizayni.
+
+  Funksiya va ID lar O'ZGARMADI. Faqat ko'rinish: teginish maydonlari 48dp,
+  ro'yxat kartochka ichida, asosiy tugma pastda.
+
+  Yangi: pastdagi katta tugma (btnFinishBig). U yuqoridagi ✓ bilan
+  AYNAN bir amalni bajaradi — TSD ekrani baland, bir qo'lda ishlaganda
+  yuqoridagi kichik belgiga bosh barmoq yetmasdi.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -12,50 +22,48 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="14dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="4dp"
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Отгрузка"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                style="@style/J.HeadTitle"
+                android:text="Отгрузка" />
 
             <TextView
                 android:id="@+id/headerCp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="@color/white70"
-                android:textSize="12sp" />
+                style="@style/J.HeadSub"
+                android:layout_marginTop="1dp"
+                android:text="—" />
         </LinearLayout>
 
-        <TextView
+        <ImageView
             android:id="@+id/btnFinish"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✓"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_check"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Yakunlash" />
     </LinearLayout>
 
     <EditText
@@ -71,87 +79,102 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:gravity="center_vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/j_field">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/j_ic_scan"
+            app:tint="#9BB3A7"
+            android:contentDescription="Skan" />
 
         <TextView
-            android:id="@+id/totalCount"
+            style="@style/J.Body"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Товар, всего: 0"
-            android:textColor="@color/text_dark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_marginStart="10dp"
+            android:textColor="#9BB3A7"
+            android:text="Shtrix-kodni skanerlang" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/btnManualAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chiqadi"
-            android:textColor="@color/text_gray"
-            android:textSize="14sp" />
+            android:minHeight="44dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/j_tag"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_search"
+                app:tint="@color/brand"
+                android:contentDescription="Qidirish" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Qo'lda"
+                android:textColor="@color/brand"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
-
     <LinearLayout
-        android:id="@+id/btnManualAdd"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:background="@drawable/bg_row_white_ripple"
-        android:clickable="true"
-        android:focusable="true"
-        android:paddingTop="13dp"
-        android:paddingBottom="13dp">
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_search"
-            app:tint="@color/brand" />
+        android:gravity="center_vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Qo'lda qo'shish"
-            android:textColor="@color/brand"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            android:id="@+id/totalCount"
+            style="@style/J.Sec"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="Товар, всего: 0" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
+        <TextView
+            style="@style/J.Sec"
+            android:text="Chiqadi" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/emptyHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="40dp"
+        android:padding="34dp"
         android:text="Пусто · mahsulotni skan qiling"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
-    <!-- Ro'yxat RecyclerView'da: faqat ko'rinib turgan qatorlar
-         chiziladi va surilganda qayta ishlatiladi. Ilgari bu
-         ScrollView ichidagi LinearLayout edi va har skandan keyin
-         BUTUN ro'yxat qaytadan yasalardi. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/j_card"
         android:overScrollMode="never"
         android:scrollbars="vertical" />
 
@@ -160,7 +183,16 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="12dp"
+        android:layout_margin="10dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFinishBig"
+        style="@style/J.Btn.Primary"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:text="Jo'natishni yakunlash" />
 </LinearLayout>

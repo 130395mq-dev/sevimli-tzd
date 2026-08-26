@@ -76,6 +76,9 @@ class SalesReturnActivity : AppCompatActivity() {
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnFinish.setOnClickListener { finishDocument() }
+        // Pastdagi katta tugma — AYNAN o'sha amal. TSD ekrani baland,
+        // yuqoridagi kichik belgiga bir qo'lda yetish qiyin edi.
+        b.btnFinishBig.setOnClickListener { finishDocument() }
         b.btnManualAdd.setOnClickListener {
             pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
         }
@@ -278,7 +281,7 @@ class SalesReturnActivity : AppCompatActivity() {
     private val busy = Busy()
 
     private fun sendDocument() {
-        if (!busy.start(b.btnFinish)) return    // allaqachon yuborilyapti
+        if (!busy.start(b.btnFinish, b.btnFinishBig)) return    // allaqachon yuborilyapti
         b.loading.visibility = View.VISIBLE
         val lines = JSONArray()
         for (item in items) {
@@ -300,7 +303,7 @@ class SalesReturnActivity : AppCompatActivity() {
         thread {
             val result = Api.post(this, "sales-return", body)
             runOnUiThread {
-                busy.stop(b.btnFinish)
+                busy.stop(b.btnFinish, b.btnFinishBig)
                 if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 when (result) {

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bildirishnomalar oynasi. Qatorlar KODDAN qo'yiladi (item_notice.xml).
+  Yangilik bo'lmasa — ro'yxat o'rniga bo'sh holat ko'rinadi.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="20dp"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/j_ic_bell"
+            app:tint="@color/brand"
+            android:contentDescription="Bildirishnomalar" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="Bildirishnomalar"
+            android:textColor="@color/text_dark"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/noticeList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp" />
+
+    <LinearLayout
+        android:id="@+id/noticeEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="18dp"
+        android:paddingBottom="26dp"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:background="@drawable/j_icon_box">
+
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:src="@drawable/j_ic_bell"
+                app:tint="@color/brand"
+                android:contentDescription="Bo'sh" />
+        </FrameLayout>
+
+        <TextView
+            style="@style/J.Body.Bold"
+            android:layout_marginTop="14dp"
+            android:text="Hozircha yangilik yo'q" />
+
+        <TextView
+            style="@style/J.Sub"
+            android:layout_marginTop="4dp"
+            android:text="Yangi hujjat kelsa shu yerda chiqadi" />
+    </LinearLayout>
+</LinearLayout>

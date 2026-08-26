@@ -6,104 +6,113 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
-    <LinearLayout
+    <!-- ==================== HEADER ====================
+         Logo markazda. Ostida sklad yorlig'i — keng, ikonka va strelka bilan:
+         bosilsa Sozlamalar ochiladi (sklad o'sha yerdan tanlanadi).
+         O'ng yuqorida qo'ng'iroqcha — yangilik bo'lsa yonida nuqta chiqadi.
+         "Yangilash" tugmasi OLIB TASHLANDI: sinx endi fonda o'zi ketadi. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:background="@drawable/bg_header"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingTop="18dp"
-        android:paddingBottom="24dp">
-
-        <!-- Logo MARKAZDA va kattaroq. Boshqa hech narsa o'zgarmadi:
-             bo'limlar, "Yangilash", sklad chipi — hammasi 6.5 dagidek. -->
-        <ImageView
-            android:layout_width="182dp"
-            android:layout_height="66dp"
-            android:src="@drawable/logo_wide"
-            android:scaleType="fitCenter"
-            android:contentDescription="Jamlov" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Ombor boshqaruv tizimi"
-            android:textColor="@color/white70"
-            android:textSize="13sp"
-            android:letterSpacing="0.04" />
+        android:background="@drawable/bg_header">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="16dp">
 
-            <LinearLayout
+            <ImageView
+                android:layout_width="182dp"
+                android:layout_height="66dp"
+                android:src="@drawable/logo_wide"
+                android:scaleType="fitCenter"
+                android:contentDescription="Jamlov" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Ombor boshqaruv tizimi"
+                android:textColor="@color/white70"
+                android:textSize="13sp"
+                android:letterSpacing="0.04" />
+
+            <LinearLayout
+                android:id="@+id/storeBar"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="14dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_icon_circle_dark"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp">
+                android:background="@drawable/j_chip_wide"
+                android:paddingStart="14dp"
+                android:paddingEnd="10dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
 
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:background="@drawable/bg_icon_circle"
-                    android:backgroundTint="#7CFC9A" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/j_ic_store"
+                    app:tint="@color/white"
+                    android:contentDescription="Sklad" />
 
                 <TextView
                     android:id="@+id/statusChip"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="7dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:text="Sklad tanlanmagan"
                     android:textColor="@color/white"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <LinearLayout
-                android:id="@+id/btnRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_icon_circle_dark"
-                android:paddingStart="12dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:foreground="?attr/selectableItemBackground">
+                    android:textSize="15.5sp"
+                    android:textStyle="bold" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:src="@drawable/ic_refresh"
-                    android:tint="@color/white"
-                    android:contentDescription="Yangilash" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="Yangilash"
-                    android:textColor="@color/white"
-                    android:textSize="12sp" />
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/j_ic_chevron_down"
+                    app:tint="@color/white70"
+                    android:contentDescription="Tanlash" />
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp">
+
+            <ImageView
+                android:id="@+id/btnBell"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:src="@drawable/j_ic_bell"
+                app:tint="@color/white"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Bildirishnomalar" />
+
+            <View
+                android:id="@+id/bellDot"
+                android:layout_width="11dp"
+                android:layout_height="11dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/j_dot_new"
+                android:visibility="gone" />
+        </FrameLayout>
+    </FrameLayout>
 
     <ScrollView
         android:layout_width="match_parent"
