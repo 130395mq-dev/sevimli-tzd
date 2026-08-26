@@ -43,4 +43,125 @@
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/text_gray</item>
     </style>
+
+    <!-- ==================== JAMLOV 6.6 DIZAYN TIZIMI ====================
+         Yangi stillar FAQAT "J." bilan boshlanadi va faqat yangilangan
+         ekranlarda ishlatiladi. Eski stillarning birortasi o'zgartirilmadi,
+         shuning uchun tegilmagan ekranlar avvalgidek ko'rinadi. -->
+
+    <style name="J.Sec" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">11.5sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textColor">@color/text_gray</item>
+    </style>
+
+    <style name="J.Body" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_dark</item>
+    </style>
+
+    <style name="J.Body.Bold" parent="J.Body">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="J.Sub" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_gray</item>
+    </style>
+
+    <style name="J.Num" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_dark</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="J.HeadTitle" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="J.HeadSub" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:textColor">@color/white70</item>
+    </style>
+
+    <style name="J.IconBox" parent="">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">@drawable/j_icon_box</item>
+    </style>
+
+    <style name="J.Field" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:background">@drawable/j_field</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_dark</item>
+        <item name="android:textColorHint">#9BB3A7</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="J.Btn" parent="Widget.Material3.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">14dp</item>
+        <!-- Material3 tugmasi standartда yuqori/pastдан 6dp ichkariga kiradi.
+             Nolga tushirilmasa, 56dp balandlik amalda ~44dp bo'lib qoladi va
+             qo'lqop bilan bosish qiyinlashadi. -->
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <style name="J.Btn.Primary" parent="J.Btn">
+        <item name="backgroundTint">@color/brand</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="J.Btn.Soft" parent="J.Btn">
+        <item name="android:layout_height">50dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="backgroundTint">@color/pill_gray</item>
+        <item name="android:textColor">@color/text_dark</item>
+    </style>
+
+    <style name="J.Row" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">64dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="J.Step" parent="">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">11dp</item>
+        <item name="android:background">@drawable/j_stepper</item>
+    </style>
 </resources>

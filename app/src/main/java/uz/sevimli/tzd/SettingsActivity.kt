@@ -3,11 +3,13 @@ package uz.sevimli.tzd
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import org.json.JSONObject
 import uz.sevimli.tzd.databinding.ActivitySettingsBinding
 import kotlin.concurrent.thread
@@ -45,6 +47,38 @@ class SettingsActivity : AppCompatActivity() {
         b.btnSaveToken.setOnClickListener { saveToken() }
         b.btnOrg.setOnClickListener { pickOrg.launch(Intent(this, OrgPickerActivity::class.java)) }
         updateOrgLabel()
+
+        // Parolni ko'rsatish/yashirish. Uzun parolni xato yozganini xodim
+        // ko'ra olsin — qayta-qayta urinib vaqt ketmasin.
+        b.btnEye.setOnClickListener {
+            val hidden = b.inPassword.transformationMethod is PasswordTransformationMethod
+            b.inPassword.transformationMethod =
+                if (hidden) HideReturnsTransformationMethod.getInstance()
+                else PasswordTransformationMethod.getInstance()
+            b.btnEye.setImageResource(
+                if (hidden) R.drawable.j_ic_eye else R.drawable.j_ic_eye_off)
+            b.inPassword.setSelection(b.inPassword.text?.length ?: 0)
+        }
+
+        // Bo'limlar yig'ilgan holda turadi — kerakligi bosilganda ochiladi.
+        // Yangi ekran YO'Q, navigatsiya o'zgarmadi: hammasi shu ekranда.
+        section(b.rowFn, b.boxFn, b.arrFn)
+        section(b.rowDev, b.boxDev, b.arrDev)
+        section(b.rowOrg, b.boxOrg, b.arrOrg)
+        section(b.rowPrice, b.boxPrice, b.arrPrice)
+        section(b.rowStore, b.boxStore, b.arrStore)
+        // "Ombor" eng ko'p ishlatiladi — ochiq holda boshlanadi.
+        b.arrStore.rotation = 90f
+    }
+
+    /** Bitta yig'iladigan bo'lim. Strelka ochiqда pastga qaraydi. */
+    private fun section(row: View, box: View, arrow: ImageView) {
+        arrow.rotation = if (box.visibility == View.VISIBLE) 90f else 0f
+        row.setOnClickListener {
+            val open = box.visibility == View.VISIBLE
+            box.visibility = if (open) View.GONE else View.VISIBLE
+            arrow.animate().rotation(if (open) 0f else 90f).setDuration(140).start()
+        }
     }
 
     private fun doLogin() {
@@ -129,6 +163,10 @@ class SettingsActivity : AppCompatActivity() {
         enterStoreStage(null)   // yangi token bilan sklad ro'yxati (alohida so'rov)
     }
 
+    /**
+     * Sklad ro'yxati. Har qator: ikonka + nom + tanlangan belgisi.
+     * Qator balandligi 64dp dan kam emas — qo'lqop bilan ham aniq bosiladi.
+     */
     private fun renderStores(json: JSONObject) {
         b.storeList.removeAllViews()
         val stores = json.optJSONArray("stores") ?: return
@@ -140,26 +178,43 @@ class SettingsActivity : AppCompatActivity() {
             val name = s.optString("name")
             val selected = id == currentId
 
-            val card = CardView(this).apply {
-                radius = dp(16f)
-                cardElevation = 0f
-                setCardBackgroundColor(getColor(if (selected) R.color.brand else R.color.white))
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                minimumHeight = dp(64f).toInt()
+                setPadding(dp(12f).toInt(), dp(10f).toInt(), dp(12f).toInt(), dp(10f).toInt())
+                background = getDrawable(R.drawable.j_card)
                 val lp = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                lp.bottomMargin = dp(10f).toInt()
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                lp.bottomMargin = dp(8f).toInt()
                 layoutParams = lp
             }
-            val tv = TextView(this).apply {
-                text = name + (if (selected) "   ✓" else "")
+            row.addView(ImageView(this).apply {
+                setImageResource(R.drawable.j_ic_store)
+                imageTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.brand))
+                background = getDrawable(R.drawable.j_icon_box)
+                val p = dp(8f).toInt()
+                setPadding(p, p, p, p)
+                layoutParams = LinearLayout.LayoutParams(dp(40f).toInt(), dp(40f).toInt())
+            })
+            row.addView(TextView(this).apply {
+                text = name
                 textSize = 16f
-                setTextColor(getColor(if (selected) R.color.white else R.color.text_dark))
-                setPadding(dp(18f).toInt(), dp(18f).toInt(), dp(18f).toInt(), dp(18f).toInt())
-            }
-            card.addView(tv)
-            card.setOnClickListener { selectStore(id, name) }
-            b.storeList.addView(card)
+                setTextColor(getColor(R.color.text_dark))
+                if (selected) setTypeface(typeface, android.graphics.Typeface.BOLD)
+                val lp = LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                lp.marginStart = dp(12f).toInt()
+                layoutParams = lp
+            })
+            row.addView(View(this).apply {
+                background = getDrawable(
+                    if (selected) R.drawable.j_radio_on else R.drawable.j_radio_off)
+                layoutParams = LinearLayout.LayoutParams(dp(22f).toInt(), dp(22f).toInt())
+            })
+            row.setOnClickListener { selectStore(id, name) }
+            b.storeList.addView(row)
         }
     }
 
@@ -200,7 +255,8 @@ class SettingsActivity : AppCompatActivity() {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(4f).toInt(), dp(12f).toInt(), dp(4f).toInt(), dp(12f).toInt())
+                minimumHeight = dp(60f).toInt()
+                setPadding(dp(2f).toInt(), dp(10f).toInt(), dp(2f).toInt(), dp(10f).toInt())
             }
             val col = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -211,7 +267,7 @@ class SettingsActivity : AppCompatActivity() {
                 text = fn.title; textSize = 16f; setTextColor(getColor(R.color.text_dark))
             })
             col.addView(TextView(this).apply {
-                text = fn.sub; textSize = 12f; setTextColor(getColor(R.color.text_gray))
+                text = fn.sub; textSize = 13f; setTextColor(getColor(R.color.text_gray))
             })
             val sw = androidx.appcompat.widget.SwitchCompat(this).apply {
                 isChecked = Config.isFn(this@SettingsActivity, fn.key)

@@ -10,18 +10,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:gravity="center_horizontal"
         android:background="@drawable/bg_header"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:paddingTop="18dp"
         android:paddingBottom="24dp">
 
+        <!-- Logo MARKAZDA va kattaroq. Boshqa hech narsa o'zgarmadi:
+             bo'limlar, "Yangilash", sklad chipi — hammasi 6.5 dagidek. -->
         <ImageView
-            android:layout_width="150dp"
-            android:layout_height="60dp"
+            android:layout_width="182dp"
+            android:layout_height="66dp"
             android:src="@drawable/logo_wide"
-            android:scaleType="fitStart"
-            android:contentDescription="TSD" />
+            android:scaleType="fitCenter"
+            android:contentDescription="Jamlov" />
 
         <TextView
             android:layout_width="wrap_content"

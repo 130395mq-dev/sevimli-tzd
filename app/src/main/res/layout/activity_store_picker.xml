@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  SKLAD TANLASH — 6.6 dizayni.
+
+  O'zgargani: ilgari skladni bosgan zahoti ekran yopilardi. Xato bosilsa
+  xodim qaytadan kirishga majbur edi. Endi avval tanlanadi (belgi ko'rinadi),
+  keyin pastdagi "Saqlash" bosiladi.
+
+  ID lar avvalgidek: btnBack, title, list, loading. Yangisi: btnSave.
+  Sarlavha matni koddan almashtiriladi (Перемещение "Qayerga" deb yuboradi),
+  shuning uchun standart qiymat O'ZGARTIRILMADI.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -12,36 +23,41 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
+        android:paddingStart="6dp"
         android:paddingEnd="16dp"
-        android:paddingTop="14dp"
+        android:paddingTop="10dp"
         android:paddingBottom="16dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Qayerga (sklad)"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/J.HeadTitle"
+            android:layout_marginStart="4dp"
+            android:text="Qayerga (sklad)" />
     </LinearLayout>
+
+    <TextView
+        style="@style/J.Sec"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="8dp"
+        android:text="Qaysi sklad bilan ishlaysiz?" />
 
     <ProgressBar
         android:id="@+id/loading"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
 
@@ -56,6 +72,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp" />
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="14dp" />
     </ScrollView>
+
+    <!-- Asosiy amal doim pastda: bir qo'l bilan bosh barmoq yetadi.
+         Sklad tanlanmaguncha o'chiq turadi. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSave"
+        style="@style/J.Btn.Primary"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="14dp"
+        android:enabled="false"
+        android:text="Saqlash" />
 </LinearLayout>

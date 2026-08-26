@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ПРИЁМКА — 6.6 dizayni.
+
+  Funksiya o'zgarmadi. ID lar avvalgidek: btnBack, btnFinish, scanInput,
+  totalCount, btnManualAdd, emptyHint, list, loading, totalSum.
+  Yangisi bitta: btnFinishBig — pastdagi katta tugma, u ham
+  finishDocument() ni chaqiradi (yuqoridagi ✓ bilan bir xil amal).
+
+  Nega pastda tugma: TSD ekrani baland, xodim qurilmani bir qo'lda ushlaydi.
+  Yuqoridagi kichkina ✓ ga bosh barmoq yetmaydi — hujjatni yakunlash uchun
+  qurilmani qo'lда siljitishga to'g'ri kelardi.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,58 +18,58 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
+    <!-- ==================== SARLAVHA ==================== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="14dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="4dp"
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Приёмка"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                style="@style/J.HeadTitle"
+                android:text="Приёмка" />
 
             <TextView
                 android:id="@+id/headerCp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="@color/white70"
-                android:textSize="12sp" />
+                style="@style/J.HeadSub"
+                android:layout_marginTop="1dp"
+                android:text="—" />
         </LinearLayout>
 
-        <TextView
+        <ImageView
             android:id="@+id/btnFinish"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✓"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_check"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Yakunlash" />
     </LinearLayout>
 
+    <!-- Skaner kiritishi — ko'rinmaydi, fokusni ushlab turadi -->
     <EditText
         android:id="@+id/scanInput"
         android:layout_width="1dp"
@@ -67,91 +79,113 @@
         android:background="@null"
         android:importantForAutofill="no" />
 
+    <!-- ==================== SKAN QATORI ====================
+         Chapda — nima qilish kerakligi, o'ngda "Qo'lda qo'shish".
+         Ilgari "Qo'lda qo'shish" alohida keng qator edi va ro'yxatdan
+         joy o'g'irlardi. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:gravity="center_vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/j_field">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/j_ic_scan"
+            app:tint="#9BB3A7"
+            android:contentDescription="Skan" />
+
+        <TextView
+            style="@style/J.Body"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:textColor="#9BB3A7"
+            android:text="Shtrix-kodni skanerlang" />
+
+        <LinearLayout
+            android:id="@+id/btnManualAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/j_tag"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_search"
+                app:tint="@color/brand"
+                android:contentDescription="Qidirish" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Qo'lda"
+                android:textColor="@color/brand"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ==================== HISOB QATORI ==================== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/totalCount"
+            style="@style/J.Sec"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Товар, всего: 0"
-            android:textColor="@color/text_dark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:text="Товар, всего: 0" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Факт"
-            android:textColor="@color/text_gray"
-            android:textSize="14sp" />
+            style="@style/J.Sec"
+            android:text="Факт" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
-
-    <LinearLayout
-        android:id="@+id/btnManualAdd"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="@drawable/bg_row_white_ripple"
-        android:clickable="true"
-        android:focusable="true"
-        android:paddingTop="13dp"
-        android:paddingBottom="13dp">
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_search"
-            app:tint="@color/brand" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Qo'lda qo'shish"
-            android:textColor="@color/brand"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
 
     <TextView
         android:id="@+id/emptyHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="40dp"
+        android:padding="34dp"
         android:text="Пусто · mahsulotni skan qiling"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
     <!-- Ro'yxat RecyclerView'da: faqat ko'rinib turgan qatorlar
-         chiziladi va surilganda qayta ishlatiladi. Ilgari bu
-         ScrollView ichidagi LinearLayout edi va har skandan keyin
-         BUTUN ro'yxat qaytadan yasalardi. -->
+         chiziladi va surilganda qayta ishlatiladi. -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/j_card"
         android:overScrollMode="never"
         android:scrollbars="vertical" />
 
@@ -160,32 +194,28 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="12dp"
+        android:layout_margin="10dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
-
+    <!-- ==================== SUMMA ==================== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/white"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/j_card"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:paddingTop="12dp"
         android:paddingBottom="12dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Kirim summasi"
-            android:textColor="@color/text_gray"
-            android:textSize="13sp" />
+            style="@style/J.Sub"
+            android:text="Kirim summasi" />
 
         <TextView
             android:id="@+id/totalSum"
@@ -196,6 +226,17 @@
             android:text="0 so'm"
             android:textColor="@color/brand"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFeatureSettings="tnum" />
     </LinearLayout>
+
+    <!-- Asosiy amal doim pastda — bosh barmoq yetadigan joyda -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFinishBig"
+        style="@style/J.Btn.Primary"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:text="Qabul qilishni yakunlash" />
 </LinearLayout>

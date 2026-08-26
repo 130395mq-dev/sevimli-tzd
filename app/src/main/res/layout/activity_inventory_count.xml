@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MoySklad'da yaratilgan inventarizatsiyani sanash ekrani.
-  Tuzilishi activity_move_receive.xml bilan bir xil — farqi:
-  ustun sarlavhasi "Qoldiq / Fakt" va tugma "Sanoqni saqlash".
+  MoySklad'da yaratilgan inventarizatsiyani sanash ekrani — 6.6 dizayni.
+
+  Funksiya va mantiq O'ZGARMADI. ID lar avvalgidek: btnBack, headerName,
+  headerRoute, btnAdd, scanInput, progressText, loading, list, btnConfirm.
+
+  O'zgargani: teginish maydonlari 48dp, ro'yxat kartochka ichida,
+  sarlavha qatori tinchroq. Farq (kamomad / ortiqcha) allaqachon har
+  qatorda yozilardi — u joyida qoldi.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -17,53 +22,55 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="16dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="14dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="4dp"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/headerName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Инвентаризация"
-                android:textColor="@color/white"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                style="@style/J.HeadTitle"
+                android:textSize="18sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Инвентаризация" />
 
             <TextView
                 android:id="@+id/headerRoute"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="@color/white70"
-                android:textSize="12sp" />
+                style="@style/J.HeadSub"
+                android:layout_marginTop="1dp"
+                android:text="—" />
         </LinearLayout>
 
-        <TextView
+        <ImageView
             android:id="@+id/btnAdd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="＋"
-            android:textColor="@color/white"
-            android:textSize="22sp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_plus"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Qo'lda qo'shish" />
     </LinearLayout>
 
+    <!-- Skaner kiritishi — ko'rinmaydi, fokusni ushlab turadi -->
     <EditText
         android:id="@+id/scanInput"
         android:layout_width="1dp"
@@ -77,41 +84,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:gravity="center_vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        android:background="@drawable/j_field">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/j_ic_scan"
+            app:tint="#9BB3A7"
+            android:contentDescription="Skan" />
+
+        <TextView
+            style="@style/J.Body"
+            android:layout_marginStart="10dp"
+            android:textColor="#9BB3A7"
+            android:text="Shtrix-kodni skanerlang" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/progressText"
+            style="@style/J.Sec"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sanalgan: 0 / 0"
-            android:textColor="@color/text_dark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:text="Sanalgan: 0 / 0" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Qoldiq / Fakt"
-            android:textColor="@color/text_gray"
-            android:textSize="12sp" />
+            style="@style/J.Sec"
+            android:text="Qoldiq / Fakt" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/card_stroke" />
 
     <ProgressBar
         android:id="@+id/loading"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         android:indeterminateTint="@color/brand"
         android:visibility="gone" />
 
@@ -120,17 +144,18 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/j_card"
         android:overScrollMode="never"
         android:scrollbars="vertical" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnConfirm"
-        android:layout_width="match_parent"
-        android:layout_height="54dp"
-        android:layout_margin="14dp"
-        android:text="Sanoqni saqlash"
-        android:textAllCaps="false"
-        android:textSize="16sp"
-        app:backgroundTint="@color/brand"
-        app:cornerRadius="14dp" />
+        style="@style/J.Btn.Primary"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:text="Sanoqni saqlash" />
 </LinearLayout>

@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  SOZLAMALAR — 6.6 dizayni.
+
+  MUHIM: birorta funksiya olib tashlanmadi va qo'shilmadi. Barcha ID lar
+  avvalgidek: inLogin, inPassword, btnLogin, loginError, fnList, inToken,
+  btnSaveToken, btnOrg, swUlgurji, storeList, loading.
+
+  O'zgargani — joylashuv: ilgari hamma bo'lim bitta uzun scrollда ochiq
+  turardi va xodim kerakli joyni izlab aylantirar edi. Endi 5 ta bo'lim
+  yig'ilgan holda turadi, bosilganda O'SHA YERDA ochiladi. Yangi ekran
+  ham, yangi navigatsiya ham yo'q.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,108 +18,163 @@
     android:orientation="vertical"
     android:background="@color/bg_light">
 
-    <!-- SARLAVHA -->
+    <!-- ==================== SARLAVHA ==================== -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_header"
-        android:paddingStart="16dp"
+        android:paddingStart="6dp"
         android:paddingEnd="16dp"
-        android:paddingTop="14dp"
+        android:paddingTop="10dp"
         android:paddingBottom="16dp">
 
-        <TextView
+        <!-- 48dp teginish maydoni: qo'lqop bilan ham beriladi -->
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="←"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:paddingEnd="14dp" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/j_ic_back"
+            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Orqaga" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sozlamalar"
-            android:textColor="@color/white"
-            android:textSize="19sp"
-            android:textStyle="bold" />
+            style="@style/J.HeadTitle"
+            android:layout_marginStart="4dp"
+            android:text="Sozlamalar" />
     </LinearLayout>
 
-    <!-- LOGIN BOSQICHI -->
-    <LinearLayout
+    <!-- ==================== 1-BOSQICH: MENEJER KIRISHI ==================== -->
+    <ScrollView
         android:id="@+id/loginStage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="6dp"
-            android:text="Menejer kirishi"
-            android:textColor="@color/text_dark"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp"
-            android:text="Sozlamani faqat menejer o'zgartiradi"
-            android:textColor="@color/text_gray"
-            android:textSize="13sp" />
-
-        <EditText
-            android:id="@+id/inLogin"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:hint="Login"
-            android:inputType="text"
-            android:background="@drawable/bg_chip"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="12dp" />
-
-        <EditText
-            android:id="@+id/inPassword"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:hint="Parol"
-            android:inputType="textPassword"
-            android:background="@drawable/bg_chip"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="20dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLogin"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:text="Kirish"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            app:backgroundTint="@color/brand"
-            app:cornerRadius="14dp" />
-
-        <TextView
-            android:id="@+id/loginError"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:gravity="center"
-            android:textColor="@color/brand"
-            android:textSize="14sp"
-            android:visibility="gone" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:paddingTop="30dp"
+            android:paddingBottom="24dp">
 
-    <!-- SOZLAMALAR (login'dan keyin) — bitta scroll -->
+            <!-- Ilovaning O'Z logosi. Oq fonda och yashil ko'rinmasligi
+                 uchun to'q yashil plitka ustiga qo'yilgan. -->
+            <FrameLayout
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/j_logo_tile">
+
+                <ImageView
+                    android:layout_width="62dp"
+                    android:layout_height="62dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/logo"
+                    android:contentDescription="Jamlov" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:text="Menejer kirishi"
+                android:textColor="@color/text_dark"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <TextView
+                style="@style/J.Sub"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="26dp"
+                android:text="Sozlamani faqat menejer o'zgartiradi" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="16dp"
+                    android:src="@drawable/j_ic_user"
+                    app:tint="#9BB3A7"
+                    android:contentDescription="Login" />
+
+                <EditText
+                    android:id="@+id/inLogin"
+                    style="@style/J.Field"
+                    android:hint="Login"
+                    android:inputType="text"
+                    android:paddingStart="48dp"
+                    android:autofillHints="username" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="16dp"
+                    android:src="@drawable/j_ic_lock"
+                    app:tint="#9BB3A7"
+                    android:contentDescription="Parol" />
+
+                <EditText
+                    android:id="@+id/inPassword"
+                    style="@style/J.Field"
+                    android:hint="Parol"
+                    android:inputType="textPassword"
+                    android:paddingStart="48dp"
+                    android:paddingEnd="52dp"
+                    android:autofillHints="password" />
+
+                <!-- Parolni ko'rish: xodim uzun parolni xato yozganini
+                     tekshira olsin, qayta-qayta urinmasin. -->
+                <ImageView
+                    android:id="@+id/btnEye"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:padding="14dp"
+                    android:src="@drawable/j_ic_eye_off"
+                    app:tint="#9BB3A7"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Parolni ko'rsatish" />
+            </FrameLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogin"
+                style="@style/J.Btn.Primary"
+                android:layout_marginTop="20dp"
+                android:text="Kirish" />
+
+            <TextView
+                android:id="@+id/loginError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:textColor="@color/warning"
+                android:textSize="14sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ==================== 2-BOSQICH: SOZLAMALAR ==================== -->
     <ScrollView
         android:id="@+id/storeStage"
         android:layout_width="match_parent"
@@ -120,217 +187,339 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
-            <!-- BO'LIMLAR (dashboard) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="2dp"
-                android:text="Bo'limlar (dashboardда ko'rinishi)"
-                android:textColor="@color/text_dark"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="8dp"
-                android:text="Kerakli bo'limlarni yoqing — menyuda faqat o'shalar chiqadi. «Просмотр товара» doim ko'rinadi."
-                android:textColor="@color/text_gray"
-                android:textSize="13sp" />
-
-            <androidx.cardview.widget.CardView
+            <!-- ==== 1. BO'LIMLAR ==== -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_marginBottom="18dp">
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/j_card">
 
                 <LinearLayout
-                    android:id="@+id/fnList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="10dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp" />
-            </androidx.cardview.widget.CardView>
+                    android:id="@+id/rowFn"
+                    style="@style/J.Row"
+                    android:foreground="?attr/selectableItemBackground">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/card_stroke"
-                android:layout_marginBottom="16dp" />
-
-            <!-- QURILMA TOKENI -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="6dp"
-                android:text="Qurilma tokeni"
-                android:textColor="@color/text_dark"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/inToken"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:hint="Qurilma tokeni (admin paneldan)"
-                android:inputType="text"
-                android:maxLines="1"
-                android:background="@drawable/bg_chip"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:layout_marginBottom="10dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveToken"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:text="Tokenni saqlash"
-                android:textAllCaps="false"
-                android:textSize="15sp"
-                app:backgroundTint="@color/brand"
-                app:cornerRadius="14dp"
-                android:layout_marginBottom="18dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/card_stroke"
-                android:layout_marginBottom="16dp" />
-
-            <!-- ORGANIZATSIYA -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="6dp"
-                android:text="Organizatsiya (yuridik shaxs)"
-                android:textColor="@color/text_dark"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnOrg"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:text="Organizatsiyani tanlash"
-                android:textAllCaps="false"
-                android:textSize="15sp"
-                app:backgroundTint="@color/pill_gray"
-                android:textColor="@color/text_dark"
-                app:cornerRadius="14dp"
-                android:layout_marginBottom="18dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/card_stroke"
-                android:layout_marginBottom="16dp" />
-
-            <!-- NARX TURI -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="2dp"
-                android:text="Narx turi (ценник)"
-                android:textColor="@color/text_dark"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="8dp"
-                android:text="Optom (ulgurji) filialда yoqing — ценник ulgurji narxда chiqadi. Boshqasida o'chiq (chakana)."
-                android:textColor="@color/text_gray"
-                android:textSize="13sp" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/white"
-                android:layout_marginBottom="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="10dp"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp">
+                    <ImageView
+                        style="@style/J.IconBox"
+                        android:src="@drawable/j_ic_sections"
+                        app:tint="@color/brand"
+                        android:contentDescription="Bo'limlar" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:layout_marginStart="12dp"
                         android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Ulgurji narx (оптом)"
-                            android:textColor="@color/text_dark"
-                            android:textSize="16sp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="optom savdo filiali uchun"
-                            android:textColor="@color/text_gray"
-                            android:textSize="12sp" />
+
+                        <TextView style="@style/J.Body.Bold" android:text="Bo'limlar" />
+                        <TextView style="@style/J.Sub"
+                            android:layout_marginTop="2dp"
+                            android:text="Dashboardда ko'rinadigan bo'limlar" />
                     </LinearLayout>
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/swUlgurji"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <ImageView
+                        android:id="@+id/arrFn"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#9BB3A7"
+                        android:contentDescription="Ochish" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/card_stroke"
-                android:layout_marginBottom="16dp" />
+                <LinearLayout
+                    android:id="@+id/boxFn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="8dp"
+                    android:visibility="gone">
 
-            <!-- SKLAD -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="2dp"
-                android:text="Qurilma qaysi skladga ishlaydi?"
-                android:textColor="@color/text_dark"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                    <TextView style="@style/J.Sub"
+                        android:layout_marginBottom="4dp"
+                        android:text="«Просмотр товара» doim ko'rinadi" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="8dp"
-                android:text="Tanlangan sklad barcha funksiyaga amal qiladi"
-                android:textColor="@color/text_gray"
-                android:textSize="13sp" />
+                    <LinearLayout
+                        android:id="@+id/fnList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </LinearLayout>
 
+            <!-- ==== 2. QURILMA ==== -->
             <LinearLayout
-                android:id="@+id/storeList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/j_card">
+
+                <LinearLayout
+                    android:id="@+id/rowDev"
+                    style="@style/J.Row"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        style="@style/J.IconBox"
+                        android:src="@drawable/j_ic_device"
+                        app:tint="@color/brand"
+                        android:contentDescription="Qurilma" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView style="@style/J.Body.Bold" android:text="Qurilma" />
+                        <TextView style="@style/J.Sub"
+                            android:layout_marginTop="2dp"
+                            android:text="Qurilma tokeni" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrDev"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#9BB3A7"
+                        android:contentDescription="Ochish" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/boxDev"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="14dp"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/inToken"
+                        style="@style/J.Field"
+                        android:hint="Qurilma tokeni (admin paneldan)"
+                        android:inputType="text"
+                        android:autofillHints="password" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSaveToken"
+                        style="@style/J.Btn.Primary"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="10dp"
+                        android:text="Tokenni saqlash" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ==== 3. TASHKILOT ==== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/j_card">
+
+                <LinearLayout
+                    android:id="@+id/rowOrg"
+                    style="@style/J.Row"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        style="@style/J.IconBox"
+                        android:src="@drawable/j_ic_org"
+                        app:tint="@color/brand"
+                        android:contentDescription="Tashkilot" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView style="@style/J.Body.Bold" android:text="Tashkilot" />
+                        <TextView style="@style/J.Sub"
+                            android:layout_marginTop="2dp"
+                            android:text="Yuridik shaxsni tanlash" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrOrg"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#9BB3A7"
+                        android:contentDescription="Ochish" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/boxOrg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="14dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOrg"
+                        style="@style/J.Btn.Soft"
+                        android:text="Organizatsiyani tanlash" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ==== 4. NARX TURI ==== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/j_card">
+
+                <LinearLayout
+                    android:id="@+id/rowPrice"
+                    style="@style/J.Row"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        style="@style/J.IconBox"
+                        android:src="@drawable/j_ic_price"
+                        app:tint="@color/brand"
+                        android:contentDescription="Narx turi" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView style="@style/J.Body.Bold" android:text="Narx turi" />
+                        <TextView style="@style/J.Sub"
+                            android:layout_marginTop="2dp"
+                            android:text="Chakana / Ulgurji" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrPrice"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#9BB3A7"
+                        android:contentDescription="Ochish" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/boxPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView style="@style/J.Sub"
+                        android:layout_marginBottom="8dp"
+                        android:text="Optom filialда yoqing — ценник ulgurji narxда chiqadi. Boshqasida o'chiq (chakana)." />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="56dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView style="@style/J.Body" android:text="Ulgurji narx (оптом)" />
+                            <TextView style="@style/J.Sub"
+                                android:layout_marginTop="2dp"
+                                android:text="optom savdo filiali uchun" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/swUlgurji"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ==== 5. OMBOR (SKLAD) ==== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/j_card">
+
+                <LinearLayout
+                    android:id="@+id/rowStore"
+                    style="@style/J.Row"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <ImageView
+                        style="@style/J.IconBox"
+                        android:src="@drawable/j_ic_store"
+                        app:tint="@color/brand"
+                        android:contentDescription="Ombor" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView style="@style/J.Body.Bold" android:text="Ombor" />
+                        <TextView style="@style/J.Sub"
+                            android:layout_marginTop="2dp"
+                            android:text="Qurilma qaysi skladga ishlaydi" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrStore"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#9BB3A7"
+                        android:contentDescription="Ochish" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/boxStore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp">
+
+                    <TextView style="@style/J.Sub"
+                        android:layout_marginBottom="6dp"
+                        android:text="Tanlangan sklad barcha bo'limga amal qiladi" />
+
+                    <LinearLayout
+                        android:id="@+id/storeList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

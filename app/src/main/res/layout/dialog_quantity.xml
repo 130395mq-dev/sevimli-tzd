@@ -74,44 +74,46 @@
 
         <TextView
             android:id="@+id/btnMinus"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
             android:gravity="center"
             android:text="−"
             android:textColor="@color/brand"
-            android:textSize="28sp"
-            android:background="@drawable/bg_chip" />
+            android:textSize="30sp"
+            android:background="@drawable/j_stepper" />
 
         <EditText
             android:id="@+id/qInput"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="58dp"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:gravity="center"
             android:inputType="numberDecimal"
+            android:selectAllOnFocus="true"
             android:text="1"
             android:textColor="@color/text_dark"
-            android:textSize="22sp"
+            android:textSize="25sp"
             android:textStyle="bold"
-            android:background="@drawable/bg_chip" />
+            android:fontFeatureSettings="tnum"
+            android:background="@drawable/j_field" />
 
         <TextView
             android:id="@+id/btnPlus"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
             android:gravity="center"
             android:text="+"
             android:textColor="@color/brand"
-            android:textSize="26sp"
-            android:background="@drawable/bg_chip" />
+            android:textSize="28sp"
+            android:background="@drawable/j_stepper" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnOk"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="56dp"
         android:layout_marginTop="18dp"
         android:text="Далее"
         android:textAllCaps="false"
