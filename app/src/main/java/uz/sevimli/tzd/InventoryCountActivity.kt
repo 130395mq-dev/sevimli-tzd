@@ -209,10 +209,14 @@ class InventoryCountActivity : AppCompatActivity() {
 
         val was = item.counted
         qName.text = item.name
-        qPrice.text = if (item.wasInDoc)
-            "Tizim qoldig'i: ${trimNum(item.expected)}"
-        else
-            "⚠ Hujjatda yo'q edi"
+        // Tizim qoldig'i ATAYIN ko'rsatilmaydi — xodim javondagi tovarni
+        // sanashi kerak, ekrandagi songa moslashi emas.
+        if (item.wasInDoc) {
+            qPrice.visibility = View.GONE
+        } else {
+            qPrice.visibility = View.VISIBLE
+            qPrice.text = "⚠ Hujjatda yo'q edi"
+        }
         qWas.text = "Sanalgan: ${trimNum(was)}"
 
         val packQty = product.optDouble("pack_qty", 0.0)
@@ -252,9 +256,7 @@ class InventoryCountActivity : AppCompatActivity() {
         fun updateWill() {
             val will = was + currentQty()
             qWill.text = "Jami: ${trimNum(will)}"
-            // Tizim qoldig'idan farq qilsa — rangini o'zgartiramiz
-            qWill.setTextColor(getColor(
-                if (item.wasInDoc && will != item.expected) R.color.warning else R.color.brand))
+            qWill.setTextColor(getColor(R.color.brand))
         }
         updateWill()
         qInput.setSelection(qInput.text.length)
@@ -291,6 +293,16 @@ class InventoryCountActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /**
+     * Ro'yxat. XODIM TIZIM QOLDIG'INI KO'RMAYDI.
+     *
+     * Sabab (Sklad 15 dagi kabi): qoldiq ko'rinib tursa, sanoq "ko'chirib
+     * yozish" ga aylanadi — xodim javondagi tovarni sanash o'rniga ekrandagi
+     * songa moslaydi. Inventarizatsiyaning butun ma'nosi shunda yo'qoladi.
+     *
+     * Shuning uchun qatorда faqat FAKT turadi. Farqni menejer kompyuterda,
+     * MoySklad hujjatida ko'radi — u yerda ikkala son ham bor.
+     */
     private fun renderList() {
         var counted = 0
         val rows = ArrayList<RecvRowAdapter.Row>(items.size)
@@ -301,24 +313,16 @@ class InventoryCountActivity : AppCompatActivity() {
             val statusColor: Int
             when {
                 !item.wasInDoc -> {
-                    status = "➕ Hujjatda yo'q edi"
+                    status = "\u2795 Hujjatda yo'q edi"
                     statusColor = R.color.warning
                 }
-                !item.touched -> {
-                    status = "Sanalmagan · qoldiq ${trimNum(item.expected)}"
-                    statusColor = R.color.text_gray
-                }
-                item.counted == item.expected -> {
-                    status = "✓ Mos keldi"
+                item.touched -> {
+                    status = "Sanaldi"
                     statusColor = R.color.brand
                 }
-                item.counted < item.expected -> {
-                    status = "⚠ Kamomad (${trimNum(item.expected - item.counted)})"
-                    statusColor = R.color.warning
-                }
                 else -> {
-                    status = "⚠ Ortiqcha (+${trimNum(item.counted - item.expected)})"
-                    statusColor = R.color.warning
+                    status = ""
+                    statusColor = R.color.text_gray
                 }
             }
 
@@ -327,9 +331,9 @@ class InventoryCountActivity : AppCompatActivity() {
                 name = item.name,
                 status = status,
                 statusColor = statusColor,
-                qty = "${trimNum(item.expected)} / ${trimNum(item.counted)}",
-                qtyColor = if (item.touched && item.counted == item.expected)
-                    R.color.brand else R.color.text_dark,
+                // FAQAT fakt. Ilgari "qoldiq / fakt" turardi.
+                qty = trimNum(item.counted),
+                qtyColor = if (item.touched) R.color.brand else R.color.text_gray,
                 numColor = if (item.touched) R.color.brand else R.color.text_gray,
                 numBold = item.touched,
             ))
@@ -351,7 +355,7 @@ class InventoryCountActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(item.name)
             .setMessage(if (item.wasInDoc)
-                "Haqiqiy son (tizim qoldig'i: ${trimNum(item.expected)}).\n0 = umuman yo'q."
+                "Haqiqiy son. 0 = umuman yo'q."
             else
                 "Haqiqiy son. Bu tovar hujjatda yo'q edi.")
             .setView(input)
@@ -362,11 +366,6 @@ class InventoryCountActivity : AppCompatActivity() {
                     item.touched = true      // 0 kiritilsa ham "sanaldi"
                     renderList()
                 }
-            }
-            .setNeutralButton("Sanalmagan qilish") { _, _ ->
-                item.counted = 0.0
-                item.touched = false
-                renderList()
             }
             .setNegativeButton("Bekor", null)
             .show()
@@ -386,11 +385,9 @@ class InventoryCountActivity : AppCompatActivity() {
         }
         val notTouched = items.count { !it.touched }
         val extra = items.count { !it.wasInDoc }
-        val diffs = items.count { it.touched && it.wasInDoc && it.counted != it.expected }
 
         val sb = StringBuilder()
         sb.append("$touched ta tovar sanaldi.")
-        if (diffs > 0) sb.append("\n⚠ $diffs ta tovarda farq bor.")
         if (extra > 0) sb.append("\n⚠ $extra ta tovar hujjatda yo'q edi — qo'shiladi.")
         if (notTouched > 0) {
             // Ochiq aytamiz: sanalmagan qatorlar hujjatdagi holicha qoladi.

@@ -127,7 +127,7 @@
 
         <TextView
             style="@style/J.Sec"
-            android:text="Qoldiq / Fakt" />
+            android:text="Fakt" />
     </LinearLayout>
 
     <ProgressBar
