@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Ikonka atrofidagi yumshoq kvadrat. Doira emas — kvadrat
-     zamonaviyroq ko'rinadi va ro'yxatда tekis tizilib turadi. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/brand_tint"/>
-    <corners android:radius="@dimen/r_sm"/>
-</shape>
