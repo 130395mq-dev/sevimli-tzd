@@ -269,28 +269,28 @@ class MenuActivity : AppCompatActivity() {
                 title = "Yangi versiya $name",
                 sub = "Bosing — darhol yangilanadi",
                 count = "!", warn = true,
-            ) { Updater.check(this, silent = false) })
+                action = { Updater.check(this, silent = false) }))
         }
         if (d.moves > 0) list.add(Notice(
             icon = R.drawable.ic_move,
             title = "Kelgan ko'chirish",
             sub = "Qabul qilish kutilmoqda",
             count = d.moves.toString(), warn = false,
-        ) { startActivity(Intent(this, MoveInboxActivity::class.java)) })
+            action = { startActivity(Intent(this, MoveInboxActivity::class.java)) }))
 
         if (d.inventories > 0) list.add(Notice(
             icon = R.drawable.ic_inventory,
             title = "Ochiq sanoq",
             sub = "Davom ettirish mumkin",
             count = d.inventories.toString(), warn = false,
-        ) { startActivity(Intent(this, InventoryInboxActivity::class.java)) })
+            action = { startActivity(Intent(this, InventoryInboxActivity::class.java)) }))
 
         if (d.pending > 0) list.add(Notice(
             icon = R.drawable.j_ic_send,
             title = "Yuborilmagan hujjat",
             sub = "Internet tiklanganda ketadi",
             count = d.pending.toString(), warn = true,
-        ) { flushQueue(manual = true) })
+            action = { flushQueue(manual = true) }))
 
         val view = layoutInflater.inflate(R.layout.dialog_notices, null)
         val holder = view.findViewById<LinearLayout>(R.id.noticeList)

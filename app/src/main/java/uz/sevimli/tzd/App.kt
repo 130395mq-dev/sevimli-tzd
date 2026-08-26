@@ -18,7 +18,12 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        SyncEngine.init(this)
+        // Fon sinxroni ikkinchi darajali. U qanday xato bersa ham ilova
+        // ochilishi kerak — shuning uchun butunlay himoyalangan.
+        try {
+            SyncEngine.init(this)
+        } catch (_: Throwable) {
+        }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityStarted(activity: Activity) {
                 SyncEngine.onForeground(activity)

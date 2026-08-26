@@ -88,17 +88,27 @@ object SyncEngine {
 
     /** Ilova yopiq bo'lganda ishlaydigan davriy vazifa. */
     private fun scheduleBackgroundJob(ctx: Context) {
-        val js = ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE) as? JobScheduler ?: return
-        // Allaqachon rejalashtirilgan bo'lsa qayta yozmaymiz — aks holda
-        // har ishga tushishда hisob noldan boshlanardi va vazifa hech
-        // qachon bajarilmasdi.
-        if (js.allPendingJobs.any { it.id == JOB_ID }) return
-        val job = JobInfo.Builder(JOB_ID, ComponentName(ctx, SyncJobService::class.java))
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPersisted(true)                 // qurilma o'chib yonsa ham qoladi
-            .setPeriodic(BACKGROUND_MS)
-            .build()
+        // BUTUN blok himoyalangan. Sabab: bu `App.onCreate` dan chaqiriladi.
+        // Bu yerdagi har qanday istisno ILOVANI UMUMAN OCHILMAYDIGAN qiladi —
+        // fon sinxroni kabi ikkinchi darajali narsa uchun bunga yo'l qo'yib
+        // bo'lmaydi.
         try {
+            val js = ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE) as? JobScheduler
+                ?: return
+            // Allaqachon rejalashtirilgan bo'lsa qayta yozmaymiz — aks holda
+            // har ishga tushishда hisob noldan boshlanardi va vazifa hech
+            // qachon bajarilmasdi.
+            if (js.allPendingJobs.any { it.id == JOB_ID }) return
+
+            // DIQQAT: `setPersisted(true)` ATAYIN ISHLATILMAYDI.
+            // U RECEIVE_BOOT_COMPLETED ruxsatini talab qiladi; ruxsatsiz
+            // `build()` istisno tashlaydi. Bizga u kerak ham emas:
+            // `SyncEngine.init` ilovaning har ishga tushishida chaqiriladi,
+            // ya'ni qurilma o'chib yonsa vazifa qaytadan qo'yiladi.
+            val job = JobInfo.Builder(JOB_ID, ComponentName(ctx, SyncJobService::class.java))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(BACKGROUND_MS)
+                .build()
             js.schedule(job)
         } catch (_: Throwable) {
             // Ba'zi qurilmalarda cheklov bo'lishi mumkin — sinx baribir
