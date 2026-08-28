@@ -29,7 +29,7 @@
     <string name="confirm_ship_fmt">Mijoz: %1$s\n%2$s ta mahsulot · jami %3$s\nTovar ombordan chiqadi. MoySklad\'ga yozilsinmi?</string>
     <string name="confirm_write_fmt">%1$s ta mahsulot · jami %2$s\nMoySklad\'ga yozilsinmi?</string>
     <string name="confirm_writeoff_fmt">%1$s ta mahsulot · jami %2$s\nTovar hisobdan chiqadi (ombordan kamayadi). MoySklad\'ga yozilsinmi?</string>
-    <string name="continue">Davom etish</string>
+    <string name="continue_action">Davom etish</string>
     <string name="copies_hint">Nusxa soni (0 = o\'chirish)</string>
     <string name="count_finish">Sanoqni yakunlash</string>
     <string name="count_save">Sanoqni saqlash</string>

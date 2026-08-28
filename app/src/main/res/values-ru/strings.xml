@@ -26,7 +26,7 @@
     <string name="confirm_ship_fmt">Клиент: %1$s\nТоваров: %2$s · всего %3$s\nТовар спишется со склада. Записать в МойСклад?</string>
     <string name="confirm_write_fmt">Товаров: %1$s · всего %2$s\nЗаписать в МойСклад?</string>
     <string name="confirm_writeoff_fmt">Товаров: %1$s · всего %2$s\nТовар будет списан (уменьшится на складе). Записать в МойСклад?</string>
-    <string name="continue">Продолжить</string>
+    <string name="continue_action">Продолжить</string>
     <string name="copies_hint">Количество копий (0 = удалить)</string>
     <string name="count_finish">Завершить пересчёт</string>
     <string name="count_save">Сохранить пересчёт</string>

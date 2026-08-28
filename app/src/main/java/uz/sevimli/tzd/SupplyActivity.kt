@@ -88,7 +88,7 @@ class SupplyActivity : AppCompatActivity() {
                 .setTitle(getString(R.string.unfinished_supply))
                 .setMessage(getString(R.string.unfinished_continue))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.continue)) { _, _ -> loadDraft() }
+                .setPositiveButton(getString(R.string.continue_action)) { _, _ -> loadDraft() }
                 .setNegativeButton(getString(R.string.new_doc)) { _, _ ->
                     DraftStore.clear(this, "supply")
                     pickCp.launch(Intent(this, CounterpartyActivity::class.java))
