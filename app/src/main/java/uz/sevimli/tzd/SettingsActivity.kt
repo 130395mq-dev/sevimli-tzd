@@ -51,8 +51,13 @@ class SettingsActivity : AppCompatActivity() {
                 d.dismiss()
                 if (codes[which] != Lang.current(this)) {
                     Lang.set(this, codes[which])
-                    // Ekran yangi tilda qayta chiziladi.
-                    recreate()
+                    // `recreate()` ATAYIN CHAQIRILMAYDI.
+                    //
+                    // `setApplicationLocales` ning o'zi ochiq ekranlarni
+                    // qayta yaratadi. Ustiga `recreate()` qo'shilsa ekran
+                    // IKKI MARTA qayta chiziladi va ko'zga "uchib olgandek"
+                    // ko'rinadi. Bitta qayta chizish yetarli.
+                    updateLangLabel()
                 }
             }
             .show()
