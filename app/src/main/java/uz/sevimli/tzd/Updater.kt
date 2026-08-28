@@ -2,6 +2,7 @@ package uz.sevimli.tzd
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -24,9 +25,18 @@ import kotlin.concurrent.thread
  */
 object Updater {
 
-    // Eng yangi versiya ma'lumoti (har build'da GitHub Release'ga qo'yiladi)
-    private const val VERSION_URL =
-        "https://github.com/130395mq-dev/sevimli-tzd/releases/latest/download/version.json"
+    // YANGILANISH ENDI O'Z SERVERIMIZDAN.
+    //
+    // SABAB: GitHub 2025-yilda release fayllarini beradigan domenni
+    // almashtirdi (`release-assets.githubusercontent.com`). Yangi domen
+    // O'zbekiston tarmoqlaridan ochilmayapti - terminal ham, brauzer ham
+    // `TIMED_OUT` oladi. Butun park yangilanishdan uzilib qolgan edi.
+    //
+    // Endi terminal GitHub'ga UMUMAN bormaydi: u o'z serveriga murojaat
+    // qiladi, server esa GitHub'dan o'zi olib beradi. Server manzili
+    // qurilma sozlamasidan olinadi - ya'ni test/ishchi server almashsa
+    // yangilanish ham o'sha bilan ketadi.
+    private const val VERSION_PATH = "/api/tzd/app-version"
 
     // APK FAQAT shu manzildan yuklanadi.
     //
@@ -36,8 +46,9 @@ object Updater {
     // butun parkka ISTALGAN manzildan APK yuklatib, o'rnatish oynasini
     // ochtira olardi — majburiy yangilanish oynasi esa xodimni "Ha" bosishga
     // o'rgatib qo'ygan.
-    private const val ALLOWED_APK_PREFIX =
-        "https://github.com/130395mq-dev/sevimli-tzd/releases/"
+    // Prefiks qat'iy YOZILMAYDI: u qurilmaning o'z server manzili bilan
+    // solishtiriladi (`allowedPrefix`). Mantiq o'zgarmadi - APK faqat
+    // ishonchli manzildan yuklanadi.
 
     private data class Info(
         val versionCode: Int,
@@ -54,8 +65,8 @@ object Updater {
      * Bo'lsa — versiya nomi, bo'lmasa yoki tarmoq yo'q bo'lsa — null.
      * Hech narsa yuklamaydi, faqat tekshiradi.
      */
-    fun newerVersionOrNull(): String? {
-        val info = try { fetchInfo() } catch (e: Exception) { return null }
+    fun newerVersionOrNull(ctx: Context): String? {
+        val info = try { fetchInfo(ctx) } catch (e: Exception) { return null }
         return if (info.versionCode > BuildConfig.VERSION_CODE) info.versionName else null
     }
     private var busy = false
@@ -67,7 +78,7 @@ object Updater {
      */
     fun forceCheck(activity: Activity) {
         thread {
-            val info = try { fetchInfo() } catch (e: Exception) { null }
+            val info = try { fetchInfo(activity) } catch (e: Exception) { null }
             activity.runOnUiThread {
                 if (activity.isFinishing) return@runOnUiThread
                 if (info != null && info.versionCode > BuildConfig.VERSION_CODE) {
@@ -92,7 +103,7 @@ object Updater {
     fun check(activity: Activity, silent: Boolean = true) {
         if (!silent) toast(activity, activity.getString(R.string.checking_update))
         thread {
-            val info = try { fetchInfo() } catch (e: Exception) { null }
+            val info = try { fetchInfo(activity) } catch (e: Exception) { null }
             activity.runOnUiThread {
                 if (activity.isFinishing) return@runOnUiThread
                 when {
@@ -164,7 +175,7 @@ object Updater {
         dlg.show()
 
         // Manzil o'zimizning reliz sahifamizdan bo'lmasa — umuman yuklamaymiz.
-        if (!info.url.startsWith(ALLOWED_APK_PREFIX)) {
+        if (!info.url.startsWith(allowedPrefix(activity))) {
             dlg.dismiss()
             busy = false
             AlertDialog.Builder(activity)
@@ -213,8 +224,13 @@ object Updater {
             .show()
     }
 
-    private fun fetchInfo(): Info {
-        val conn = (URL(VERSION_URL).openConnection() as HttpURLConnection).apply {
+    private fun versionUrl(ctx: Context) = Config.baseUrl(ctx) + VERSION_PATH
+
+    /** APK faqat shu manzil bilan boshlanishi shart. */
+    private fun allowedPrefix(ctx: Context) = Config.baseUrl(ctx)
+
+    private fun fetchInfo(ctx: Context): Info {
+        val conn = (URL(versionUrl(ctx)).openConnection() as HttpURLConnection).apply {
             connectTimeout = 8000
             readTimeout = 8000
             instanceFollowRedirects = true

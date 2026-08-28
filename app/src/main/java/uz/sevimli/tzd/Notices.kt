@@ -50,7 +50,7 @@ object Notices {
         if (!force && now - cachedAt < TTL_MS) return cached
 
         val pending = OfflineQueue.size(ctx)
-        val upd = Updater.newerVersionOrNull()
+        val upd = Updater.newerVersionOrNull(ctx)
         if (Config.storeId(ctx) <= 0) {
             cached = Data(pending = pending, updateName = upd)
             cachedAt = now
