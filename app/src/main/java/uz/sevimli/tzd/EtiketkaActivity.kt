@@ -86,7 +86,7 @@ class EtiketkaActivity : AppCompatActivity() {
                     }
                     json == null || !json.optBoolean("found", false) -> {
                         ScanFeedback.fail(this)
-                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.product_not_found), Toast.LENGTH_SHORT).show()
                     }
                     else -> {
                         ScanFeedback.ok(this)
@@ -114,9 +114,9 @@ class EtiketkaActivity : AppCompatActivity() {
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(name)
-            .setMessage("Nechta ценник chop etilsin?")
+            .setMessage(getString(R.string.how_many_labels))
             .setView(input)
-            .setPositiveButton("Qo'shish") { _, _ ->
+            .setPositiveButton(getString(R.string.add)) { _, _ ->
                 val n = input.text.toString().toIntOrNull() ?: 1
                 if (n > 0) {
                     if (existing != null) existing.count += n
@@ -124,7 +124,7 @@ class EtiketkaActivity : AppCompatActivity() {
                     renderList()
                 }
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .create()
         dialog.show()
         input.requestFocus()
@@ -133,7 +133,7 @@ class EtiketkaActivity : AppCompatActivity() {
     private fun renderList() {
         b.emptyHint.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         val total = items.sumOf { it.count }
-        b.totalCount.text = "Mahsulot: ${items.size} · Yorliq: $total"
+        b.totalCount.text = getString(R.string.prod_label_fmt, items.size, total)
         b.btnPrint.isEnabled = items.isNotEmpty()
         b.btnPrint.alpha = if (items.isEmpty()) 0.5f else 1f
         // Ro'yxat adapterga beriladi — RecyclerView faqat ko'rinib
@@ -150,14 +150,14 @@ class EtiketkaActivity : AppCompatActivity() {
         }
         AlertDialog.Builder(this)
             .setTitle(item.name)
-            .setMessage("Nusxa soni (0 = o'chirish)")
+            .setMessage(getString(R.string.copies_hint))
             .setView(input)
-            .setPositiveButton("Saqlash") { _, _ ->
+            .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 val v = input.text.toString().toIntOrNull() ?: item.count
                 if (v <= 0) items.remove(item) else item.count = v
                 renderList()
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -196,7 +196,7 @@ class EtiketkaActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        Toast.makeText(this, "Chopga yuborildi ✓", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.sent_to_print), Toast.LENGTH_SHORT).show()
                         items.clear(); renderList()
                         // Keyingi chop — ALOHIDA buyruq, yangi kalit bilan
                         printUuid = java.util.UUID.randomUUID().toString()

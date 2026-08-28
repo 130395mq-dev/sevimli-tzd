@@ -90,20 +90,20 @@ object Updater {
      * silent=false — natijani Toast bilan bildiradi; yangilik bo'lsa MAJBURIY yangilaydi.
      */
     fun check(activity: Activity, silent: Boolean = true) {
-        if (!silent) toast(activity, "Yangilanish tekshirilmoqda...")
+        if (!silent) toast(activity, activity.getString(R.string.checking_update))
         thread {
             val info = try { fetchInfo() } catch (e: Exception) { null }
             activity.runOnUiThread {
                 if (activity.isFinishing) return@runOnUiThread
                 when {
                     info == null ->
-                        if (!silent) toast(activity, "Yangilanishni tekshirib bo'lmadi")
+                        if (!silent) toast(activity, activity.getString(R.string.update_check_failed))
                     info.versionCode > BuildConfig.VERSION_CODE -> {
                         pending = info
                         forceUpdate(activity, info)
                     }
                     else ->
-                        if (!silent) toast(activity, "Eng so'nggi versiya o'rnatilgan")
+                        if (!silent) toast(activity, activity.getString(R.string.latest_installed))
                 }
             }
         }
@@ -119,7 +119,7 @@ object Updater {
             !activity.packageManager.canRequestPackageInstalls()
         ) {
             AlertDialog.Builder(activity)
-                .setTitle("Majburiy yangilanish")
+                .setTitle(activity.getString(R.string.update_required))
                 .setMessage(
                     "Yangi versiya (${info.versionName}) o'rnatilishi shart — " +
                     "ilovadan foydalanishni davom ettirish uchun.\n\n" +
@@ -127,7 +127,7 @@ object Updater {
                     "Yangilanish avtomatik davom etadi."
                 )
                 .setCancelable(false)
-                .setPositiveButton("Ruxsat berish") { _, _ ->
+                .setPositiveButton(activity.getString(R.string.grant)) { _, _ ->
                     try {
                         activity.startActivity(
                             Intent(
@@ -152,7 +152,7 @@ object Updater {
             max = 100; isIndeterminate = false
         }
         val label = TextView(activity).apply {
-            text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda... 0%"
+            text = activity.getString(R.string.force_update_zero_fmt, info.versionName)
         }
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -168,10 +168,10 @@ object Updater {
             dlg.dismiss()
             busy = false
             AlertDialog.Builder(activity)
-                .setTitle("Yangilanish bloklandi")
-                .setMessage("Yangilanish manbasi ishonchsiz. Administratorga xabar bering.")
+                .setTitle(activity.getString(R.string.update_blocked))
+                .setMessage(activity.getString(R.string.update_untrusted))
                 .setCancelable(false)
-                .setPositiveButton("Yopish", null)
+                .setPositiveButton(activity.getString(R.string.close), null)
                 .show()
             return
         }
@@ -183,11 +183,11 @@ object Updater {
                         if (pct >= 0) {
                             bar.isIndeterminate = false
                             bar.progress = pct
-                            label.text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda... $pct%"
+                            label.text = activity.getString(R.string.force_update_pct_fmt, info.versionName, pct)
                         } else {
                             // Hajm noma'lum — aylanuvchi indikator
                             bar.isIndeterminate = true
-                            label.text = "Majburiy yangilanish: ${info.versionName}\nYuklanmoqda..."
+                            label.text = activity.getString(R.string.force_update_fmt, info.versionName)
                         }
                     }
                 }
@@ -206,10 +206,10 @@ object Updater {
     /** Yuklab bo'lmasa — chiqib ketishga yo'l qo'ymay, qayta urinishni majburlaydi. */
     private fun retryForced(activity: Activity, info: Info) {
         AlertDialog.Builder(activity)
-            .setTitle("Yangilanib bo'lmadi")
-            .setMessage("Internet aloqasini tekshirib, qayta urining. Yangilanish majburiy.")
+            .setTitle(activity.getString(R.string.update_failed))
+            .setMessage(activity.getString(R.string.update_required_note))
             .setCancelable(false)
-            .setPositiveButton("Qayta urinish") { _, _ -> startForcedDownload(activity, info) }
+            .setPositiveButton(activity.getString(R.string.retry)) { _, _ -> startForcedDownload(activity, info) }
             .show()
     }
 
@@ -337,13 +337,13 @@ object Updater {
         if (!verifyApk(activity, file)) {
             try { file.delete() } catch (_: Exception) {}
             AlertDialog.Builder(activity)
-                .setTitle("Yangilanish bloklandi")
+                .setTitle(activity.getString(R.string.update_blocked))
                 .setMessage(
                     "Yuklab olingan fayl imzosi mos kelmadi — o'rnatish to'xtatildi.\n" +
                     "Administratorga xabar bering."
                 )
                 .setCancelable(false)
-                .setPositiveButton("Yopish", null)
+                .setPositiveButton(activity.getString(R.string.close), null)
                 .show()
             return
         }
@@ -357,7 +357,7 @@ object Updater {
         try {
             activity.startActivity(intent)
         } catch (e: Exception) {
-            toast(activity, "O'rnatishni ochib bo'lmadi: ${e.message}")
+            toast(activity, activity.getString(R.string.install_open_failed_fmt, e.message))
         }
     }
 

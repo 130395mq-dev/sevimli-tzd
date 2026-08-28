@@ -18,6 +18,12 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Saqlangan til birinchi ekran chizilishidan OLDIN qo'llanadi,
+        // aks holda ilova bir lahza eski tilda ochiladi.
+        try {
+            Lang.apply(this)
+        } catch (_: Throwable) {
+        }
         // Fon sinxroni ikkinchi darajali. U qanday xato bersa ham ilova
         // ochilishi kerak — shuning uchun butunlay himoyalangan.
         try {

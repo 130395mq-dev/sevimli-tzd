@@ -14,11 +14,11 @@
         android:paddingTop="22dp" android:paddingBottom="20dp">
         <TextView android:id="@+id/setupTitle"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Jamlov — sozlash" android:textColor="@color/white"
+            android:text="@string/setup_title" android:textColor="@color/white"
             android:textSize="20sp" android:textStyle="bold" />
         <TextView android:id="@+id/setupSub"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Hisobingizga kiring" android:textColor="@color/white70"
+            android:text="@string/sign_in_account" android:textColor="@color/white70"
             android:textSize="13sp" android:layout_marginTop="3dp" />
     </LinearLayout>
 
@@ -31,19 +31,19 @@
             <LinearLayout android:id="@+id/step0" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Email" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
+                    android:text="@string/email" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
                 <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
                     android:layout_height="wrap_content" android:inputType="textEmailAddress"
-                    android:hint="siz@company.uz" android:layout_marginBottom="10dp"/>
+                    android:hint="@string/email_hint" android:layout_marginBottom="10dp"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Parol" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
+                    android:text="@string/password" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="13sp"/>
                 <EditText android:id="@+id/etPass" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:inputType="textPassword" android:hint="••••••••"/>
+                    android:layout_height="wrap_content" android:inputType="textPassword" android:hint="@string/password_dots"/>
                 <TextView android:id="@+id/msgLogin" android:layout_width="match_parent"
                     android:layout_height="wrap_content" android:textColor="@color/warning"
                     android:textSize="13sp" android:layout_marginTop="8dp"/>
                 <Button android:id="@+id/btnLogin" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:text="Kirish"
+                    android:layout_height="wrap_content" android:text="@string/sign_in"
                     android:textColor="@color/white" android:backgroundTint="@color/brand"
                     android:layout_marginTop="14dp"/>
             </LinearLayout>
@@ -52,9 +52,9 @@
             <LinearLayout android:id="@+id/step1" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Qurilma litsenziyasi" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="15sp"/>
+                    android:text="@string/device_license" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="15sp"/>
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="Shu qurilma uchun litsenziyani tanlang. Band litsenziyalar boshqa qurilmaga bog'langan."
+                    android:text="@string/license_note"
                     android:textColor="@color/text_gray" android:textSize="13sp" android:layout_marginBottom="6dp"/>
                 <ProgressBar android:id="@+id/licLoading" android:layout_width="28dp" android:layout_height="28dp"
                     android:layout_gravity="center_horizontal" android:layout_marginTop="14dp"
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="8dp"/>
 
                 <TextView android:id="@+id/lnkManual" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="Token qo'lda kiritish"
+                    android:layout_height="wrap_content" android:text="@string/token_manual_kt"
                     android:textColor="@color/brand" android:textStyle="bold" android:textSize="13sp"
                     android:padding="8dp" android:layout_gravity="center_horizontal" android:layout_marginTop="6dp"/>
 
@@ -73,12 +73,12 @@
                 <LinearLayout android:id="@+id/manualBox" android:layout_width="match_parent"
                     android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
                     <EditText android:id="@+id/etToken" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:inputType="text" android:hint="token..."/>
+                        android:layout_height="wrap_content" android:inputType="text" android:hint="@string/token_hint"/>
                     <TextView android:id="@+id/msgToken" android:layout_width="match_parent"
                         android:layout_height="wrap_content" android:textColor="@color/warning"
                         android:textSize="13sp" android:layout_marginTop="8dp"/>
                     <Button android:id="@+id/btnToken" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Tekshirish"
+                        android:layout_height="wrap_content" android:text="@string/check"
                         android:textColor="@color/white" android:backgroundTint="@color/brand"
                         android:layout_marginTop="10dp"/>
                 </LinearLayout>
@@ -88,9 +88,9 @@
             <LinearLayout android:id="@+id/step2" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Filialingizni tanlang" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="15sp"/>
+                    android:text="@string/pick_branch" android:textColor="@color/text_dark" android:textStyle="bold" android:textSize="15sp"/>
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="Qurilma shu filialga (skladga) biriktiriladi."
+                    android:text="@string/branch_note"
                     android:textColor="@color/text_gray" android:textSize="13sp" android:layout_marginBottom="6dp"/>
                 <ProgressBar android:id="@+id/storeLoading" android:layout_width="28dp" android:layout_height="28dp"
                     android:layout_gravity="center_horizontal" android:layout_marginTop="14dp"
@@ -108,7 +108,7 @@
                 <ProgressBar android:layout_width="40dp" android:layout_height="40dp"
                     android:indeterminateTint="@color/brand"/>
                 <TextView android:id="@+id/syncMsg" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="Sinxronlanmoqda..."
+                    android:layout_height="wrap_content" android:text="@string/syncing"
                     android:textColor="@color/text_dark" android:textSize="15sp" android:layout_marginTop="18dp"/>
             </LinearLayout>
 

@@ -77,13 +77,13 @@ class StorePickerActivity : AppCompatActivity() {
     private fun showError(msg: String) {
         b.list.removeAllViews()
         val tv = TextView(this).apply {
-            text = "Sklad ro'yxati olinmadi.\n$msg"
+            text = getString(R.string.stores_failed_fmt, msg)
             textSize = 15f
             setTextColor(getColor(R.color.text_dark))
             setPadding(dp(8f).toInt(), dp(24f).toInt(), dp(8f).toInt(), dp(14f).toInt())
         }
         val btn = com.google.android.material.button.MaterialButton(this).apply {
-            text = "Qayta urinish"
+            text = getString(R.string.retry_2)
             isAllCaps = false
             textSize = 16f
             setOnClickListener { load() }
@@ -157,7 +157,7 @@ class StorePickerActivity : AppCompatActivity() {
         }
         if (shown == 0) {
             val tv = TextView(this).apply {
-                text = "Boshqa sklad topilmadi"
+                text = getString(R.string.no_other_store)
                 textSize = 15f
                 setTextColor(getColor(R.color.text_gray))
                 setPadding(dp(8f).toInt(), dp(24f).toInt(), dp(8f).toInt(), dp(8f).toInt())

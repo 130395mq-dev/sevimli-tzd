@@ -23,7 +23,7 @@ class LookupActivity : AppCompatActivity() {
             val json = productFromIntent(res.data!!)
             b.emptyState.visibility = View.GONE
             b.notFound.visibility = View.GONE
-            b.lastCode.text = "Qo'lda tanlandi"
+            b.lastCode.text = getString(R.string.picked_manually)
             showResult(json, json.optString("barcode"))
         }
     }
@@ -46,7 +46,7 @@ class LookupActivity : AppCompatActivity() {
     }
 
     private fun handleScan(code: String) {
-        b.lastCode.text = "Oxirgi skan: $code"
+        b.lastCode.text = getString(R.string.last_scan_fmt, code)
         b.emptyState.visibility = View.GONE
         b.card.visibility = View.GONE
         b.notFound.visibility = View.GONE
@@ -65,7 +65,7 @@ class LookupActivity : AppCompatActivity() {
                 when {
                     serverErr != null -> showError(serverErr)
                     json != null -> showResult(json, code)
-                    else -> showError("Mahsulot topilmadi")
+                    else -> showError(getString(R.string.product_not_found_2))
                 }
             }
         }
@@ -75,7 +75,7 @@ class LookupActivity : AppCompatActivity() {
         val found = json.optBoolean("found", false)
         if (!found) {
             ScanFeedback.fail(this)
-            b.notFound.text = "Mahsulot topilmadi\n$code"
+            b.notFound.text = getString(R.string.not_found_fmt, code)
             b.notFound.visibility = View.VISIBLE
             return
         }
@@ -88,13 +88,13 @@ class LookupActivity : AppCompatActivity() {
         val article = json.optString("article")
         if (article.isNotBlank()) {
             b.pArticle.visibility = View.VISIBLE
-            b.pArticle.text = "арт: $article"
+            b.pArticle.text = getString(R.string.article_fmt, article)
         } else {
             b.pArticle.visibility = View.GONE
         }
 
         val price = json.optLong("price", 0)
-        b.pPrice.text = "${fmt.format(price)} so'm"
+        b.pPrice.text = getString(R.string.sum_fmt, fmt.format(price))
 
         // Tarozi shtrixi yoki Upakovka (blok) shtrixi
         val packQty = json.optDouble("pack_qty", 0.0)
@@ -110,18 +110,18 @@ class LookupActivity : AppCompatActivity() {
             json.optBoolean("is_pack", false) && packQty > 0 -> {
                 b.pPackInfo.visibility = View.VISIBLE
                 val u = json.optString("uom", "").let { if (it.isBlank()) "dona" else it }
-                b.pPackInfo.text = "📦 Upakovka: 1 × ${trimNum(packQty)} $u"
+                b.pPackInfo.text = getString(R.string.pack_info_fmt, trimNum(packQty), u)
             }
             json.optBoolean("pack_unknown", false) -> {
                 b.pPackInfo.visibility = View.VISIBLE
-                b.pPackInfo.text = "\uD83D\uDCE6 BLOK kodi (ichidagi dona soni ko'rsatilmagan)"
+                b.pPackInfo.text = getString(R.string.blok_no_qty)
             }
             else -> b.pPackInfo.visibility = View.GONE
         }
 
         val storeQty = json.optDouble("store_qty", 0.0)
         b.pStock.text = trimNum(storeQty)
-        b.storeLabel.text = "Qoldiq" + (json.optString("store_name").let {
+        b.storeLabel.text = getString(R.string.stock_kt) + (json.optString("store_name").let {
             if (it.isNotBlank()) " · $it" else ""
         })
 

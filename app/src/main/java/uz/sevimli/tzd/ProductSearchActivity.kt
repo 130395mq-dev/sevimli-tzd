@@ -56,7 +56,7 @@ class ProductSearchActivity : AppCompatActivity() {
     private fun load(q: String) {
         b.list.removeAllViews()
         if (q.length < 2) {
-            showHint("Nomi yoki kodi bo'yicha qidiring", "Kamida 2 ta belgi (masalan: S6406)")
+            showHint(getString(R.string.search_hint_2), getString(R.string.min_2_chars))
             b.loading.visibility = View.GONE
             return
         }
@@ -125,7 +125,7 @@ class ProductSearchActivity : AppCompatActivity() {
         b.list.removeAllViews()
         val arr = json.optJSONArray("products") ?: return
         if (arr.length() == 0) {
-            showHint("Hech narsa topilmadi", "Boshqa nom yoki kod bilan urinib ko'ring")
+            showHint(getString(R.string.nothing_found), getString(R.string.try_other_name))
             return
         }
         b.hint.visibility = View.GONE

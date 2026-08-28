@@ -28,7 +28,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -40,13 +40,13 @@
             <TextView
                 android:id="@+id/headerTitle"
                 style="@style/J.HeadTitle"
-                android:text="Hujjatlar" />
+                android:text="@string/documents" />
 
             <TextView
                 android:id="@+id/headerDate"
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="—" />
+                android:text="@string/dash" />
         </LinearLayout>
 
         <ImageView
@@ -57,7 +57,7 @@
             android:src="@drawable/ic_refresh"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Yangilash" />
+            android:contentDescription="@string/refresh" />
     </LinearLayout>
 
     <ProgressBar
@@ -75,7 +75,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="34dp"
-        android:text="Bugun hali hujjat yaratilmagan"
+        android:text="@string/no_docs_today"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
@@ -119,7 +119,7 @@
                 android:id="@+id/btnNewText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋  Yangi hujjat"
+                android:text="@string/new_doc_plus"
                 android:textColor="@color/white"
                 android:textSize="15sp"
                 android:textStyle="bold" />

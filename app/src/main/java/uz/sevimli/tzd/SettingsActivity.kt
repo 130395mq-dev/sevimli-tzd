@@ -27,9 +27,35 @@ class SettingsActivity : AppCompatActivity() {
             if (id.isNotEmpty()) {
                 Config.setOrg(this, id, name)
                 updateOrgLabel()
-                Toast.makeText(this, "Organizatsiya: $name", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.org_selected_fmt, name), Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun updateLangLabel() {
+        b.langValue.text = Lang.label(Lang.current(this))
+    }
+
+    /**
+     * Til tanlash oynasi. Ikki qator, ortiqcha tugmasiz: bosildi - tanlandi.
+     * Dialog ilovaning umumiy uslubini oladi (themes.xml dagi
+     * `android:alertDialogTheme`), shuning uchun bu yerda uslub berilmaydi.
+     */
+    private fun pickLang() {
+        val codes = arrayOf(Lang.UZ, Lang.RU)
+        val names = codes.map { Lang.label(it) }.toTypedArray()
+        val now = codes.indexOf(Lang.current(this)).coerceAtLeast(0)
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.lang_title))
+            .setSingleChoiceItems(names, now) { d, which ->
+                d.dismiss()
+                if (codes[which] != Lang.current(this)) {
+                    Lang.set(this, codes[which])
+                    // Ekran yangi tilda qayta chiziladi.
+                    recreate()
+                }
+            }
+            .show()
     }
 
     private fun updateOrgLabel() {
@@ -47,6 +73,10 @@ class SettingsActivity : AppCompatActivity() {
         b.btnSaveToken.setOnClickListener { saveToken() }
         b.btnOrg.setOnClickListener { pickOrg.launch(Intent(this, OrgPickerActivity::class.java)) }
         updateOrgLabel()
+
+        // TIL. Menejer parolisiz ishlaydi - tilni xodimning o'zi tanlaydi.
+        updateLangLabel()
+        b.rowLang.setOnClickListener { pickLang() }
 
         // Parolni ko'rsatish/yashirish. Uzun parolni xato yozganini xodim
         // ko'ra olsin — qayta-qayta urinib vaqt ketmasin.
@@ -85,7 +115,7 @@ class SettingsActivity : AppCompatActivity() {
         val login = b.inLogin.text.toString().trim()
         val password = b.inPassword.text.toString()
         if (login.isEmpty() || password.isEmpty()) {
-            showLoginError("Login va parolni kiriting")
+            showLoginError(getString(R.string.enter_login_pass))
             return
         }
         b.loginError.visibility = View.GONE
@@ -155,11 +185,11 @@ class SettingsActivity : AppCompatActivity() {
     private fun saveToken() {
         val t = b.inToken.text.toString().trim()
         if (t.isEmpty()) {
-            Toast.makeText(this, "Token kiriting", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, getString(R.string.enter_token), Toast.LENGTH_SHORT).show(); return
         }
         Config.setToken(this, t)
         thread { LocalDb.get(this).clearProducts() }   // boshqa sklad ma'lumoti tozalansin
-        Toast.makeText(this, "Token saqlandi. Menyuda 'Yangilash' ni bosing.", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, getString(R.string.token_saved), Toast.LENGTH_LONG).show()
         enterStoreStage(null)   // yangi token bilan sklad ro'yxati (alohida so'rov)
     }
 
@@ -237,7 +267,7 @@ class SettingsActivity : AppCompatActivity() {
                 when (result) {
                     is ApiResult.Success -> {
                         Config.setStore(this, id, name)
-                        Toast.makeText(this, "Sklad tanlandi: $name", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.store_selected_fmt, name), Toast.LENGTH_LONG).show()
                         finish()
                     }
                     is ApiResult.Error ->
@@ -264,10 +294,10 @@ class SettingsActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
             col.addView(TextView(this).apply {
-                text = fn.title; textSize = 16f; setTextColor(getColor(R.color.text_dark))
+                text = getString(fn.title); textSize = 16f; setTextColor(getColor(R.color.text_dark))
             })
             col.addView(TextView(this).apply {
-                text = fn.sub; textSize = 13f; setTextColor(getColor(R.color.text_gray))
+                text = getString(fn.sub); textSize = 13f; setTextColor(getColor(R.color.text_gray))
             })
             val sw = androidx.appcompat.widget.SwitchCompat(this).apply {
                 isChecked = Config.isFn(this@SettingsActivity, fn.key)

@@ -62,7 +62,7 @@ class MoveInboxActivity : AppCompatActivity() {
         b.list.removeAllViews()
         val arr = json.optJSONArray("moves")
         if (arr == null || arr.length() == 0) {
-            b.emptyHint.text = "Kelgan dokument yo'q"
+            b.emptyHint.text = getString(R.string.no_incoming_kt)
             b.emptyHint.visibility = View.VISIBLE
             return
         }
@@ -93,7 +93,7 @@ class MoveInboxActivity : AppCompatActivity() {
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
             val sub = TextView(this).apply {
-                text = "$source dan  ·  $count ta tovar"
+                text = getString(R.string.from_n_items_fmt, source, count)
                 textSize = 13f
                 setTextColor(getColor(R.color.brand))
                 setPadding(0, dp(4f).toInt(), 0, 0)

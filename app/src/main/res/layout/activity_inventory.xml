@@ -35,7 +35,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -46,13 +46,13 @@
 
             <TextView
                 style="@style/J.HeadTitle"
-                android:text="Инвентаризация" />
+                android:text="@string/inventory" />
 
             <TextView
                 android:id="@+id/headerStore"
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="—" />
+                android:text="@string/dash" />
         </LinearLayout>
 
         <ImageView
@@ -63,7 +63,7 @@
             android:src="@drawable/j_ic_check"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Yakunlash" />
+            android:contentDescription="@string/finish" />
     </LinearLayout>
 
     <EditText
@@ -94,7 +94,7 @@
             android:layout_height="22dp"
             android:src="@drawable/j_ic_scan"
             app:tint="#9BB3A7"
-            android:contentDescription="Skan" />
+            android:contentDescription="@string/scan" />
 
         <TextView
             style="@style/J.Body"
@@ -102,7 +102,7 @@
             android:layout_weight="1"
             android:layout_marginStart="10dp"
             android:textColor="#9BB3A7"
-            android:text="Shtrix-kodni skanerlang" />
+            android:text="@string/scan_barcode_hyph" />
 
         <LinearLayout
             android:id="@+id/btnManualAdd"
@@ -122,13 +122,13 @@
                 android:layout_height="16dp"
                 android:src="@drawable/ic_search"
                 app:tint="@color/brand"
-                android:contentDescription="Qidirish" />
+                android:contentDescription="@string/search" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="Qo'lda"
+                android:text="@string/manual"
                 android:textColor="@color/brand"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -150,11 +150,11 @@
             style="@style/J.Sec"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="Товар, всего: 0" />
+            android:text="@string/total_items_zero" />
 
         <TextView
             style="@style/J.Sec"
-            android:text="Факт" />
+            android:text="@string/fact_ru" />
     </LinearLayout>
 
     <TextView
@@ -163,7 +163,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="34dp"
-        android:text="Пусто · mahsulotni skan qiling"
+        android:text="@string/empty_scan_product"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
@@ -194,5 +194,5 @@
         android:layout_marginEnd="12dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="12dp"
-        android:text="Sanoqni yakunlash" />
+        android:text="@string/count_finish" />
 </LinearLayout>

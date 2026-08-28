@@ -31,13 +31,13 @@
                 android:layout_height="66dp"
                 android:src="@drawable/logo_wide"
                 android:scaleType="fitCenter"
-                android:contentDescription="Jamlov" />
+                android:contentDescription="@string/logo" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Ombor boshqaruv tizimi"
+                android:text="@string/wms_subtitle"
                 android:textColor="@color/white70"
                 android:textSize="13sp"
                 android:letterSpacing="0.04" />
@@ -61,7 +61,7 @@
                     android:layout_height="20dp"
                     android:src="@drawable/j_ic_store"
                     app:tint="@color/white"
-                    android:contentDescription="Sklad" />
+                    android:contentDescription="@string/store_ru" />
 
                 <TextView
                     android:id="@+id/statusChip"
@@ -71,7 +71,7 @@
                     android:layout_marginStart="10dp"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:text="Sklad tanlanmagan"
+                    android:text="@string/store_not_set"
                     android:textColor="@color/white"
                     android:textSize="15.5sp"
                     android:textStyle="bold" />
@@ -85,7 +85,7 @@
                     android:layout_height="20dp"
                     android:src="@drawable/ic_refresh"
                     app:tint="@color/white70"
-                    android:contentDescription="Yangilash" />
+                    android:contentDescription="@string/refresh" />
             </LinearLayout>
         </LinearLayout>
 
@@ -104,7 +104,7 @@
                 android:src="@drawable/j_ic_bell"
                 app:tint="@color/white"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Bildirishnomalar" />
+                android:contentDescription="@string/notifications" />
 
             <View
                 android:id="@+id/bellDot"
@@ -135,7 +135,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_marginBottom="10dp"
-                android:text="Bo'limlar"
+                android:text="@string/sections"
                 android:textColor="@color/text_gray"
                 android:textSize="13sp"
                 android:letterSpacing="0.05" />
@@ -175,8 +175,8 @@
                         android:layout_marginStart="14dp"
                         android:orientation="vertical">
 
-                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="Sozlamalar"/>
-                        <TextView style="@style/MenuCardSub" android:text="Menejer · sklad · bo'limlarni sozlash"/>
+                        <TextView style="@style/MenuCardTitle" android:layout_marginTop="0dp" android:text="@string/settings_title"/>
+                        <TextView style="@style/MenuCardSub" android:text="@string/settings_card_sub"/>
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -189,7 +189,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="8dp"
-        android:text="v0.5 · Sevimli Market"
+        android:text="@string/footer_version"
         android:textColor="@color/text_gray"
         android:textSize="12sp" />
 </LinearLayout>

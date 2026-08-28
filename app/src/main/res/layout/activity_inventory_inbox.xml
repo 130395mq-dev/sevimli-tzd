@@ -28,7 +28,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -39,13 +39,13 @@
 
             <TextView
                 style="@style/J.HeadTitle"
-                android:text="Инвентаризация" />
+                android:text="@string/inventory" />
 
             <TextView
                 android:id="@+id/headerStore"
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="—" />
+                android:text="@string/dash" />
         </LinearLayout>
 
         <ImageView
@@ -56,7 +56,7 @@
             android:src="@drawable/ic_refresh"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Yangilash" />
+            android:contentDescription="@string/refresh" />
     </LinearLayout>
 
     <TextView
@@ -64,7 +64,7 @@
         android:layout_marginStart="18dp"
         android:layout_marginTop="14dp"
         android:layout_marginBottom="6dp"
-        android:text="Ochiq sanoqlar (davom ettirish)" />
+        android:text="@string/open_counts" />
 
     <ProgressBar
         android:id="@+id/loading"
@@ -81,7 +81,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="34dp"
-        android:text="Ochiq sanoq yo'q"
+        android:text="@string/no_open_counts"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
@@ -125,7 +125,7 @@
                 android:id="@+id/btnNewLbl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="＋  Yangi sanoq"
+                android:text="@string/new_count_plus"
                 android:textColor="@color/white"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -147,7 +147,7 @@
                 android:id="@+id/btnDocsLbl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hujjatlar"
+                android:text="@string/documents"
                 android:textColor="@color/brand"
                 android:textSize="15sp"
                 android:textStyle="bold" />

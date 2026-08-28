@@ -25,13 +25,13 @@
             android:layout_height="24dp"
             android:src="@drawable/j_ic_bell"
             app:tint="@color/brand"
-            android:contentDescription="Bildirishnomalar" />
+            android:contentDescription="@string/notifications" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:text="Bildirishnomalar"
+            android:text="@string/notifications"
             android:textColor="@color/text_dark"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -66,17 +66,17 @@
                 android:layout_gravity="center"
                 android:src="@drawable/j_ic_bell"
                 app:tint="@color/brand"
-                android:contentDescription="Bo'sh" />
+                android:contentDescription="@string/empty" />
         </FrameLayout>
 
         <TextView
             style="@style/J.Body.Bold"
             android:layout_marginTop="14dp"
-            android:text="Hozircha yangilik yo'q" />
+            android:text="@string/no_news" />
 
         <TextView
             style="@style/J.Sub"
             android:layout_marginTop="4dp"
-            android:text="Yangi hujjat kelsa shu yerda chiqadi" />
+            android:text="@string/news_hint" />
     </LinearLayout>
 </LinearLayout>

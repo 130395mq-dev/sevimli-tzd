@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     private fun onScan(code: String, method: String, extras: String) {
         runOnUiThread {
             b.lastScan.text = code
-            b.methodText.text = "Usul: $method"
+            b.methodText.text = getString(R.string.method_fmt, method)
             val ts = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
             val entry = "[$ts] $method\n   => $code\n$extras"
             b.log.text = "$entry\n${b.log.text}"

@@ -36,13 +36,13 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <TextView
             android:id="@+id/title"
             style="@style/J.HeadTitle"
             android:layout_marginStart="4dp"
-            android:text="Qayerga (sklad)" />
+            android:text="@string/to_store" />
     </LinearLayout>
 
     <TextView
@@ -50,7 +50,7 @@
         android:layout_marginStart="18dp"
         android:layout_marginTop="14dp"
         android:layout_marginBottom="8dp"
-        android:text="Qaysi sklad bilan ishlaysiz?" />
+        android:text="@string/which_store" />
 
     <ProgressBar
         android:id="@+id/loading"
@@ -87,5 +87,5 @@
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
         android:enabled="false"
-        android:text="Saqlash" />
+        android:text="@string/save_kt" />
 </LinearLayout>

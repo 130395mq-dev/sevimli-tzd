@@ -22,7 +22,7 @@
         android:id="@+id/nIcon"
         style="@style/J.IconBox"
         app:tint="@color/brand"
-        android:contentDescription="Bo'lim" />
+        android:contentDescription="@string/section" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -63,5 +63,5 @@
         android:layout_marginStart="8dp"
         android:src="@drawable/ic_chevron_right"
         app:tint="#9BB3A7"
-        android:contentDescription="Ochish" />
+        android:contentDescription="@string/open" />
 </LinearLayout>

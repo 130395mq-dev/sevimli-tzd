@@ -160,7 +160,7 @@ class InventoryCountActivity : AppCompatActivity() {
                     }
                     json == null || !json.optBoolean("found", false) -> {
                         ScanFeedback.fail(this)
-                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.product_not_found), Toast.LENGTH_SHORT).show()
                     }
                     else -> matchScan(json)
                 }
@@ -172,7 +172,7 @@ class InventoryCountActivity : AppCompatActivity() {
         val mid = product.optString("moysklad_id")
         if (mid.isBlank()) {
             ScanFeedback.fail(this)
-            Toast.makeText(this, "Bu mahsulot MoySklad'da yo'q", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.err_not_in_ms), Toast.LENGTH_SHORT).show()
             return
         }
         var item = items.find { it.productMoyskladId == mid }
@@ -187,7 +187,7 @@ class InventoryCountActivity : AppCompatActivity() {
                 wasInDoc = false,
             )
             items.add(item)
-            Toast.makeText(this, "Hujjatda yo'q edi — qo'shildi:\n${item.name}",
+            Toast.makeText(this, getString(R.string.added_not_in_doc_fmt, item.name),
                 Toast.LENGTH_SHORT).show()
         }
         ScanFeedback.ok(this)
@@ -215,9 +215,9 @@ class InventoryCountActivity : AppCompatActivity() {
             qPrice.visibility = View.GONE
         } else {
             qPrice.visibility = View.VISIBLE
-            qPrice.text = "⚠ Hujjatda yo'q edi"
+            qPrice.text = getString(R.string.was_not_in_doc)
         }
-        qWas.text = "Sanalgan: ${trimNum(was)}"
+        qWas.text = getString(R.string.counted_fmt1, trimNum(was))
 
         val packQty = product.optDouble("pack_qty", 0.0)
         val isPack = product.optBoolean("is_pack", false) && packQty > 0
@@ -226,7 +226,7 @@ class InventoryCountActivity : AppCompatActivity() {
         when {
             product.optBoolean("scale", false) && scaleWeight > 0 -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "⚖ Tarozi: ${trimNum(scaleWeight)} kg"
+                qPackInfo.text = getString(R.string.scale_fmt, trimNum(scaleWeight))
                 qInput.setText(trimNum(scaleWeight))
             }
             isPack -> {
@@ -235,7 +235,7 @@ class InventoryCountActivity : AppCompatActivity() {
             }
             product.optBoolean("pack_unknown", false) -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "📦 BLOK kodi — ichidagi DONA sonini kiriting"
+                qPackInfo.text = getString(R.string.blok_enter_qty)
                 qInput.setText("")
             }
             else -> {
@@ -250,12 +250,12 @@ class InventoryCountActivity : AppCompatActivity() {
             if (!isPack) return typed
             val total = round3(typed * packQty)
             qPackInfo.text =
-                "📦 ${trimNum(typed)} upakovka x ${trimNum(packQty)} = ${trimNum(total)}$packUom"
+                getString(R.string.pack_calc_fmt, trimNum(typed), trimNum(packQty), trimNum(total), packUom)
             return total
         }
         fun updateWill() {
             val will = was + currentQty()
-            qWill.text = "Jami: ${trimNum(will)}"
+            qWill.text = getString(R.string.total_fmt, trimNum(will))
             qWill.setTextColor(getColor(R.color.brand))
         }
         updateWill()
@@ -313,11 +313,11 @@ class InventoryCountActivity : AppCompatActivity() {
             val statusColor: Int
             when {
                 !item.wasInDoc -> {
-                    status = "\u2795 Hujjatda yo'q edi"
+                    status = getString(R.string.not_in_doc_plus)
                     statusColor = R.color.warning
                 }
                 item.touched -> {
-                    status = "Sanaldi"
+                    status = getString(R.string.counted_lbl)
                     statusColor = R.color.brand
                 }
                 else -> {
@@ -339,7 +339,7 @@ class InventoryCountActivity : AppCompatActivity() {
             ))
         }
         rowAdapter.submit(rows)
-        b.progressText.text = "Sanalgan: $counted / ${items.size}"
+        b.progressText.text = getString(R.string.counted_fmt2, counted, items.size)
     }
 
     /**
@@ -359,7 +359,7 @@ class InventoryCountActivity : AppCompatActivity() {
             else
                 "Haqiqiy son. Bu tovar hujjatda yo'q edi.")
             .setView(view)
-            .setPositiveButton("Saqlash") { _, _ ->
+            .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 val v = input.text.toString().toDoubleOrNull()
                 if (v != null && v >= 0) {
                     item.counted = v
@@ -367,7 +367,7 @@ class InventoryCountActivity : AppCompatActivity() {
                     renderList()
                 }
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -377,11 +377,11 @@ class InventoryCountActivity : AppCompatActivity() {
     private fun confirm() {
         if (busy.isRunning) return
         if (items.isEmpty()) {
-            Toast.makeText(this, "Ro'yxat bo'sh", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, getString(R.string.list_empty), Toast.LENGTH_SHORT).show(); return
         }
         val touched = items.count { it.touched }
         if (touched == 0) {
-            Toast.makeText(this, "Hech qanday tovar sanalmadi", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, getString(R.string.nothing_counted), Toast.LENGTH_SHORT).show(); return
         }
         val notTouched = items.count { !it.touched }
         val extra = items.count { !it.wasInDoc }
@@ -396,13 +396,13 @@ class InventoryCountActivity : AppCompatActivity() {
             .sortedByDescending { kotlin.math.abs(it.counted - it.expected) }
 
         val sb = StringBuilder()
-        sb.append("$touched ta tovar sanaldi.")
-        if (extra > 0) sb.append("\n⚠ $extra ta tovar hujjatda yo'q edi — qo'shiladi.")
+        sb.append(getString(R.string.counted_n_fmt, touched))
+        if (extra > 0) sb.append(getString(R.string.extra_items_fmt, extra))
         if (notTouched > 0) {
             // Ochiq aytamiz: sanalmagan qatorlar hujjatdagi holicha qoladi.
             // MoySklad hujjatida "sanalmagan" degan holat yo'q — shuning uchun
             // ularning qiymati o'zgarmaydi, o'chirilmaydi ham.
-            sb.append("\n\n$notTouched ta tovar sanalmadi — ular hujjatda o'zgarishsiz qoladi.")
+            sb.append(getString(R.string.untouched_fmt, notTouched))
         }
         if (diffs.isNotEmpty()) {
             // DIQQAT: bu yerda FARQ SONI ATAYIN yozilmaydi, faqat NOMLAR.
@@ -410,19 +410,19 @@ class InventoryCountActivity : AppCompatActivity() {
             // oladi va sanoq yana "raqamga moslash" ga aylanadi — ya'ni
             // qoldiqni yashirganimizning ma'nosi qolmaydi.
             // Nom yetarli: xodim o'sha tovarni qaytib sanaydi, xolos.
-            sb.append("\n\n\u26a0 ${diffs.size} ta tovar hujjatdagidan farq qildi:")
-            for (it2 in diffs.take(8)) sb.append("\n  \u2022 ${it2.name}")
-            if (diffs.size > 8) sb.append("\n  \u2026 va yana ${diffs.size - 8} ta")
-            sb.append("\n\nShularni qaytib sanab ko'ring.")
+            sb.append(getString(R.string.diffs_header_fmt, diffs.size))
+            for (it2 in diffs.take(8)) sb.append(getString(R.string.diff_line_fmt, it2.name))
+            if (diffs.size > 8) sb.append(getString(R.string.diff_more_fmt, diffs.size - 8))
+            sb.append(getString(R.string.recount_hint))
         }
-        sb.append("\n\nHujjat O'TKAZILMAYDI — qoldiqlar o'zgarmaydi. " +
+        sb.append(getString(R.string.not_posted_note) +
                   "Menejer kompyuterdan ko'rib o'tkazadi.")
 
         AlertDialog.Builder(this)
-            .setTitle("Sanoqni saqlash")
+            .setTitle(getString(R.string.count_save_kt))
             .setMessage(sb.toString())
-            .setPositiveButton("Ha, saqlayman") { _, _ -> send() }
-            .setNegativeButton("Qaytib tekshiraman", null)
+            .setPositiveButton(getString(R.string.yes_save)) { _, _ -> send() }
+            .setNegativeButton(getString(R.string.go_back_check), null)
             .show()
     }
 
@@ -457,10 +457,10 @@ class InventoryCountActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val name = result.json.optString("name", "Инвентаризация")
                         AlertDialog.Builder(this)
-                            .setTitle("Saqlandi ✓")
+                            .setTitle(getString(R.string.saved_ok))
                             .setMessage("MoySklad: $name\n\n" +
                                     "Hujjat o'tkazilmadi — menejer tekshirib o'tkazadi.")
-                            .setPositiveButton("OK") { _, _ -> finish() }
+                            .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                             .setCancelable(false)
                             .show()
                     }
@@ -469,9 +469,9 @@ class InventoryCountActivity : AppCompatActivity() {
                             "Internet yo'q. Qayta urinib ko'ring."
                         else result.message
                         AlertDialog.Builder(this)
-                            .setTitle("Saqlanmadi")
+                            .setTitle(getString(R.string.not_saved))
                             .setMessage(msg)
-                            .setPositiveButton("OK", null)
+                            .setPositiveButton(getString(R.string.ok), null)
                             .show()
                     }
                 }
@@ -482,10 +482,10 @@ class InventoryCountActivity : AppCompatActivity() {
     private fun confirmExit() {
         if (items.none { it.touched }) { finish(); return }
         AlertDialog.Builder(this)
-            .setTitle("Chiqasizmi?")
-            .setMessage("Sanoq saqlanmagan — kiritilgan sonlar yo'qoladi.")
-            .setPositiveButton("Ha, chiqaman") { _, _ -> finish() }
-            .setNegativeButton("Qolaman", null)
+            .setTitle(getString(R.string.exit_q))
+            .setMessage(getString(R.string.count_unsaved_note))
+            .setPositiveButton(getString(R.string.yes_exit)) { _, _ -> finish() }
+            .setNegativeButton(getString(R.string.stay), null)
             .show()
     }
 

@@ -74,7 +74,7 @@ class InventoryInboxActivity : AppCompatActivity() {
         b.list.removeAllViews()
         val arr = json.optJSONArray("inventories")
         if (arr == null || arr.length() == 0) {
-            b.emptyHint.text = "Ochiq sanoq yo'q.\nMoySklad'da inventarizatsiya yarating."
+            b.emptyHint.text = getString(R.string.no_open_count_note)
             b.emptyHint.visibility = View.VISIBLE
             return
         }

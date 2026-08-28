@@ -49,7 +49,7 @@ class DocumentsActivity : AppCompatActivity() {
         }
         if (createTarget != null) {
             b.btnNew.visibility = View.VISIBLE
-            b.btnNewText.text = "＋  Yangi hujjat yaratish"
+            b.btnNewText.text = getString(R.string.create_new_doc)
             // ILGARI: tez ikki marta bosilsa IKKITA hujjat ekrani ochilardi,
             // har biri o'z raqami bilan — natijada ikkita haqiqiy hujjat.
             b.btnNew.setOnClickListener {
@@ -110,7 +110,7 @@ class DocumentsActivity : AppCompatActivity() {
         b.list.removeAllViews()
         val arr = json.optJSONArray("documents")
         if (arr == null || arr.length() == 0) {
-            b.emptyHint.text = "Hali hujjat yo'q"
+            b.emptyHint.text = getString(R.string.no_docs_yet)
             b.emptyHint.visibility = View.VISIBLE
             return
         }
@@ -227,14 +227,14 @@ class DocumentsActivity : AppCompatActivity() {
             setPadding(pad, dp(12f).toInt(), pad, 0)
         }
         outer.addView(TextView(this).apply {
-            text = "Jami: $cnt tovar · ${trimNum(total)} dona"
+            text = getString(R.string.doc_total_fmt, cnt, trimNum(total))
             textSize = 13f
             setTextColor(getColor(R.color.text_gray))
             setPadding(0, 0, 0, dp(8f).toInt())
         })
         if (isError && errorText.isNotBlank()) {
             outer.addView(TextView(this).apply {
-                text = "⚠ Bu hujjat MoySklad'ga o'tmagan. Qizil bilan belgilangan tovar muammo bergan."
+                text = getString(R.string.doc_failed_note)
                 textSize = 12.5f
                 setTextColor(android.graphics.Color.parseColor("#B91C1C"))
                 setBackgroundColor(android.graphics.Color.parseColor("#FEF2F2"))
@@ -263,7 +263,7 @@ class DocumentsActivity : AppCompatActivity() {
         outer.addView(scroll)
         if (editable) {
             outer.addView(TextView(this).apply {
-                text = "Keraksiz yoki xato tovarni 🗑 bilan olib tashlab, keyin qayta yuboring."
+                text = getString(R.string.doc_fix_hint)
                 textSize = 12f
                 setTextColor(getColor(R.color.text_gray))
                 setPadding(0, dp(4f).toInt(), 0, dp(8f).toInt())
@@ -273,9 +273,9 @@ class DocumentsActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
             .setTitle(if (name.isNotBlank()) name else "Hujjat tarkibi")
             .setView(outer)
-            .setPositiveButton("Yopish", null)
+            .setPositiveButton(getString(R.string.close), null)
         if (isError && tcode.isNotEmpty()) {
-            builder.setNeutralButton("Qayta yuborish") { _, _ -> doRetry(tcode, id) }
+            builder.setNeutralButton(getString(R.string.resend)) { _, _ -> doRetry(tcode, id) }
         }
         val d = builder.create()
         dlg = d
@@ -319,7 +319,7 @@ class DocumentsActivity : AppCompatActivity() {
         }
         if (problem) {
             col.addView(TextView(this).apply {
-                text = "⚠ Shu tovar muammo bergan (MoySklad'da topilmadi)"
+                text = getString(R.string.item_problem)
                 textSize = 12f
                 setTextColor(android.graphics.Color.parseColor("#B91C1C"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
@@ -351,9 +351,9 @@ class DocumentsActivity : AppCompatActivity() {
     /** Yuborilmagan hujjatdan bitta tovarni o'chiradi (tasdiqlab). */
     private fun removeLine(tcode: String, docId: Int, lineId: Int, name: String, after: () -> Unit) {
         AlertDialog.Builder(this)
-            .setTitle("Tovarni o'chirish")
-            .setMessage("«$name» ni hujjatdan olib tashlaymizmi?")
-            .setPositiveButton("O'chirish") { _, _ ->
+            .setTitle(getString(R.string.delete_item))
+            .setMessage(getString(R.string.ask_remove_item, name))
+            .setPositiveButton(getString(R.string.delete)) { _, _ ->
                 b.loading.visibility = View.VISIBLE
                 val body = JSONObject().put("type", tcode).put("id", docId).put("line_id", lineId)
                 thread {
@@ -363,7 +363,7 @@ class DocumentsActivity : AppCompatActivity() {
                         b.loading.visibility = View.GONE
                         when (r) {
                             is ApiResult.Success -> {
-                                Toast.makeText(this, "O'chirildi", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, getString(R.string.deleted), Toast.LENGTH_SHORT).show()
                                 after()
                             }
                             is ApiResult.Error ->
@@ -372,7 +372,7 @@ class DocumentsActivity : AppCompatActivity() {
                     }
                 }
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -380,10 +380,10 @@ class DocumentsActivity : AppCompatActivity() {
         val msg = (if (error.isNotBlank()) "Xato: $error\n\n" else "") +
                 "«$name» hujjatini MoySklad'ga qaytadan yuboraylikmi?"
         AlertDialog.Builder(this)
-            .setTitle("Qayta yuborish")
+            .setTitle(getString(R.string.resend))
             .setMessage(msg)
-            .setPositiveButton("Qayta yuborish") { _, _ -> doRetry(tcode, id) }
-            .setNegativeButton("Bekor", null)
+            .setPositiveButton(getString(R.string.resend)) { _, _ -> doRetry(tcode, id) }
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -400,7 +400,7 @@ class DocumentsActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (r) {
                     is ApiResult.Success -> {
-                        Toast.makeText(this, "Yuborildi ✓", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.sent_ok), Toast.LENGTH_SHORT).show()
                         load()
                     }
                     is ApiResult.Error ->

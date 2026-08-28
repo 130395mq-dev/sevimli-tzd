@@ -49,7 +49,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Было: 0"
+            android:text="@string/was_zero"
             android:textColor="@color/text_gray"
             android:textSize="14sp" />
 
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="end"
-            android:text="Будет: 1"
+            android:text="@string/will_one"
             android:textColor="@color/text_dark"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -77,7 +77,7 @@
             android:layout_width="58dp"
             android:layout_height="58dp"
             android:gravity="center"
-            android:text="−"
+            android:text="@string/minus"
             android:textColor="@color/brand"
             android:textSize="30sp"
             android:background="@drawable/j_stepper" />
@@ -92,7 +92,7 @@
             android:gravity="center"
             android:inputType="numberDecimal"
             android:selectAllOnFocus="true"
-            android:text="1"
+            android:text="@string/one"
             android:textColor="@color/text_dark"
             android:textSize="25sp"
             android:textStyle="bold"
@@ -104,7 +104,7 @@
             android:layout_width="58dp"
             android:layout_height="58dp"
             android:gravity="center"
-            android:text="+"
+            android:text="@string/plus"
             android:textColor="@color/brand"
             android:textSize="28sp"
             android:background="@drawable/j_stepper" />
@@ -115,7 +115,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="18dp"
-        android:text="Далее"
+        android:text="@string/next"
         android:textAllCaps="false"
         android:textSize="16sp"
         app:backgroundTint="@color/brand"

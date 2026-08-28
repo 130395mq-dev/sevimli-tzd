@@ -28,7 +28,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -39,12 +39,12 @@
 
             <TextView
                 style="@style/J.HeadTitle"
-                android:text="Mahsulot qidirish" />
+                android:text="@string/product_search" />
 
             <TextView
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="Nomi, kodi yoki artikuli bo'yicha" />
+                android:text="@string/search_by_fields" />
         </LinearLayout>
 
     </LinearLayout>
@@ -59,7 +59,7 @@
         <EditText
             android:id="@+id/search"
             style="@style/J.Field"
-            android:hint="Nomi yoki kodi (S6406)"
+            android:hint="@string/name_or_code_hint"
             android:inputType="text"
             android:imeOptions="actionSearch"
             android:paddingEnd="52dp"
@@ -75,7 +75,7 @@
             app:tint="#9BB3A7"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:visibility="gone"
-            android:contentDescription="Tozalash" />
+            android:contentDescription="@string/clear" />
     </FrameLayout>
 
     <LinearLayout
@@ -89,13 +89,13 @@
         <TextView
             android:id="@+id/hintTitle"
             style="@style/J.Body"
-            android:text="Nomi yoki kodi bo'yicha qidiring" />
+            android:text="@string/search_by_name_code" />
 
         <TextView
             android:id="@+id/hintSub"
             style="@style/J.Sub"
             android:layout_marginTop="5dp"
-            android:text="Masalan: S6406" />
+            android:text="@string/example_code" />
     </LinearLayout>
 
     <ProgressBar

@@ -124,7 +124,7 @@ class MoveReceiveActivity : AppCompatActivity() {
                     }
                     json == null || !json.optBoolean("found", false) -> {
                         ScanFeedback.fail(this)
-                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.product_not_found), Toast.LENGTH_SHORT).show()
                     }
                     else -> matchScan(json)
                 }
@@ -137,7 +137,7 @@ class MoveReceiveActivity : AppCompatActivity() {
         val item = items.find { it.productMoyskladId == mid }
         if (item == null) {
             ScanFeedback.fail(this)
-            Toast.makeText(this, "Bu tovar dokumentda yo'q:\n${product.optString("name")}",
+            Toast.makeText(this, getString(R.string.not_in_doc_fmt, product.optString("name")),
                 Toast.LENGTH_LONG).show()
             return
         }
@@ -165,8 +165,8 @@ class MoveReceiveActivity : AppCompatActivity() {
         val was = item.scanned
         qName.text = item.name
         // Приёмка'да narx turadi; bu yerda muhimi — KUTILGAN miqdor
-        qPrice.text = "Kutilgan: ${trimNum(item.expected)} dona"
-        qWas.text = "Было: ${trimNum(was)}"
+        qPrice.text = getString(R.string.expected_fmt, trimNum(item.expected))
+        qWas.text = getString(R.string.was_fmt, trimNum(was))
 
         // Blok (upakovka) yoki tarozi shtrixi — avtomatik to'ldiramiz
         val packQty = product.optDouble("pack_qty", 0.0)
@@ -176,7 +176,7 @@ class MoveReceiveActivity : AppCompatActivity() {
         when {
             product.optBoolean("scale", false) && scaleWeight > 0 -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "\u2696 Tarozi: ${trimNum(scaleWeight)} kg"
+                qPackInfo.text = getString(R.string.scale_fmt_u, trimNum(scaleWeight))
                 qInput.setText(trimNum(scaleWeight))
             }
             isPack -> {
@@ -187,7 +187,7 @@ class MoveReceiveActivity : AppCompatActivity() {
             // dona ekani MoySklad'da ro'yxatdan o'tmagan — xodim o'zi kiritadi.
             product.optBoolean("pack_unknown", false) -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "\uD83D\uDCE6 BLOK kodi \u2014 ichidagi DONA sonini kiriting"
+                qPackInfo.text = getString(R.string.blok_enter_qty_u)
                 qInput.setText("")
             }
             else -> {
@@ -204,12 +204,12 @@ class MoveReceiveActivity : AppCompatActivity() {
             if (!isPack) return typed
             val total = round3(typed * packQty)
             qPackInfo.text =
-                "\uD83D\uDCE6 ${trimNum(typed)} upakovka x ${trimNum(packQty)} = ${trimNum(total)}$packUom"
+                getString(R.string.pack_calc_fmt_u, trimNum(typed), trimNum(packQty), trimNum(total), packUom)
             return total
         }
         fun updateWill() {
             val will = was + currentQty()
-            qWill.text = "Будет: ${trimNum(will)}"
+            qWill.text = getString(R.string.will_fmt, trimNum(will))
             // Kutilgandan oshsa — ogohlantirib rangini o'zgartiramiz
             qWill.setTextColor(getColor(
                 if (will > item.expected) R.color.warning else R.color.brand))
@@ -262,19 +262,19 @@ class MoveReceiveActivity : AppCompatActivity() {
             val statusColor: Int
             when {
                 item.scanned == 0.0 -> {
-                    status = "Kutilyapti \u00B7 ${trimNum(item.expected)} dona"
+                    status = getString(R.string.expected_pcs_fmt, trimNum(item.expected))
                     statusColor = R.color.text_gray
                 }
                 item.scanned == item.expected -> {
-                    status = "\u2713 To'liq keldi"
+                    status = getString(R.string.arrived_full)
                     statusColor = R.color.brand
                 }
                 item.scanned < item.expected -> {
-                    status = "\u26A0 Kam keldi (${trimNum(item.expected - item.scanned)} yetmadi)"
+                    status = getString(R.string.arrived_less_fmt, trimNum(item.expected - item.scanned))
                     statusColor = R.color.warning
                 }
                 else -> {
-                    status = "\u26A0 Ortiq keldi (+${trimNum(item.scanned - item.expected)})"
+                    status = getString(R.string.arrived_more_fmt, trimNum(item.scanned - item.expected))
                     statusColor = R.color.warning
                 }
             }
@@ -292,7 +292,7 @@ class MoveReceiveActivity : AppCompatActivity() {
             ))
         }
         rowAdapter.submit(rows)
-        b.progressText.text = "Tekshirilgan: $checked / ${items.size}"
+        b.progressText.text = getString(R.string.checked_fmt, checked, items.size)
     }
 
     private fun editItem(item: RecvItem) {
@@ -303,13 +303,13 @@ class MoveReceiveActivity : AppCompatActivity() {
         }
         AlertDialog.Builder(this)
             .setTitle(item.name)
-            .setMessage("Haqiqiy kelgan miqdor (kutilgan: ${trimNum(item.expected)})")
+            .setMessage(getString(R.string.actual_qty_fmt, trimNum(item.expected)))
             .setView(input)
-            .setPositiveButton("Saqlash") { _, _ ->
+            .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 item.scanned = input.text.toString().toDoubleOrNull() ?: item.scanned
                 renderList()
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -323,21 +323,21 @@ class MoveReceiveActivity : AppCompatActivity() {
         if (busy.isRunning) return               // allaqachon yuborilyapti
         val scannedItems = items.filter { it.scanned > 0 }
         if (scannedItems.isEmpty()) {
-            Toast.makeText(this, "Hech qanday tovar skan qilinmadi", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, getString(R.string.nothing_scanned), Toast.LENGTH_SHORT).show(); return
         }
         val notScanned = items.count { it.scanned == 0.0 }
         val diffs = scannedItems.count { it.scanned != it.expected }
         val sb = StringBuilder()
-        sb.append("${scannedItems.size} ta tovar qabul qilinadi.")
-        if (notScanned > 0) sb.append("\n⚠ $notScanned ta tovar skan qilinmadi — ular qabul qilinmaydi.")
-        if (diffs > 0) sb.append("\n⚠ $diffs ta tovarda miqdor farqi bor.")
-        sb.append("\n\nMoySklad'ga o'tkazilsinmi?")
+        sb.append(getString(R.string.will_accept_fmt, scannedItems.size))
+        if (notScanned > 0) sb.append(getString(R.string.not_scanned_fmt, notScanned))
+        if (diffs > 0) sb.append(getString(R.string.qty_diff_fmt, diffs))
+        sb.append(getString(R.string.post_to_ms_q))
 
         AlertDialog.Builder(this)
-            .setTitle("Qabul qilish")
+            .setTitle(getString(R.string.accept))
             .setMessage(sb.toString())
-            .setPositiveButton("Ha, qabul qilaman") { _, _ -> send(scannedItems) }
-            .setNegativeButton("Bekor", null)
+            .setPositiveButton(getString(R.string.yes_accept)) { _, _ -> send(scannedItems) }
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -370,9 +370,9 @@ class MoveReceiveActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val name = result.json.optString("moysklad_name", "Перемещение")
                         AlertDialog.Builder(this)
-                            .setTitle("Qabul qilindi ✓")
+                            .setTitle(getString(R.string.accepted_ok))
                             .setMessage("MoySklad: $name")
-                            .setPositiveButton("OK") { _, _ -> finish() }
+                            .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                             .setCancelable(false)
                             .show()
                     }
@@ -381,9 +381,9 @@ class MoveReceiveActivity : AppCompatActivity() {
                             "Internet yo'q. Qayta urinib ko'ring."
                         else result.message
                         AlertDialog.Builder(this)
-                            .setTitle("Qabul qilinmadi")
+                            .setTitle(getString(R.string.not_accepted))
                             .setMessage(msg)
-                            .setPositiveButton("OK", null)
+                            .setPositiveButton(getString(R.string.ok), null)
                             .show()
                     }
                 }

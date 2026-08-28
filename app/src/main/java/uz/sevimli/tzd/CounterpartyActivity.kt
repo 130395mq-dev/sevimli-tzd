@@ -52,7 +52,7 @@ class CounterpartyActivity : AppCompatActivity() {
                     if (ok) load(b.search.text.toString().trim())
                     else {
                         b.loading.visibility = View.GONE
-                        showHint("Kontragentlar yuklanmadi — internetni tekshiring.")
+                        showHint(getString(R.string.cp_load_failed))
                     }
                 }
             } else {
@@ -91,7 +91,7 @@ class CounterpartyActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
                 if (empty) {
-                    showHint("Kontragentlar hali yuklanmagan.\nBir marta internet bilan oching — keyin offline ham ishlaydi.")
+                    showHint(getString(R.string.cp_not_loaded))
                 } else {
                     render(rows!!)
                 }

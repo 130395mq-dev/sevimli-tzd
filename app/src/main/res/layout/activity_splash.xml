@@ -11,7 +11,7 @@
         android:layout_width="230dp"
         android:layout_height="230dp"
         android:src="@drawable/logo"
-        android:contentDescription="TSD" />
+        android:contentDescription="@string/tsd" />
 
     <ProgressBar
         android:id="@+id/splashProgress"
@@ -25,7 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="46dp"
-        android:text="Ombor boshqaruv tizimi · v0.5"
+        android:text="@string/wms_subtitle_v"
         android:textColor="@color/white70"
         android:textSize="13sp"
         android:letterSpacing="0.06" />

@@ -56,9 +56,9 @@ class SetupActivity : AppCompatActivity() {
     private fun doLogin() {
         val email = b.etEmail.text.toString().trim()
         val pass = b.etPass.text.toString()
-        if (email.isEmpty() || pass.isEmpty()) { msg(b.msgLogin, "Email va parolni kiriting"); return }
+        if (email.isEmpty() || pass.isEmpty()) { msg(b.msgLogin, getString(R.string.enter_email_pass)); return }
         b.btnLogin.isEnabled = false
-        msg(b.msgLogin, "Tekshirilmoqda...")
+        msg(b.msgLogin, getString(R.string.checking))
         thread {
             val r = Api.saasPost(this, "login",
                 JSONObject().put("email", email).put("password", pass))
@@ -82,7 +82,7 @@ class SetupActivity : AppCompatActivity() {
     private fun loadLicenses() {
         step(1)
         b.manualBox.visibility = View.GONE
-        b.lnkManual.text = "Token qo'lda kiritish"
+        b.lnkManual.text = getString(R.string.token_manual_kt)
         b.licLoading.visibility = View.VISIBLE
         b.llLicenses.removeAllViews()
         msg(b.msgLicense, "")
@@ -103,9 +103,9 @@ class SetupActivity : AppCompatActivity() {
         b.llLicenses.removeAllViews()
         val arr = json.optJSONArray("devices")
         if (arr == null || arr.length() == 0) {
-            msg(b.msgLicense, "Litsenziya topilmadi. Kabinetda avval qurilma qo'shing yoki tokenni qo'lda kiriting.")
+            msg(b.msgLicense, getString(R.string.no_license))
             b.manualBox.visibility = View.VISIBLE
-            b.lnkManual.text = "Ro'yxatdan tanlash"
+            b.lnkManual.text = getString(R.string.pick_from_list)
             return
         }
         val myId = Config.deviceId(this)
@@ -156,7 +156,7 @@ class SetupActivity : AppCompatActivity() {
 
     private fun pickLicense(token: String, name: String) {
         Config.setToken(this, token)
-        msg(b.msgLicense, "Tekshirilmoqda...")
+        msg(b.msgLicense, getString(R.string.checking))
         thread {
             val r = Api.get(this, "ping")
             runOnUiThread {
@@ -172,10 +172,10 @@ class SetupActivity : AppCompatActivity() {
     // ---- 1: LITSENZIYA (TOKEN) ----
     private fun doToken() {
         val tok = b.etToken.text.toString().trim()
-        if (tok.length < 8) { msg(b.msgToken, "Tokenni to'liq kiriting"); return }
+        if (tok.length < 8) { msg(b.msgToken, getString(R.string.token_incomplete)); return }
         Config.setToken(this, tok)
         b.btnToken.isEnabled = false
-        msg(b.msgToken, "Tekshirilmoqda...")
+        msg(b.msgToken, getString(R.string.checking))
         thread {
             val r = Api.get(this, "ping")
             runOnUiThread {
@@ -183,7 +183,7 @@ class SetupActivity : AppCompatActivity() {
                 b.btnToken.isEnabled = true
                 when (r) {
                     is ApiResult.Success -> { msg(b.msgToken, ""); loadStores() }
-                    is ApiResult.Error -> msg(b.msgToken, "Token xato: " + r.message)
+                    is ApiResult.Error -> msg(b.msgToken, getString(R.string.token_error_pre) + r.message)
                 }
             }
         }
@@ -211,7 +211,7 @@ class SetupActivity : AppCompatActivity() {
     private fun renderStores(json: JSONObject) {
         b.llStores.removeAllViews()
         val arr = json.optJSONArray("stores")
-        if (arr == null || arr.length() == 0) { msg(b.msgStore, "Filial topilmadi"); return }
+        if (arr == null || arr.length() == 0) { msg(b.msgStore, getString(R.string.branch_not_found)); return }
         for (i in 0 until arr.length()) {
             val s = arr.optJSONObject(i) ?: continue
             val id = s.optInt("id")
@@ -241,7 +241,7 @@ class SetupActivity : AppCompatActivity() {
 
     private fun pickStore(id: Int, name: String) {
         if (!storeBusy.start()) return
-        msg(b.msgStore, "Saqlanmoqda...")
+        msg(b.msgStore, getString(R.string.saving))
         thread {
             val r = Api.post(this, "set-store", JSONObject().put("store_id", id))
             runOnUiThread {
@@ -259,15 +259,15 @@ class SetupActivity : AppCompatActivity() {
     private fun doSync() {
         step(3)
         thread {
-            runOnUiThread { b.syncMsg.text = "Kontragentlar yuklanmoqda..." }
+            runOnUiThread { b.syncMsg.text = getString(R.string.cp_loading) }
             CatalogSync.syncCounterparties(this)
             CatalogSync.syncProductsFull(this) { done, total ->
-                runOnUiThread { b.syncMsg.text = "Mahsulotlar: $done / $total" }
+                runOnUiThread { b.syncMsg.text = getString(R.string.products_fmt, done, total) }
             }
             Config.setConfigured(this, true)
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
-                Toast.makeText(this, "Tayyor! Ilova ishga tushdi ✓", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.ready_started), Toast.LENGTH_LONG).show()
                 startActivity(Intent(this, MenuActivity::class.java))
                 finish()
             }

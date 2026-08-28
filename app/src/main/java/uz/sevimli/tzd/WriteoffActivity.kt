@@ -94,7 +94,7 @@ class WriteoffActivity : AppCompatActivity() {
                     }
                     json == null || !json.optBoolean("found", false) -> {
                         ScanFeedback.fail(this)
-                        Toast.makeText(this, "Mahsulot topilmadi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.product_not_found), Toast.LENGTH_SHORT).show()
                     }
                     else -> {
                         ScanFeedback.ok(this)
@@ -135,7 +135,7 @@ class WriteoffActivity : AppCompatActivity() {
             "${fmt.format(price)} so'm · Qoldiq: ${trimNum(storeQty)}"
         else
             "${fmt.format(price)} so'm"
-        qWas.text = "Было: ${trimNum(was)}"
+        qWas.text = getString(R.string.was_fmt, trimNum(was))
 
         // Tarozi og'irligi yoki upakovka (blok) — avto to'ldiramiz
         val packQty = product.optDouble("pack_qty", 0.0)
@@ -145,7 +145,7 @@ class WriteoffActivity : AppCompatActivity() {
         when {
             product.optBoolean("scale", false) && scaleWeight > 0 -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "⚖ Tarozi: ${trimNum(scaleWeight)} kg"
+                qPackInfo.text = getString(R.string.scale_fmt, trimNum(scaleWeight))
                 qInput.setText(trimNum(scaleWeight))
             }
             isPack -> {
@@ -156,7 +156,7 @@ class WriteoffActivity : AppCompatActivity() {
             // dona ekani MoySklad'da ro'yxatdan o'tmagan — xodim o'zi kiritadi.
             product.optBoolean("pack_unknown", false) -> {
                 qPackInfo.visibility = View.VISIBLE
-                qPackInfo.text = "\uD83D\uDCE6 BLOK kodi \u2014 ichidagi DONA sonini kiriting"
+                qPackInfo.text = getString(R.string.blok_enter_qty_u)
                 qInput.setText("")
             }
             else -> {
@@ -173,13 +173,13 @@ class WriteoffActivity : AppCompatActivity() {
             if (!isPack) return typed
             val total = round3(typed * packQty)
             qPackInfo.text =
-                "\uD83D\uDCE6 ${trimNum(typed)} upakovka x ${trimNum(packQty)} = ${trimNum(total)}$packUom"
+                getString(R.string.pack_calc_fmt_u, trimNum(typed), trimNum(packQty), trimNum(total), packUom)
             return total
         }
         fun updateWill() {
             val will = was + currentQty()
-            qWill.text = "Будет: ${trimNum(will)}"
-            if (storeQty >= 0 && will > storeQty) qWill.append("  ⚠ qoldiqdan ko'p")
+            qWill.text = getString(R.string.will_fmt, trimNum(will))
+            if (storeQty >= 0 && will > storeQty) qWill.append(getString(R.string.more_than_stock))
         }
         updateWill()
         qInput.setOnFocusChangeListener { _, _ -> updateWill() }
@@ -219,7 +219,7 @@ class WriteoffActivity : AppCompatActivity() {
 
     private fun renderList() {
         b.emptyHint.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
-        b.totalCount.text = "Товар, всего: ${items.size}"
+        b.totalCount.text = getString(R.string.total_items_fmt, items.size)
         // Ro'yxat adapterga beriladi — RecyclerView faqat ko'rinib
         // turgan qatorlarni chizadi (ilgari hammasi qayta yasalardi).
         rowAdapter.submit(items.map { item ->
@@ -235,26 +235,26 @@ class WriteoffActivity : AppCompatActivity() {
         }
         AlertDialog.Builder(this)
             .setTitle(item.name)
-            .setMessage("Yangi miqdor (0 = o'chirish)")
+            .setMessage(getString(R.string.new_qty_hint))
             .setView(input)
-            .setPositiveButton("Saqlash") { _, _ ->
+            .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 val v = input.text.toString().toDoubleOrNull() ?: item.quantity
                 if (v <= 0) items.remove(item) else item.quantity = v
                 renderList()
             }
-            .setNegativeButton("Bekor", null)
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
     private fun finishDocument() {
         if (items.isEmpty()) {
-            Toast.makeText(this, "Hujjat bo'sh", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, getString(R.string.doc_empty), Toast.LENGTH_SHORT).show(); return
         }
         AlertDialog.Builder(this)
-            .setTitle("Списаниени yakunlash")
-            .setMessage("${items.size} ta mahsulot · jami ${trimNum(items.sumOf { it.quantity })}\nTovar hisobdan chiqadi (ombordan kamayadi). MoySklad'ga yozilsinmi?")
-            .setPositiveButton("Завершить") { _, _ -> sendDocument() }
-            .setNegativeButton("Bekor", null)
+            .setTitle(getString(R.string.writeoff_finish_kt))
+            .setMessage(getString(R.string.confirm_writeoff_fmt, items.size, trimNum(items.sumOf { it.quantity })))
+            .setPositiveButton(getString(R.string.finish_ru)) { _, _ -> sendDocument() }
+            .setNegativeButton(getString(R.string.cancel_short), null)
             .show()
     }
 
@@ -290,9 +290,9 @@ class WriteoffActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         val name = result.json.optString("moysklad_name", "Списание")
                         AlertDialog.Builder(this)
-                            .setTitle("Yuborildi ✓")
+                            .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
-                            .setPositiveButton("OK") { _, _ -> finish() }
+                            .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                             .setCancelable(false)
                             .show()
                     }
@@ -301,16 +301,16 @@ class WriteoffActivity : AppCompatActivity() {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
                             OfflineQueue.enqueue(this, "writeoff", "Списание", body)
                             AlertDialog.Builder(this)
-                                .setTitle("Saqlandi ⏳")
-                                .setMessage("Internet yo'q. Hujjat telefonda saqlandi — internet qaytganda o'zi yuboriladi.")
-                                .setPositiveButton("OK") { _, _ -> finish() }
+                                .setTitle(getString(R.string.saved_pending))
+                                .setMessage(getString(R.string.offline_saved))
+                                .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                                 .setCancelable(false)
                                 .show()
                         } else {
                             AlertDialog.Builder(this)
-                                .setTitle("Yuborilmadi")
+                                .setTitle(getString(R.string.not_sent))
                                 .setMessage(result.message)
-                                .setPositiveButton("OK", null)
+                                .setPositiveButton(getString(R.string.ok), null)
                                 .show()
                         }
                     }
@@ -322,10 +322,10 @@ class WriteoffActivity : AppCompatActivity() {
     private fun confirmExit() {
         if (items.isEmpty()) { finish(); return }
         AlertDialog.Builder(this)
-            .setTitle("Chiqish")
-            .setMessage("Hujjat yakunlanmagan. Chiqilsinmi? (ma'lumot saqlanmaydi)")
-            .setPositiveButton("Chiqish") { _, _ -> finish() }
-            .setNegativeButton("Qolish", null)
+            .setTitle(getString(R.string.exit))
+            .setMessage(getString(R.string.doc_unfinished_exit))
+            .setPositiveButton(getString(R.string.exit)) { _, _ -> finish() }
+            .setNegativeButton(getString(R.string.stay2), null)
             .show()
     }
 

@@ -28,7 +28,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -39,7 +39,7 @@
 
             <TextView
                 style="@style/J.HeadTitle"
-                android:text="Kontragent tanlash" />
+                android:text="@string/cp_pick" />
         </LinearLayout>
 
     </LinearLayout>
@@ -50,7 +50,7 @@
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
         android:layout_marginTop="12dp"
-        android:hint="Qidirish..."
+        android:hint="@string/search_dots"
         android:inputType="text"
         android:imeOptions="actionSearch"
         android:importantForAutofill="no" />

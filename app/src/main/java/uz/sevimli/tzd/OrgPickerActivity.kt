@@ -48,12 +48,12 @@ class OrgPickerActivity : AppCompatActivity() {
     private fun showError(msg: String) {
         b.list.removeAllViews()
         b.list.addView(android.widget.TextView(this).apply {
-            text = "Tashkilotlar olinmadi.\n$msg"
+            text = getString(R.string.orgs_failed_fmt, msg)
             textSize = 14f
             setPadding(40, 60, 40, 20)
         })
         b.list.addView(android.widget.Button(this).apply {
-            text = "Qayta urinish"
+            text = getString(R.string.retry_2)
             setOnClickListener { load() }
         })
     }
@@ -91,7 +91,7 @@ class OrgPickerActivity : AppCompatActivity() {
         }
         if (arr.length() == 0) {
             val tv = TextView(this).apply {
-                text = "Tashkilot topilmadi"
+                text = getString(R.string.org_not_found)
                 textSize = 15f
                 setTextColor(getColor(R.color.text_gray))
                 setPadding(dp(8f).toInt(), dp(24f).toInt(), dp(8f).toInt(), dp(8f).toInt())

@@ -34,7 +34,7 @@ class SplashActivity : AppCompatActivity() {
             .start()
 
         // Haqiqiy versiyani ko'rsatadi (qattiq yozilgan matn emas)
-        b.splashVersion.text = "Ombor boshqaruv tizimi · v${BuildConfig.VERSION_NAME}"
+        b.splashVersion.text = getString(R.string.wms_version_fmt, BuildConfig.VERSION_NAME)
         b.splashVersion.alpha = 0f
         b.splashVersion.animate().alpha(1f).setStartDelay(400).setDuration(500).start()
 

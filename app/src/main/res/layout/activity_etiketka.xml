@@ -25,7 +25,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -36,7 +36,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Этикетка / Ценник"
+                android:text="@string/label_price"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -45,7 +45,7 @@
                 android:id="@+id/priceMode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Narx: Chakana"
+                android:text="@string/price_retail_lbl"
                 android:textColor="@color/white70"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -80,7 +80,7 @@
             android:gravity="center"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:text="Godex\n40*58"
+            android:text="@string/printer_godex"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
             android:gravity="center"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:text="Xprinter\n30*20"
+            android:text="@string/printer_xprinter"
             android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -117,7 +117,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Mahsulot: 0 · Yorliq: 0"
+            android:text="@string/prod_label_zero"
             android:textColor="@color/text_dark"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -134,7 +134,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="40dp"
-        android:text="Mahsulotni skan qiling"
+        android:text="@string/scan_product"
         android:textColor="@color/text_gray"
         android:textSize="15sp" />
 
@@ -168,7 +168,7 @@
         android:gravity="center"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
-        android:text="🖨  Chop etish"
+        android:text="@string/print_btn"
         android:textColor="@color/white"
         android:textSize="17sp"
         android:textStyle="bold"

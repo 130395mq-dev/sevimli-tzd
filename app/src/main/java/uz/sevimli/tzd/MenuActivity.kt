@@ -52,13 +52,13 @@ class MenuActivity : AppCompatActivity() {
 
         val cells = ArrayList<Cell>()
         // Просмотр товара — DOIM ko'rinadi (o'chirib bo'lmaydi)
-        cells.add(Cell("Просмотр товара", "Narx va qoldiq", R.drawable.ic_lookup, true) {
+        cells.add(Cell(getString(R.string.view_product_2), getString(R.string.price_and_stock), R.drawable.ic_lookup, true) {
             startActivity(Intent(this, LookupActivity::class.java))
         })
         // Sozlamalarда yoqilgan bo'limlar
         for (fn in MenuFunctions.LIST) {
             if (!Config.isFn(this, fn.key)) continue
-            cells.add(Cell(fn.title, fn.sub, fn.icon, false) { dispatch(fn) })
+            cells.add(Cell(getString(fn.title), getString(fn.sub), fn.icon, false) { dispatch(fn) })
         }
 
         var i = 0
@@ -116,7 +116,7 @@ class MenuActivity : AppCompatActivity() {
 
     private fun dispatch(fn: MenuFunctions.Fn) {
         if (fn.needsStore && !Config.hasStore(this)) {
-            Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.err_pick_store_first), Toast.LENGTH_LONG).show()
             return
         }
         when (fn.key) {
@@ -125,13 +125,13 @@ class MenuActivity : AppCompatActivity() {
             // ro'yxatini ochadi. "Yangi sanoq" va "Hujjatlar" o'sha ekranda.
             "inventory" -> startActivity(Intent(this, InventoryInboxActivity::class.java))
             "etiketka" -> startActivity(Intent(this, EtiketkaActivity::class.java))
-            else -> openDocs(fn.key, fn.title)
+            else -> openDocs(fn.key, getString(fn.title))
         }
     }
 
     private fun openDocs(type: String, title: String) {
         if (!Config.hasStore(this)) {
-            Toast.makeText(this, "Avval Sozlamalardan sklad tanlang", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.err_pick_store_first), Toast.LENGTH_LONG).show()
             return
         }
         startActivity(Intent(this, DocumentsActivity::class.java).apply {
@@ -200,7 +200,7 @@ class MenuActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(d, d, d, d)
             addView(TextView(this@MenuActivity).apply {
-                text = "⛔ Obuna to'xtatilgan"
+                text = getString(R.string.subscription_stopped)
                 textSize = 21f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
@@ -213,7 +213,7 @@ class MenuActivity : AppCompatActivity() {
         blockDialog = AlertDialog.Builder(this)
             .setView(box)
             .setCancelable(false)
-            .setPositiveButton("Qayta tekshirish") { _, _ ->
+            .setPositiveButton(getString(R.string.recheck)) { _, _ ->
                 thread {
                     Api.get(this, "ping")
                     runOnUiThread {
@@ -299,7 +299,7 @@ class MenuActivity : AppCompatActivity() {
 
         val dialog = AlertDialog.Builder(this)
             .setView(view)
-            .setNegativeButton("Yopish", null)
+            .setNegativeButton(getString(R.string.close), null)
             .create()
 
         if (list.isEmpty()) {
@@ -342,13 +342,13 @@ class MenuActivity : AppCompatActivity() {
             if (manual) Updater.check(this, silent = false)
             return
         }
-        if (manual) Toast.makeText(this, "Yuborilmoqda...", Toast.LENGTH_SHORT).show()
+        if (manual) Toast.makeText(this, getString(R.string.sending), Toast.LENGTH_SHORT).show()
         thread {
             val sent = OfflineQueue.flushBlocking(this)
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
-                if (sent > 0) Toast.makeText(this, "$sent ta hujjat yuborildi ✓", Toast.LENGTH_SHORT).show()
-                else if (manual) Toast.makeText(this, "Hozircha yuborilmadi (internet yoki server)", Toast.LENGTH_SHORT).show()
+                if (sent > 0) Toast.makeText(this, getString(R.string.docs_sent_fmt, sent), Toast.LENGTH_SHORT).show()
+                else if (manual) Toast.makeText(this, getString(R.string.not_sent_yet), Toast.LENGTH_SHORT).show()
                 updateStatus()
             }
         }
@@ -356,7 +356,7 @@ class MenuActivity : AppCompatActivity() {
 
     private fun fullRefresh() {
         val label = TextView(this).apply {
-            text = "Boshlanmoqda..."
+            text = getString(R.string.starting)
             val p = (20 * resources.displayMetrics.density).toInt()
             setPadding(p, p, p, p)
             textSize = 15f
@@ -365,9 +365,9 @@ class MenuActivity : AppCompatActivity() {
         // butun katalog yuklanardi. Katta katalog va sekin internetda ilova
         // o'n daqiqalab qotib turishi mumkin edi — chiqish yo'li yo'q edi.
         val dlg = AlertDialog.Builder(this)
-            .setTitle("🔄 To'liq yangilash")
+            .setTitle(getString(R.string.full_refresh))
             .setView(label)
-            .setNegativeButton("Bekor qilish") { _, _ -> CatalogSync.cancel() }
+            .setNegativeButton(getString(R.string.cancel)) { _, _ -> CatalogSync.cancel() }
             .setCancelable(false)
             .create()
         dlg.show()
@@ -384,17 +384,17 @@ class MenuActivity : AppCompatActivity() {
                 // Faqat `removeCallbacks` yetmaydi: u ALLAQACHON ishga tushgan
                 // oqimni to'xtatmaydi.
                 if (CatalogSync.isSyncing) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kutilmoqda..." }
+                    runOnUiThread { if (!isFinishing) label.text = getString(R.string.waiting) }
                     CatalogSync.waitIdle()
                 }
                 if (!CatalogSync.isCancelRequested) {
-                    runOnUiThread { if (!isFinishing) label.text = "Kontragentlar yuklanmoqda..." }
+                    runOnUiThread { if (!isFinishing) label.text = getString(R.string.cp_loading) }
                     CatalogSync.syncCounterparties(this)
                 }
                 ok = CatalogSync.syncProductsFull(this) { done, total ->
                     runOnUiThread {
                         if (!isFinishing && !isDestroyed) {
-                            label.text = "Mahsulotlar yuklanmoqda...\n$done / $total"
+                            label.text = getString(R.string.loading_products_fmt, done, total)
                         }
                     }
                 }
@@ -419,11 +419,11 @@ class MenuActivity : AppCompatActivity() {
                     syncHandler.postDelayed(syncTick, 2 * 60 * 1000L)
                 }
                 when {
-                    ok -> Toast.makeText(this, "Yangilandi ✓", Toast.LENGTH_LONG).show()
+                    ok -> Toast.makeText(this, getString(R.string.updated_ok), Toast.LENGTH_LONG).show()
                     CatalogSync.isCancelled ->
-                        Toast.makeText(this, "To'xtatildi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getString(R.string.stopped), Toast.LENGTH_SHORT).show()
                     else -> Toast.makeText(this,
-                        "Yuklab bo'lmadi — internetni tekshiring. Keyingi avto-sinxda qayta urinadi.",
+                        getString(R.string.download_failed),
                         Toast.LENGTH_LONG).show()
                 }
                 updateStatus()

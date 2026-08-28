@@ -35,7 +35,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -50,13 +50,13 @@
                 android:textSize="18sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:text="Инвентаризация" />
+                android:text="@string/inventory" />
 
             <TextView
                 android:id="@+id/headerRoute"
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="—" />
+                android:text="@string/dash" />
         </LinearLayout>
 
         <ImageView
@@ -67,7 +67,7 @@
             android:src="@drawable/j_ic_plus"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Qo'lda qo'shish" />
+            android:contentDescription="@string/add_manual" />
     </LinearLayout>
 
     <!-- Skaner kiritishi — ko'rinmaydi, fokusni ushlab turadi -->
@@ -99,13 +99,13 @@
             android:layout_height="22dp"
             android:src="@drawable/j_ic_scan"
             app:tint="#9BB3A7"
-            android:contentDescription="Skan" />
+            android:contentDescription="@string/scan" />
 
         <TextView
             style="@style/J.Body"
             android:layout_marginStart="10dp"
             android:textColor="#9BB3A7"
-            android:text="Shtrix-kodni skanerlang" />
+            android:text="@string/scan_barcode_hyph" />
     </LinearLayout>
 
     <LinearLayout
@@ -123,11 +123,11 @@
             style="@style/J.Sec"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="Sanalgan: 0 / 0" />
+            android:text="@string/counted_zero" />
 
         <TextView
             style="@style/J.Sec"
-            android:text="Fakt" />
+            android:text="@string/fact" />
     </LinearLayout>
 
     <ProgressBar
@@ -157,5 +157,5 @@
         android:layout_marginEnd="12dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="12dp"
-        android:text="Sanoqni saqlash" />
+        android:text="@string/count_save_kt" />
 </LinearLayout>

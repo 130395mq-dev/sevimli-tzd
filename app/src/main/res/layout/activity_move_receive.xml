@@ -31,7 +31,7 @@
             android:src="@drawable/j_ic_back"
             app:tint="@color/white"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Orqaga" />
+            android:contentDescription="@string/back" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -46,13 +46,13 @@
                 android:textSize="18sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:text="Перемещение" />
+                android:text="@string/move" />
 
             <TextView
                 android:id="@+id/headerRoute"
                 style="@style/J.HeadSub"
                 android:layout_marginTop="1dp"
-                android:text="—" />
+                android:text="@string/dash" />
         </LinearLayout>
 
     </LinearLayout>
@@ -85,7 +85,7 @@
             android:layout_height="22dp"
             android:src="@drawable/j_ic_scan"
             app:tint="#9BB3A7"
-            android:contentDescription="Skan" />
+            android:contentDescription="@string/scan" />
 
         <TextView
             style="@style/J.Body"
@@ -93,7 +93,7 @@
             android:layout_weight="1"
             android:layout_marginStart="10dp"
             android:textColor="#9BB3A7"
-            android:text="Shtrix-kodni skanerlang" />
+            android:text="@string/scan_barcode_hyph" />
 
     </LinearLayout>
 
@@ -112,11 +112,11 @@
             style="@style/J.Sec"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="Tekshirilgan: 0 / 0" />
+            android:text="@string/checked_zero" />
 
         <TextView
             style="@style/J.Sec"
-            android:text="Кол-во / Факт" />
+            android:text="@string/qty_fact" />
     </LinearLayout>
 
     <ProgressBar
@@ -146,5 +146,5 @@
         android:layout_marginEnd="12dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="12dp"
-        android:text="Далее · qabul qilish" />
+        android:text="@string/next_accept" />
 </LinearLayout>

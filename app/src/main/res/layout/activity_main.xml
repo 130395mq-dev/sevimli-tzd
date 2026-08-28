@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="SEVIMLI TZD — Skaner testi"
+        android:text="@string/scanner_test"
         android:textStyle="bold"
         android:textSize="18sp"
         android:paddingBottom="8dp" />
@@ -17,14 +17,14 @@
         android:id="@+id/methodText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Usul: —"
+        android:text="@string/method_dash"
         android:textSize="14sp" />
 
     <TextView
         android:id="@+id/lastScan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Skan kutilmoqda..."
+        android:text="@string/waiting_scan"
         android:textSize="28sp"
         android:textStyle="bold"
         android:paddingTop="12dp"
@@ -34,14 +34,14 @@
         android:id="@+id/wedgeInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Bu yerga skan / qo'lda kiriting"
+        android:hint="@string/scan_or_type_here"
         android:inputType="text"
         android:imeOptions="actionDone" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tarix (yangi tepada):"
+        android:text="@string/history_newest"
         android:textStyle="bold"
         android:paddingTop="12dp" />
 
