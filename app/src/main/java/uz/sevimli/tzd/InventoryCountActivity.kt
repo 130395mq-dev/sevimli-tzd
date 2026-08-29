@@ -62,11 +62,16 @@ class InventoryCountActivity : AppCompatActivity() {
 
     /**
      * @param expected   tizim qoldig'i (MoySklad calculatedQuantity)
-     * @param counted    sanalgan fakt
-     * @param touched    ishchi shu tovarga TEGDIMI. `counted == 0.0` ikki xil
-     *                   ma'noda bo'ladi: "hali sanalmagan" va "sanadim, yo'q
-     *                   ekan". Bu bayroq ularni ajratadi — ikkinchisi
-     *                   inventarizatsiyaning eng muhim natijasi.
+     * @param counted    HUJJATDA allaqachon turgan son. Bu — oldingi
+     *                   saqlashlarning natijasi (pastdagi sklad sanog'i,
+     *                   yoki boshqa terminal yozgani). Ilova buni
+     *                   O'ZGARTIRMAYDI, faqat ko'rsatadi.
+     * @param added      SHU SAFAR sanalgan son. Saqlanganda `counted` ning
+     *                   USTIGA qo'shiladi. Ekran qaytadan ochilganda 0 dan
+     *                   boshlanadi — xodim tepadagi tovarni toza sanaydi.
+     * @param touched    ishchi shu tovarga SHU SAFAR tegdimi. `added == 0.0`
+     *                   ikki xil ma'noda bo'ladi: "hali sanalmagan" va
+     *                   "sanadim, yo'q ekan". Bu bayroq ularni ajratadi.
      * @param wasInDoc   MoySklad hujjatida bor edimi
      */
     data class InvItem(
@@ -75,6 +80,7 @@ class InventoryCountActivity : AppCompatActivity() {
         val name: String,
         val expected: Double,
         var counted: Double = 0.0,
+        var added: Double = 0.0,
         var touched: Boolean = false,
         val wasInDoc: Boolean = true,
     )
@@ -324,15 +330,26 @@ class InventoryCountActivity : AppCompatActivity() {
         val btnPlus = view.findViewById<TextView>(R.id.btnPlus)
         val btnOk = view.findViewById<View>(R.id.btnOk)
 
-        val was = item.counted
+        // MUHIM: bu yerda HUJJATDAGI son emas, SHU SAFARGI son turadi.
+        // Xodim tepaga chiqqanda javondagi tovarni toza sanashi kerak;
+        // pastdagi sanoq raqami ko'z oldida tursa u chalg'iydi.
+        val was = item.added
         qName.text = item.name
         // Tizim qoldig'i ATAYIN ko'rsatilmaydi — xodim javondagi tovarni
         // sanashi kerak, ekrandagi songa moslashi emas.
-        if (item.wasInDoc) {
-            qPrice.visibility = View.GONE
-        } else {
-            qPrice.visibility = View.VISIBLE
-            qPrice.text = getString(R.string.was_not_in_doc)
+        when {
+            !item.wasInDoc -> {
+                qPrice.visibility = View.VISIBLE
+                qPrice.text = getString(R.string.was_not_in_doc)
+            }
+            // Hujjatda allaqachon son bor — xodim bilib tursin, lekin bu
+            // faqat MA'LUMOT: kiritish maydoniga tushmaydi va qo'shiladigan
+            // songa aralashmaydi.
+            item.counted > 0 -> {
+                qPrice.visibility = View.VISIBLE
+                qPrice.text = getString(R.string.in_doc_qty_fmt, trimNum(item.counted))
+            }
+            else -> qPrice.visibility = View.GONE
         }
         qWas.text = getString(R.string.counted_fmt1, trimNum(was))
 
@@ -395,7 +412,7 @@ class InventoryCountActivity : AppCompatActivity() {
 
         val confirmWith: (Double) -> Unit = { addQty ->
             if (addQty > 0) {
-                item.counted = round3(item.counted + addQty)
+                item.added = round3(item.added + addQty)
                 item.touched = true
                 markDraftDirty()
                 renderList()
@@ -449,7 +466,7 @@ class InventoryCountActivity : AppCompatActivity() {
      */
     private fun markDraftDirty() {
         draftDirty = true
-        val big = items.count { it.touched } > DRAFT_BIG
+        val big = items.count { it.added > 0 } > DRAFT_BIG
         val now = System.currentTimeMillis()
         if (!big || now - lastDraftMs >= DRAFT_MIN_MS) flushDraft()
     }
@@ -476,11 +493,14 @@ class InventoryCountActivity : AppCompatActivity() {
                 put("id", it2.productMoyskladId)
                 put("t", it2.productType)
                 put("n", it2.name)
-                put("q", it2.counted)
+                put("q", it2.added)
                 put("d", it2.wasInDoc)
             })
         }
         DraftStore.save(this, DRAFT, JSONObject().apply {
+            // v=2 - "q" endi SHU SAFAR sanalgan son (ilgari umumiy son edi).
+            // Eski qoralama tiklansa u umumiy sonni USTIGA qo'shib yuborardi.
+            put("v", 2)
             put("inv", inventoryId)
             put("lines", arr)
         }.toString())
@@ -491,6 +511,9 @@ class InventoryCountActivity : AppCompatActivity() {
         val raw = DraftStore.load(this, DRAFT) ?: return 0
         val j = try { JSONObject(raw) } catch (e: Exception) { return 0 }
         if (j.optString("inv") != inventoryId) return 0
+        // Eski (6.9.9 va undan oldingi) formatdagi qoralama tiklanmaydi -
+        // undagi son umumiy edi, endi esa qo'shiladigan son kerak.
+        if (j.optInt("v", 1) < 2) { DraftStore.clear(this, DRAFT); return 0 }
         val arr = j.optJSONArray("lines") ?: return 0
         var n = 0
         for (i in 0 until arr.length()) {
@@ -499,7 +522,7 @@ class InventoryCountActivity : AppCompatActivity() {
             val q = l.optDouble("q", 0.0)
             val ex = items.find { it.productMoyskladId == id }
             if (ex != null) {
-                ex.counted = q; ex.touched = true; n++
+                ex.added = q; ex.touched = true; n++
             } else {
                 // Hujjatda yo'q, lekin xodim skanerlagan tovar.
                 items.add(InvItem(
@@ -507,7 +530,8 @@ class InventoryCountActivity : AppCompatActivity() {
                     productType = l.optString("t", "product"),
                     name = l.optString("n"),
                     expected = 0.0,
-                    counted = q,
+                    counted = 0.0,
+                    added = q,
                     touched = true,
                     wasInDoc = l.optBoolean("d", false),
                 ))
@@ -521,7 +545,10 @@ class InventoryCountActivity : AppCompatActivity() {
         var counted = 0
         val rows = ArrayList<RecvRowAdapter.Row>(items.size)
         for ((index, item) in items.withIndex()) {
-            if (item.touched) counted++
+            // Hujjatda soni bor qator ham "sanalgan" hisoblanadi — u boshqa
+            // qavatda yoki boshqa terminalda sanalgan bo'lishi mumkin.
+            val done = item.touched || item.counted > 0
+            if (done) counted++
 
             val status: String
             val statusColor: Int
@@ -534,6 +561,14 @@ class InventoryCountActivity : AppCompatActivity() {
                     status = getString(R.string.counted_lbl)
                     statusColor = R.color.brand
                 }
+                // Oldingi saqlashda sanalgan: BELGISI turadi, SONI turmaydi.
+                // Foydalanuvchi talabi: "qayta ochganda o'sha tovarning
+                // sonini emas, 'sanaldi' bo'lib tursin" — son ko'rinib tursa
+                // xodim uni tuzatishi kerakdek tuyuladi.
+                item.counted > 0 -> {
+                    status = getString(R.string.counted_lbl)
+                    statusColor = R.color.text_gray
+                }
                 else -> {
                     status = ""
                     statusColor = R.color.text_gray
@@ -545,10 +580,11 @@ class InventoryCountActivity : AppCompatActivity() {
                 name = item.name,
                 status = status,
                 statusColor = statusColor,
-                // FAQAT fakt. Ilgari "qoldiq / fakt" turardi.
-                qty = trimNum(item.counted),
+                // FAQAT shu safar sanalgan son. Hujjatdagi eski son bu yerga
+                // chiqmaydi — yuqoridagi izohga qarang.
+                qty = if (item.touched) trimNum(item.added) else "",
                 qtyColor = if (item.touched) R.color.brand else R.color.text_gray,
-                numColor = if (item.touched) R.color.brand else R.color.text_gray,
+                numColor = if (done) R.color.brand else R.color.text_gray,
                 numBold = item.touched,
             ))
         }
@@ -557,26 +593,40 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     /**
-     * Qo'lda tuzatish. Bu yerda 0 ham QABUL QILINADI — "sanadim, yo'q ekan"
-     * degani. Aynan shu holat kamomadni ko'rsatadi.
+     * Qatorga bosilganda ochiladigan oyna.
+     *
+     * MAYDON BO'SH BOSHLANADI. Foydalanuvchi talabi shu edi: oldingi
+     * saqlashdagi son maydonda tursa, xodim uni tuzatishi kerakdek his
+     * qiladi va chalg'iydi. Bu yerga SHU SAFAR sanalgan son yoziladi.
+     *
+     * Sanalgan sonlar oynaning MATN qismida ko'rinadi — "necha sanalgani
+     * ko'rinsin" talabi shu tarzda bajarilgan: ma'lumot bor, lekin
+     * kiritish maydoniga aralashmaydi.
      */
     private fun editItem(item: InvItem) {
         // Yalang'och EditText o'rniga chetlari joyida turgan, yirik raqamli
         // maydon — oyna ilovaning qolgan qismi bilan bir uslubda bo'lsin.
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_qty_edit, null)
         val input = view.findViewById<EditText>(R.id.qeInput)
-        input.setText(trimNum(item.counted))
+        input.setText("")
+        val info = StringBuilder(if (item.wasInDoc)
+            getString(R.string.real_qty_hint)
+        else
+            getString(R.string.real_qty_hint_extra))
+        if (item.counted > 0) {
+            info.append("\n").append(getString(R.string.in_doc_qty_fmt, trimNum(item.counted)))
+        }
+        if (item.added > 0) {
+            info.append("\n").append(getString(R.string.this_time_fmt, trimNum(item.added)))
+        }
         AlertDialog.Builder(this)
             .setTitle(item.name)
-            .setMessage(if (item.wasInDoc)
-                getString(R.string.real_qty_hint)
-            else
-                getString(R.string.real_qty_hint_extra))
+            .setMessage(info.toString())
             .setView(view)
             .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 val v = input.text.toString().toDoubleOrNull()
                 if (v != null && v >= 0) {
-                    item.counted = v
+                    item.added = v
                     item.touched = true      // 0 kiritilsa ham "sanaldi"
                     markDraftDirty()
                     renderList()
@@ -587,18 +637,25 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private val busy = Busy()
-    private val saveUuid = java.util.UUID.randomUUID().toString()
+
+    // TAKROR-HIMOYA kaliti. Tarmoq uzilib qayta bosilganda AYNAN o'sha
+    // ro'yxat ketsa — server uni ikkinchi marta qo'shmaydi. Ro'yxat
+    // o'zgargan bo'lsa kalit ham yangilanadi, ya'ni qo'shimcha sanoq
+    // "takror" deb tashlab yuborilmaydi.
+    private var lastSignature = ""
+    private var lastKey = ""
 
     private fun confirm() {
         if (busy.isRunning) return
         if (items.isEmpty()) {
             Toast.makeText(this, getString(R.string.list_empty), Toast.LENGTH_SHORT).show(); return
         }
-        val touched = items.count { it.touched }
+        val touched = items.count { it.added > 0 }
         if (touched == 0) {
             Toast.makeText(this, getString(R.string.nothing_counted), Toast.LENGTH_SHORT).show(); return
         }
-        val notTouched = items.count { !it.touched }
+        // Umuman sanalmagan: na shu safar, na oldingi saqlashda.
+        val notTouched = items.count { !it.touched && it.counted <= 0 }
         val extra = items.count { !it.wasInDoc }
 
         // SANOQ DAVOMIDA qoldiq ko'rsatilmaydi — xodim unga moslab
@@ -606,9 +663,11 @@ class InventoryCountActivity : AppCompatActivity() {
         // ko'rsatiladi: qo'pol xato (noto'g'ri javon, blokni dona deb
         // kiritish) shu yerda ushlanadi va xodim qaytib tekshira oladi.
         // Halollik ham saqlanadi, xato ham menejergacha yetib bormaydi.
+        // Farq HUJJATDAGI son + SHU SAFARGI son bo'yicha hisoblanadi —
+        // saqlangandan keyin hujjatda aynan shu yig'indi turadi.
         val diffs = items
-            .filter { it.touched && it.wasInDoc && it.counted != it.expected }
-            .sortedByDescending { kotlin.math.abs(it.counted - it.expected) }
+            .filter { it.added > 0 && it.wasInDoc && round3(it.counted + it.added) != it.expected }
+            .sortedByDescending { kotlin.math.abs(round3(it.counted + it.added) - it.expected) }
 
         val sb = StringBuilder()
         sb.append(getString(R.string.counted_n_fmt, touched))
@@ -630,8 +689,8 @@ class InventoryCountActivity : AppCompatActivity() {
             if (diffs.size > 8) sb.append(getString(R.string.diff_more_fmt, diffs.size - 8))
             sb.append(getString(R.string.recount_hint))
         }
-        sb.append(getString(R.string.not_posted_note) +
-                  "Menejer kompyuterdan ko'rib o'tkazadi.")
+        sb.append(getString(R.string.not_posted_note))
+        sb.append(getString(R.string.manager_will_post))
 
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.count_save_kt))
@@ -657,19 +716,35 @@ class InventoryCountActivity : AppCompatActivity() {
         //   2. 10 ta terminal bitta hujjatda ishlay oladi - har biri
         //      faqat o'zi sanaganini yozadi, boshqasinikini bosmaydi;
         //   3. 10 000 qatorli hujjatda ham so'rov kichik bo'ladi.
+        //
+        // QO'SHIB BORISH. Yuboriladigan son — SHU SAFAR sanalgani. Server
+        // uni hujjatdagi songa QO'SHADI (`mode = add`). Shuning uchun
+        // pastdagi sklad sanog'i tepadagi sanoq bilan yo'qolmaydi.
         val lines = JSONArray()
-        for (item in items.filter { it.touched }) {
+        for (item in items.filter { it.added > 0 }) {
             lines.put(JSONObject().apply {
                 put("product_moysklad_id", item.productMoyskladId)
                 put("product_type", item.productType)
-                put("quantity", item.counted)
+                put("quantity", item.added)
             })
+        }
+        if (lines.length() == 0) {
+            busy.stop(b.btnConfirm)
+            b.loading.visibility = View.GONE
+            Toast.makeText(this, getString(R.string.nothing_counted), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val sig = lines.toString()
+        if (sig != lastSignature || lastKey.isEmpty()) {
+            lastKey = java.util.UUID.randomUUID().toString()
+            lastSignature = sig
         }
         val body = JSONObject().apply {
             // TAKROR-HIMOYA: tarmoq uzilib qayta yuborilsa sanoq ikkilanmasin.
-            put("client_uuid", saveUuid)
+            put("client_uuid", lastKey)
             put("inventory_id", inventoryId)
             put("lines", lines)
+            put("mode", "add")
         }
         thread {
             val result = Api.post(this, "inventory-save", body)
@@ -709,7 +784,7 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private fun confirmExit() {
-        if (items.none { it.touched }) { finish(); return }
+        if (items.none { it.added > 0 }) { finish(); return }
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.exit_q))
             .setMessage(getString(R.string.count_unsaved_note))

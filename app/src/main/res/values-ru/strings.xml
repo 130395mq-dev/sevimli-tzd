@@ -329,8 +329,8 @@
     <string name="price_mode_wholesale">Цена: Опт</string>
     <string name="no_internet_retry">Нет интернета — попробуйте снова</string>
     <string name="no_internet_retry2">Нет интернета. Попробуйте снова.</string>
-    <string name="real_qty_hint">Фактическое количество. 0 = нет совсем.</string>
-    <string name="real_qty_hint_extra">Фактическое количество. Этого товара не было в документе.</string>
+    <string name="real_qty_hint">Количество, посчитанное сейчас \u2014 прибавится к количеству в документе.</string>
+    <string name="real_qty_hint_extra">Количество, посчитанное сейчас. Этого товара не было в документе.</string>
     <string name="not_posted_manager">Документ не проведён — менеджер проверит и проведёт.</string>
     <string name="items_to_count_fmt">Товаров к пересчёту: %1$s</string>
     <string name="store_pending_fmt">%1$s · ⏳ %2$s не отправлено</string>
@@ -353,4 +353,7 @@
     <string name="pick_branch2">Выберите филиал</string>
     <string name="draft_restored_fmt">Прерванный пересчёт восстановлен: %1$s товаров</string>
     <string name="from_cache">Список взят с устройства</string>
+    <string name="in_doc_qty_fmt">В документе: %1$s</string>
+    <string name="this_time_fmt">В этот раз: %1$s</string>
+    <string name="manager_will_post">Менеджер проверит на компьютере и проведёт.</string>
 </resources>

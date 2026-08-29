@@ -348,8 +348,8 @@
     <string name="price_mode_wholesale">Narx: Ulgurji</string>
     <string name="no_internet_retry">Internet yo\'q — qayta urinib ko\'ring</string>
     <string name="no_internet_retry2">Internet yo\'q. Qayta urinib ko\'ring.</string>
-    <string name="real_qty_hint">Haqiqiy son. 0 = umuman yo\'q.</string>
-    <string name="real_qty_hint_extra">Haqiqiy son. Bu tovar hujjatda yo\'q edi.</string>
+    <string name="real_qty_hint">Shu safar sanalgan son \u2014 hujjatdagi songa qo\'shiladi.</string>
+    <string name="real_qty_hint_extra">Shu safar sanalgan son. Bu tovar hujjatda yo\'q edi.</string>
     <string name="not_posted_manager">Hujjat o\'tkazilmadi — menejer tekshirib o\'tkazadi.</string>
     <string name="items_to_count_fmt">%1$s ta tovar sanaladi</string>
     <string name="store_pending_fmt">%1$s · ⏳ %2$s yuborilmagan</string>
@@ -372,4 +372,7 @@
     <string name="pick_branch2">Filialni tanlang</string>
     <string name="draft_restored_fmt">Uzilib qolgan sanoq tiklandi: %1$s ta tovar</string>
     <string name="from_cache">Ro\'yxat qurilmadan olindi</string>
+    <string name="in_doc_qty_fmt">Hujjatda: %1$s</string>
+    <string name="this_time_fmt">Bu safar: %1$s</string>
+    <string name="manager_will_post">Menejer kompyuterdan ko\'rib o\'tkazadi.</string>
 </resources>
