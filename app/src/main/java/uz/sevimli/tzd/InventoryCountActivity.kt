@@ -125,77 +125,98 @@ class InventoryCountActivity : AppCompatActivity() {
         b.btnConfirm.alpha = 0.5f
         items.clear()
         thread {
-            var offset = 0
-            var total = 0
-            var guard = 0            // cheksiz siklga qarshi
+            // 1-QADAM: YENGIL TEKSHIRUV.
+            // Faqat sarlavha so'raladi (limit=0) - qator soni va hujjatning
+            // MoySklad'dagi `updated` vaqti. Bu bir zumda keladi.
+            val headRes = Api.get(this, "inventory-detail", mapOf(
+                "id" to inventoryId, "limit" to "0"))
+            if (headRes !is ApiResult.Success) {
+                val msg = (headRes as? ApiResult.Error)?.message ?: ""
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    b.loading.visibility = View.GONE
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                }
+                return@thread
+            }
+            val total = headRes.json.optInt("total", 0)
+            val updated = headRes.json.optString("updated", "")
+            val store = headRes.json.optString("store", "-")
+            runOnUiThread { b.headerRoute.text = store }
+
+            // 2-QADAM: KESH.
+            // Qator soni ham, `updated` ham mos kelsa - hujjat o'zgarmagan,
+            // qurilmadagi nusxa ishlatiladi. Menejer qator qo'shsa yoki
+            // boshqa terminal sanoq yozsa `updated` o'zgaradi va kesh
+            // avtomatik tashlanadi.
+            var fromCache = false
+            if (total > 0 && updated.isNotEmpty()) {
+                val cached = try {
+                    LocalDb.get(this).invCacheGet(inventoryId, total, updated)
+                } catch (e: Throwable) { null }
+                if (cached != null) {
+                    addFromJson(cached)
+                    fromCache = true
+                }
+            }
+
             var failed: String? = null
 
-            while (guard++ < 200) {
-                // Qisqa uzilish butun yuklashni bekor qilmasin: har sahifa
-                // uch marta so'raladi. 10 000 qatorli hujjatda bitta
-                // sahifaning tasodifiy xatosi tufayli qaytadan boshlash
-                // xodim uchun juda qimmat.
-                var r: ApiResult? = null
-                for (attempt in 1..PAGE_TRIES) {
-                    r = Api.get(this, "inventory-detail", mapOf(
-                        "id" to inventoryId,
-                        "offset" to offset.toString(),
-                        "limit" to PAGE.toString()))
-                    if (r is ApiResult.Success) break
-                    if (attempt < PAGE_TRIES) Thread.sleep(1200L * attempt)
-                }
-                if (r !is ApiResult.Success) {
-                    failed = (r as? ApiResult.Error)?.message ?: ""
-                    break
-                }
-                val j = r.json
-                if (offset == 0) {
-                    total = j.optInt("total", 0)
-                    val store = j.optString("store", "-")
-                    runOnUiThread { b.headerRoute.text = store }
-                }
-                val arr = j.optJSONArray("positions") ?: JSONArray()
-                for (i in 0 until arr.length()) {
-                    val p = arr.optJSONObject(i) ?: continue
-                    items.add(InvItem(
-                        productMoyskladId = p.optString("product_moysklad_id"),
-                        productType = p.optString("product_type", "product"),
-                        name = p.optString("name"),
-                        expected = p.optDouble("expected_qty", 0.0),
-                        // Hujjatda allaqachon turgan fakt (sanoq davom ettirilsa).
-                        // `touched=false` - buni ishchi EMAS, hujjat keltirdi.
-                        counted = p.optDouble("counted_qty", 0.0),
-                        touched = false,
-                        wasInDoc = true,
-                    ))
-                }
-                val loaded = items.size
-                val t = total
-                runOnUiThread {
-                    if (!isFinishing && !isDestroyed && t > 0) {
-                        b.progressText.text =
-                            getString(R.string.loading_products_fmt, loaded, t)
+            // 3-QADAM: kesh yaramasa - serverdan bo'lib yuklaymiz.
+            if (!fromCache) {
+                var offset = 0
+                var guard = 0
+                while (guard++ < 200) {
+                    // Qisqa uzilish butun yuklashni bekor qilmasin: har
+                    // sahifa uch marta so'raladi.
+                    var r: ApiResult? = null
+                    for (attempt in 1..PAGE_TRIES) {
+                        r = Api.get(this, "inventory-detail", mapOf(
+                            "id" to inventoryId,
+                            "offset" to offset.toString(),
+                            "limit" to PAGE.toString()))
+                        if (r is ApiResult.Success) break
+                        if (attempt < PAGE_TRIES) Thread.sleep(1200L * attempt)
                     }
+                    if (r !is ApiResult.Success) {
+                        failed = (r as? ApiResult.Error)?.message ?: ""
+                        break
+                    }
+                    addFromJson(r.json.optJSONArray("positions") ?: JSONArray())
+                    val loaded = items.size
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed && total > 0) {
+                            b.progressText.text =
+                                getString(R.string.loading_products_fmt, loaded, total)
+                        }
+                    }
+                    val next = r.json.optInt("next_offset", 0)
+                    if (next <= offset) break
+                    offset = next
                 }
-                val next = j.optInt("next_offset", 0)
-                if (next <= offset) break        // tugadi yoki oldinga siljimadi
-                offset = next
+
+                // Keshga FAQAT to'liq ro'yxat yoziladi. Yarim ro'yxat keshga
+                // tushsa, keyingi ochilishda u to'liq deb qabul qilinardi.
+                if (failed == null && items.size == total && total > 0) {
+                    try {
+                        LocalDb.get(this).invCachePut(
+                            inventoryId, total, updated, store,
+                            items.map { arrayOf<Any>(
+                                it.productMoyskladId, it.productType,
+                                it.name, it.expected, it.counted) })
+                    } catch (_: Throwable) {}
+                }
             }
 
             val err = failed
+            val cacheUsed = fromCache
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
-                if (err != null && items.isEmpty()) {
-                    // Ro'yxat kelmasa tugma o'chiq qoladi - aks holda xodim
-                    // bo'sh hujjatni saqlab, MoySklad'dagi ro'yxatni
-                    // o'chirib yuborishi mumkin edi.
-                    Toast.makeText(this, err, Toast.LENGTH_LONG).show()
-                    return@runOnUiThread
-                }
                 if (err != null) {
-                    // Yarim kelgan ro'yxat bilan ishlash XAVFLI: saqlashda
-                    // kelmagan qatorlar hujjatdan o'chib ketardi.
+                    // Yarim kelgan ro'yxat bilan ishlash XAVFLI: skanerlangan
+                    // tovarning qatori yuklanmagan bo'lsa, u YANGI qator deb
+                    // qo'shilib, hujjatda dublikat paydo bo'lardi.
                     Toast.makeText(this, err, Toast.LENGTH_LONG).show()
                     items.clear()
                     renderList()
@@ -209,9 +230,30 @@ class InventoryCountActivity : AppCompatActivity() {
                     Toast.makeText(this,
                         getString(R.string.draft_restored_fmt, back),
                         Toast.LENGTH_LONG).show()
+                } else if (cacheUsed) {
+                    Toast.makeText(this, getString(R.string.from_cache),
+                        Toast.LENGTH_SHORT).show()
                 }
                 renderList()
             }
+        }
+    }
+
+    /** Serverdan yoki keshdan kelgan qatorlarni ro'yxatga qo'shadi. */
+    private fun addFromJson(arr: JSONArray) {
+        for (i in 0 until arr.length()) {
+            val p = arr.optJSONObject(i) ?: continue
+            items.add(InvItem(
+                productMoyskladId = p.optString("product_moysklad_id"),
+                productType = p.optString("product_type", "product"),
+                name = p.optString("name"),
+                expected = p.optDouble("expected_qty", 0.0),
+                // Hujjatda allaqachon turgan fakt (sanoq davom ettirilsa).
+                // `touched=false` - buni ishchi EMAS, hujjat keltirdi.
+                counted = p.optDouble("counted_qty", 0.0),
+                touched = false,
+                wasInDoc = true,
+            ))
         }
     }
 
@@ -639,6 +681,9 @@ class InventoryCountActivity : AppCompatActivity() {
                     is ApiResult.Success -> {
                         // Serverga yozildi - endi qoralama keraksiz.
                         DraftStore.clear(this, DRAFT)
+                        // Hujjat serverda o'zgardi - kesh yaroqsiz.
+                        try { LocalDb.get(this).invCacheClear(inventoryId) }
+                        catch (_: Throwable) {}
                         val name = result.json.optString("name", getString(R.string.inventory))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.saved_ok))

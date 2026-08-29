@@ -53,6 +53,7 @@ class LocalDb private constructor(ctx: Context) :
         db.execSQL("CREATE TABLE counterparty (id INTEGER PRIMARY KEY, name TEXT)")
         db.execSQL("CREATE INDEX idx_cp_name ON counterparty(name)")
         createProductTables(db)
+        createInventoryTables(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldV: Int, newV: Int) {
@@ -62,6 +63,36 @@ class LocalDb private constructor(ctx: Context) :
             // v2 -> v3: kirim narxi ustuni qo'shiladi
             try { db.execSQL("ALTER TABLE product ADD COLUMN buy_price INTEGER DEFAULT 0") } catch (_: Exception) {}
         }
+        // v3 -> v4: inventarizatsiya hujjati keshi
+        if (oldV < 4) createInventoryTables(db)
+    }
+
+    /**
+     * INVENTARIZATSIYA KESHI.
+     *
+     * 7000-10 000 qatorli hujjat serverdan bir necha o'n soniyada keladi.
+     * Xodim ekrandan chiqib qaytsa yoki ilova yopilsa - hammasi qaytadan
+     * yuklanardi. Endi hujjat qurilmada saqlanadi va qayta ochilganda
+     * BIR ZUMDA chiqadi.
+     *
+     * ESKIRISH XAVFI hisobga olingan: `inv_head` da hujjatning MoySklad'dagi
+     * `updated` vaqti va qator soni saqlanadi. Ochilishda bitta yengil
+     * so'rov yuboriladi; ular mos kelmasa kesh tashlanadi va hujjat
+     * qaytadan yuklanadi. Ya'ni menejer hujjatga qator qo'shsa yoki
+     * boshqa terminal sanoq yozsa - terminal buni sezadi.
+     */
+    private fun createInventoryTables(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS inv_head (" +
+                "inv_id TEXT PRIMARY KEY, total INTEGER, updated TEXT, " +
+                "store TEXT, saved_at INTEGER)"
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS inv_pos (" +
+                "inv_id TEXT, ord INTEGER, mid TEXT, ptype TEXT, name TEXT, " +
+                "expected REAL, counted REAL)"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_invpos ON inv_pos(inv_id, ord)")
     }
 
     private fun createProductTables(db: SQLiteDatabase) {
@@ -82,6 +113,81 @@ class LocalDb private constructor(ctx: Context) :
         // jadvalni o'qish edi — 20 000 tovarda sezilarli, va u har 2 daqiqada
         // bazani band qilib turardi.
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prod_upd ON product(ms_updated)")
+    }
+
+    // ---------------- Inventarizatsiya keshi ----------------
+
+    /** Kesh mos kelsa qatorlarni qaytaradi, aks holda null. */
+    @Synchronized
+    fun invCacheGet(invId: String, total: Int, updated: String): JSONArray? {
+        val c = db.rawQuery(
+            "SELECT total, updated FROM inv_head WHERE inv_id=?", arrayOf(invId))
+        var ok = false
+        c.use { if (it.moveToFirst()) ok = it.getInt(0) == total && it.getString(1) == updated }
+        if (!ok) return null
+
+        val out = JSONArray()
+        db.rawQuery("SELECT mid, ptype, name, expected, counted FROM inv_pos " +
+                    "WHERE inv_id=? ORDER BY ord", arrayOf(invId)).use { r ->
+            while (r.moveToNext()) {
+                out.put(JSONObject().apply {
+                    put("product_moysklad_id", r.getString(0))
+                    put("product_type", r.getString(1))
+                    put("name", r.getString(2))
+                    put("expected_qty", r.getDouble(3))
+                    put("counted_qty", r.getDouble(4))
+                })
+            }
+        }
+        return if (out.length() == total) out else null
+    }
+
+    /**
+     * Hujjatni keshga yozadi. FAQAT to'liq yuklab bo'lingach chaqiriladi -
+     * yarim ro'yxat keshga tushsa, keyingi ochilishda u to'liq deb
+     * qabul qilinardi.
+     */
+    @Synchronized
+    fun invCachePut(invId: String, total: Int, updated: String, store: String,
+                    rows: List<Array<Any>>) {
+        db.beginTransaction()
+        try {
+            db.execSQL("DELETE FROM inv_pos WHERE inv_id=?", arrayOf(invId))
+            db.execSQL("DELETE FROM inv_head WHERE inv_id=?", arrayOf(invId))
+            val st = db.compileStatement(
+                "INSERT INTO inv_pos(inv_id, ord, mid, ptype, name, expected, counted) " +
+                "VALUES(?,?,?,?,?,?,?)")
+            for ((i, r) in rows.withIndex()) {
+                st.clearBindings()
+                st.bindString(1, invId); st.bindLong(2, i.toLong())
+                st.bindString(3, r[0] as String); st.bindString(4, r[1] as String)
+                st.bindString(5, r[2] as String)
+                st.bindDouble(6, r[3] as Double); st.bindDouble(7, r[4] as Double)
+                st.executeInsert()
+            }
+            db.execSQL("INSERT INTO inv_head(inv_id, total, updated, store, saved_at) " +
+                       "VALUES(?,?,?,?,?)",
+                arrayOf(invId, total, updated, store, System.currentTimeMillis()))
+            // Faqat oxirgi 3 ta hujjat saqlanadi - xotira cheksiz o'smasin.
+            db.execSQL("DELETE FROM inv_pos WHERE inv_id NOT IN " +
+                       "(SELECT inv_id FROM inv_head ORDER BY saved_at DESC LIMIT 3)")
+            db.execSQL("DELETE FROM inv_head WHERE inv_id NOT IN " +
+                       "(SELECT inv_id FROM (SELECT inv_id FROM inv_head " +
+                       "ORDER BY saved_at DESC LIMIT 3))")
+            db.setTransactionSuccessful()
+        } catch (_: Exception) {
+        } finally {
+            try { db.endTransaction() } catch (_: Exception) {}
+        }
+    }
+
+    /** Saqlangach chaqiriladi: hujjat serverda o'zgardi, kesh yaroqsiz. */
+    @Synchronized
+    fun invCacheClear(invId: String) {
+        try {
+            db.execSQL("DELETE FROM inv_pos WHERE inv_id=?", arrayOf(invId))
+            db.execSQL("DELETE FROM inv_head WHERE inv_id=?", arrayOf(invId))
+        } catch (_: Exception) {}
     }
 
     // ---------------- Kontragentlar ----------------
@@ -372,7 +478,7 @@ class LocalDb private constructor(ctx: Context) :
 
     companion object {
         private const val NAME = "sevimli_local.db"
-        private const val VERSION = 3
+        private const val VERSION = 4
 
         @Volatile
         private var INSTANCE: LocalDb? = null

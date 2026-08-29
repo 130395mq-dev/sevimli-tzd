@@ -352,4 +352,5 @@
     <string name="pick_license">Выберите лицензию</string>
     <string name="pick_branch2">Выберите филиал</string>
     <string name="draft_restored_fmt">Прерванный пересчёт восстановлен: %1$s товаров</string>
+    <string name="from_cache">Список взят с устройства</string>
 </resources>

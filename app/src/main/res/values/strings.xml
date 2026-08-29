@@ -371,4 +371,5 @@
     <string name="pick_license">Litsenziyani tanlang</string>
     <string name="pick_branch2">Filialni tanlang</string>
     <string name="draft_restored_fmt">Uzilib qolgan sanoq tiklandi: %1$s ta tovar</string>
+    <string name="from_cache">Ro\'yxat qurilmadan olindi</string>
 </resources>
