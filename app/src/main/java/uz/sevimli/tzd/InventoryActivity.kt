@@ -60,7 +60,7 @@ class InventoryActivity : AppCompatActivity() {
         b.list.adapter = rowAdapter
         b.list.setHasFixedSize(true)
 
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnFinish.setOnClickListener { finishDocument() }
@@ -284,7 +284,7 @@ class InventoryActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Инвентаризация")
+                        val name = result.json.optString("moysklad_name", getString(R.string.inventory))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
@@ -295,7 +295,7 @@ class InventoryActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
-                            OfflineQueue.enqueue(this, "inventory", "Инвентаризация", body)
+                            OfflineQueue.enqueue(this, "inventory", getString(R.string.inventory), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))
@@ -349,7 +349,7 @@ class InventoryActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.scanInput.requestFocus()
     }
 

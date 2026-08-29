@@ -47,7 +47,7 @@ class EtiketkaActivity : AppCompatActivity() {
         b.pXprinter.setOnClickListener { setPrinter("xprinter") }
         setPrinter("godex")
         // Narx turi Sozlamalardan olinadi (chakana / ulgurji) — sarlavhada ko'rsatamiz
-        b.priceMode.text = if (Config.isUlgurji(this)) "Narx: Ulgurji (оптом)" else "Narx: Chakana"
+        b.priceMode.text = if (Config.isUlgurji(this)) getString(R.string.price_mode_wholesale) else "Narx: Chakana"
 
         b.btnPrint.setOnClickListener { sendPrint() }
 
@@ -203,7 +203,7 @@ class EtiketkaActivity : AppCompatActivity() {
                     }
                     is ApiResult.Error -> {
                         Toast.makeText(this,
-                            if (result.offline) "Internet yo'q — qayta urinib ko'ring"
+                            if (result.offline) getString(R.string.no_internet_retry)
                             else result.message, Toast.LENGTH_LONG).show()
                     }
                 }

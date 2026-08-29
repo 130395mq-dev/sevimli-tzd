@@ -228,10 +228,10 @@ class MenuActivity : AppCompatActivity() {
     }
 
     private fun updateStatus() {
-        val store = Config.storeName(this) ?: "Sklad tanlanmagan"
+        val store = Config.storeName(this) ?: getString(R.string.store_not_set)
         val pending = OfflineQueue.size(this)
         b.statusChip.text =
-            if (pending > 0) "$store · ⏳ $pending yuborilmagan" else store
+            if (pending > 0) getString(R.string.store_pending_fmt, store, pending) else store
     }
 
     // ==================== BILDIRISHNOMALAR ====================
@@ -267,29 +267,29 @@ class MenuActivity : AppCompatActivity() {
         d.updateName?.let { name ->
             list.add(Notice(
                 icon = R.drawable.j_ic_download,
-                title = "Yangi versiya $name",
-                sub = "Bosing — darhol yangilanadi",
+                title = getString(R.string.notice_update_fmt, name),
+                sub = getString(R.string.notice_update_sub),
                 count = "!", warn = true,
                 action = { Updater.check(this, silent = false) }))
         }
         if (d.moves > 0) list.add(Notice(
             icon = R.drawable.ic_move,
-            title = "Bugun kelgan ko'chirish",
-            sub = "Qabul qilish kutilmoqda",
+            title = getString(R.string.notice_move_title),
+            sub = getString(R.string.notice_move_sub),
             count = d.moves.toString(), warn = false,
             action = { startActivity(Intent(this, MoveInboxActivity::class.java)) }))
 
         if (d.inventories > 0) list.add(Notice(
             icon = R.drawable.ic_inventory,
-            title = "Bugungi sanoq",
-            sub = "Davom ettirish mumkin",
+            title = getString(R.string.notice_inv_title),
+            sub = getString(R.string.notice_inv_sub),
             count = d.inventories.toString(), warn = false,
             action = { startActivity(Intent(this, InventoryInboxActivity::class.java)) }))
 
         if (d.pending > 0) list.add(Notice(
             icon = R.drawable.j_ic_send,
-            title = "Yuborilmagan hujjat",
-            sub = "Internet tiklanganda ketadi",
+            title = getString(R.string.notice_queue_title),
+            sub = getString(R.string.notice_queue_sub),
             count = d.pending.toString(), warn = true,
             action = { flushQueue(manual = true) }))
 

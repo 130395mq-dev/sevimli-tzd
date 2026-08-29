@@ -23,7 +23,7 @@ object OfflineLookup {
         if (scan.kind == "url" && scan.code.isEmpty()) {
             return JSONObject().put("found", false).put("barcode", raw)
                 .put("offline", true).put("scan_kind", "url")
-                .put("hint", "Bu QR — sayt havolasi, tovar kodi emas")
+                .put("hint", ctx.getString(R.string.qr_is_link))
         }
 
         val (scalePlu, scaleValue) = parseScaleBarcode(code)

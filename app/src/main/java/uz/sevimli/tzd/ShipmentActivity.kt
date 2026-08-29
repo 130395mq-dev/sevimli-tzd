@@ -308,7 +308,7 @@ class ShipmentActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Отгрузка")
+                        val name = result.json.optString("moysklad_name", getString(R.string.shipment))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
@@ -319,7 +319,7 @@ class ShipmentActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
-                            OfflineQueue.enqueue(this, "shipment", "Отгрузка", body)
+                            OfflineQueue.enqueue(this, "shipment", getString(R.string.shipment), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))

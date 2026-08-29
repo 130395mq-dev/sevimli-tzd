@@ -364,7 +364,7 @@ class SupplyActivity : AppCompatActivity() {
                 when (result) {
                     is ApiResult.Success -> {
                         DraftStore.clear(this, "supply")   // yuborildi — qoralama tozalanadi
-                        val name = result.json.optString("moysklad_name", "Приёмка")
+                        val name = result.json.optString("moysklad_name", getString(R.string.supply))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
@@ -376,7 +376,7 @@ class SupplyActivity : AppCompatActivity() {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
                             DraftStore.clear(this, "supply")   // navbatga tushdi — qoralama tozalanadi
-                            OfflineQueue.enqueue(this, "supply", "Приёмка", body)
+                            OfflineQueue.enqueue(this, "supply", getString(R.string.supply), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))

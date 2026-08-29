@@ -29,7 +29,7 @@ class InventoryInboxActivity : AppCompatActivity() {
         b = ActivityInventoryInboxBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.btnBack.setOnClickListener { finish() }
         b.btnRefresh.setOnClickListener { load() }
         b.btnNew.setOnClickListener {
@@ -40,7 +40,7 @@ class InventoryInboxActivity : AppCompatActivity() {
         b.btnDocs.setOnClickListener {
             startActivity(Intent(this, DocumentsActivity::class.java).apply {
                 putExtra("type", "inventory")
-                putExtra("title", "Инвентаризация")
+                putExtra("title", getString(R.string.inventory))
             })
         }
     }
@@ -104,7 +104,7 @@ class InventoryInboxActivity : AppCompatActivity() {
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
             val sub = TextView(this).apply {
-                text = if (count > 0) "$count ta tovar sanaladi" else "Ro'yxat bo'sh"
+                text = if (count > 0) getString(R.string.items_to_count_fmt, count) else getString(R.string.list_empty)
                 textSize = 13f
                 setTextColor(getColor(R.color.brand))
                 setPadding(0, dp(4f).toInt(), 0, 0)

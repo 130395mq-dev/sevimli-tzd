@@ -156,7 +156,7 @@ class DocumentsActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val badge = TextView(this).apply {
-            text = type; textSize = 12f
+            text = typeText(tcode, type); textSize = 12f
             setTextColor(getColor(R.color.brand_dark))
             setBackgroundResource(R.drawable.bg_chip)
             backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.brand_tint))
@@ -175,8 +175,8 @@ class DocumentsActivity : AppCompatActivity() {
             setPadding(0, dp(6f).toInt(), 0, 0)
         }
         val statusTv = TextView(this).apply {
-            text = if (isError) "⚠ $status · qayta yuborish uchun bosing"
-                   else "$status · jami ${trimNum(qty)}"
+            text = if (isError) getString(R.string.doc_error_tap, statusText(statusCode, status))
+                   else getString(R.string.doc_status_fmt, statusText(statusCode, status), trimNum(qty))
             textSize = 13f
             setTextColor(getColor(when (statusCode) {
                 "synced" -> R.color.green_ok
@@ -271,7 +271,7 @@ class DocumentsActivity : AppCompatActivity() {
         }
 
         val builder = AlertDialog.Builder(this)
-            .setTitle(if (name.isNotBlank()) name else "Hujjat tarkibi")
+            .setTitle(if (name.isNotBlank()) name else getString(R.string.doc_content))
             .setView(outer)
             .setPositiveButton(getString(R.string.close), null)
         if (isError && tcode.isNotEmpty()) {
@@ -377,8 +377,8 @@ class DocumentsActivity : AppCompatActivity() {
     }
 
     private fun confirmRetry(tcode: String, id: Int, name: String, error: String) {
-        val msg = (if (error.isNotBlank()) "Xato: $error\n\n" else "") +
-                "«$name» hujjatini MoySklad'ga qaytadan yuboraylikmi?"
+        val msg = (if (error.isNotBlank()) getString(R.string.error_pre_fmt, error) else "") +
+                getString(R.string.resend_q_fmt, name)
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.resend))
             .setMessage(msg)
@@ -410,8 +410,38 @@ class DocumentsActivity : AppCompatActivity() {
         }
     }
 
-    private fun trimNum(d: Double): String =
-        if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+    /**
+     * Miqdorni ekranga chiqarish.
+     *
+     * YAXLITLASH SHART: qiymatlar `Double` da saqlanadi va qo'shilganda
+     * ikkilik kasr xatosi to'planadi — 63.789 o'rniga ekranda
+     * 63.788999999999994 chiqib qolardi. Boshqa ekranlarda yaxlitlash
+     * bor edi, faqat shu yerda tushib qolgan.
+     */
+    private fun trimNum(d: Double): String {
+        val r = Math.round(d * 1000.0) / 1000.0
+        return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
+    }
+
+    /** Hujjat holati - kod bo'yicha, serverning tilidan mustaqil. */
+    private fun statusText(code: String, fallback: String): String = when (code) {
+        "pending" -> getString(R.string.doc_status_pending)
+        "synced"  -> getString(R.string.doc_status_synced)
+        "error"   -> getString(R.string.doc_status_error)
+        else      -> fallback
+    }
+
+    /** Hujjat turi - kod bo'yicha. Server matni faqat zaxira sifatida. */
+    private fun typeText(code: String, fallback: String): String = when (code) {
+        "supply"    -> getString(R.string.supply)
+        "inventory" -> getString(R.string.inventory)
+        "move"      -> getString(R.string.move)
+        "shipment"  -> getString(R.string.shipment)
+        "writeoff"  -> getString(R.string.writeoff)
+        "preturn"   -> getString(R.string.purchase_return)
+        "sreturn"   -> getString(R.string.sales_return)
+        else        -> fallback
+    }
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
 }

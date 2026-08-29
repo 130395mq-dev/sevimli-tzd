@@ -131,12 +131,8 @@ object Updater {
         ) {
             AlertDialog.Builder(activity)
                 .setTitle(activity.getString(R.string.update_required))
-                .setMessage(
-                    "Yangi versiya (${info.versionName}) o'rnatilishi shart — " +
-                    "ilovadan foydalanishni davom ettirish uchun.\n\n" +
-                    "Sozlamalar ochiladi: \"Ruxsat berish\"ni yoqing va ortga qayting. " +
-                    "Yangilanish avtomatik davom etadi."
-                )
+                .setMessage(activity.getString(
+                    R.string.force_update_msg_fmt, info.versionName))
                 .setCancelable(false)
                 .setPositiveButton(activity.getString(R.string.grant)) { _, _ ->
                     try {

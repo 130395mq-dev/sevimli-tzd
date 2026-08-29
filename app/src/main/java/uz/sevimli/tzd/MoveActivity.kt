@@ -111,7 +111,7 @@ class MoveActivity : AppCompatActivity() {
         // Avval "qayerga" skladini tanlash (o'z skladidan tashqari)
         pickStore.launch(Intent(this, StorePickerActivity::class.java).apply {
             putExtra("exclude_id", Config.storeId(this@MoveActivity))
-            putExtra("title", "Qayerga (sklad)")
+            putExtra("title", getString(R.string.to_store))
         })
     }
 
@@ -324,7 +324,7 @@ class MoveActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Перемещение")
+                        val name = result.json.optString("moysklad_name", getString(R.string.move))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.shipped_ok))
                             .setMessage(getString(R.string.move_done_fmt, name, targetStoreName))
@@ -335,7 +335,7 @@ class MoveActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
-                            OfflineQueue.enqueue(this, "move", "Перемещение", body)
+                            OfflineQueue.enqueue(this, "move", getString(R.string.move), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))

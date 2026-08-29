@@ -55,7 +55,7 @@ class MoveReceiveActivity : AppCompatActivity() {
         b.list.setHasFixedSize(true)
 
         moveId = intent.getStringExtra("move_id") ?: ""
-        b.headerName.text = intent.getStringExtra("move_name") ?: "Перемещение"
+        b.headerName.text = intent.getStringExtra("move_name") ?: getString(R.string.move)
 
         b.btnBack.setOnClickListener { finish() }
         b.btnConfirm.setOnClickListener { confirm() }
@@ -368,7 +368,7 @@ class MoveReceiveActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Перемещение")
+                        val name = result.json.optString("moysklad_name", getString(R.string.move))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.accepted_ok))
                             .setMessage("MoySklad: $name")
@@ -378,7 +378,7 @@ class MoveReceiveActivity : AppCompatActivity() {
                     }
                     is ApiResult.Error -> {
                         val msg = if (result.offline)
-                            "Internet yo'q. Qayta urinib ko'ring."
+                            getString(R.string.no_internet_retry2)
                         else result.message
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.not_accepted))
@@ -391,8 +391,13 @@ class MoveReceiveActivity : AppCompatActivity() {
         }
     }
 
-    private fun trimNum(d: Double): String =
-        if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+    private fun trimNum(d: Double): String {
+        // Yaxlitlash: `Double` da qo'shish ikkilik kasr xatosini to'playdi
+        // (63.789 -> 63.788999999999994). Boshqa ekranlarda bor edi,
+        // shu uchtasida tushib qolgan.
+        val r = Math.round(d * 1000.0) / 1000.0
+        return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
+    }
 
     /** Kasr xatolarini oldini olish (0.1 + 0.2 muammosi) — 3 xonaga yaxlitlaymiz. */
     private fun round3(d: Double): Double = Math.round(d * 1000.0) / 1000.0

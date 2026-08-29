@@ -33,7 +33,7 @@ class LookupActivity : AppCompatActivity() {
         b = ActivityLookupBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        val storeName = Config.storeName(this) ?: "Sklad tanlanmagan"
+        val storeName = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.headerStore.text = storeName
 
         b.btnBack.setOnClickListener { finish() }
@@ -156,8 +156,13 @@ class LookupActivity : AppCompatActivity() {
         b.notFound.visibility = View.VISIBLE
     }
 
-    private fun trimNum(d: Double): String =
-        if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+    private fun trimNum(d: Double): String {
+        // Yaxlitlash: `Double` da qo'shish ikkilik kasr xatosini to'playdi
+        // (63.789 -> 63.788999999999994). Boshqa ekranlarda bor edi,
+        // shu uchtasida tushib qolgan.
+        val r = Math.round(d * 1000.0) / 1000.0
+        return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
+    }
 
     /** ProductSearchActivity'dan qaytgan tanlovni product_lookup javobi kabi JSON'ga aylantiradi. */
     private fun productFromIntent(data: Intent): JSONObject = JSONObject().apply {
@@ -176,7 +181,7 @@ class LookupActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.scanInput.requestFocus()
     }
 

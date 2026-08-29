@@ -124,11 +124,11 @@ object Api {
                 }
             }
         } catch (e: java.net.UnknownHostException) {
-            ApiResult.Error("Internet yo'q", offline = true)
+            ApiResult.Error(ctx.getString(R.string.no_internet), offline = true)
         } catch (e: java.net.SocketTimeoutException) {
-            ApiResult.Error("Server javob bermadi", offline = true)
+            ApiResult.Error(ctx.getString(R.string.server_no_answer), offline = true)
         } catch (e: Exception) {
-            ApiResult.Error(e.message ?: "Noma'lum xato")
+            ApiResult.Error(e.message ?: ctx.getString(R.string.unknown_error))
         } finally {
             conn?.disconnect()
         }

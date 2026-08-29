@@ -33,6 +33,18 @@ import kotlin.concurrent.thread
  */
 class InventoryCountActivity : AppCompatActivity() {
 
+    companion object {
+        /** Bitta so'rovda olinadigan qator soni. Serverdagi chegara 1000. */
+        private const val PAGE = 1000
+        /** Bitta sahifani necha marta qayta so'rash. */
+        private const val PAGE_TRIES = 3
+        /** Qurilmada saqlanadigan qoralama kaliti. */
+        private const val DRAFT = "inventory"
+        /** Shu sondan ko'p qator sanalgach qoralama tez-tez emas, oralab yoziladi. */
+        private const val DRAFT_BIG = 300
+        private const val DRAFT_MIN_MS = 2000L
+    }
+
     private lateinit var b: ActivityInventoryCountBinding
     private val items = mutableListOf<InvItem>()
 
@@ -84,7 +96,7 @@ class InventoryCountActivity : AppCompatActivity() {
         b.list.setHasFixedSize(true)
 
         inventoryId = intent.getStringExtra("inventory_id") ?: ""
-        b.headerName.text = intent.getStringExtra("inventory_name") ?: "Инвентаризация"
+        b.headerName.text = intent.getStringExtra("inventory_name") ?: getString(R.string.inventory)
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnConfirm.setOnClickListener { confirm() }
@@ -96,46 +108,109 @@ class InventoryCountActivity : AppCompatActivity() {
         loadDetail()
     }
 
+    /**
+     * Hujjat tarkibini BO'LIB yuklaydi.
+     *
+     * NEGA BO'LIB. 7000+ qatorli hujjat bitta so'rovda kelmaydi: MoySklad
+     * sekin javob beradi va GET uchun berilgan 12 soniya yetmaydi -
+     * "Server javob bermadi" chiqardi. Ilgari server bir marta 1000 ta
+     * qator qaytarardi va qolgani JIMGINA tushib qolardi.
+     *
+     * Endi sahifama-sahifa olinadi va ekranda necha qator kelgani
+     * ko'rinib turadi. `next_offset = 0` - hammasi keldi.
+     */
     private fun loadDetail() {
         b.loading.visibility = View.VISIBLE
+        b.btnConfirm.isEnabled = false
+        b.btnConfirm.alpha = 0.5f
+        items.clear()
         thread {
-            val result = Api.get(this, "inventory-detail", mapOf("id" to inventoryId))
+            var offset = 0
+            var total = 0
+            var guard = 0            // cheksiz siklga qarshi
+            var failed: String? = null
+
+            while (guard++ < 200) {
+                // Qisqa uzilish butun yuklashni bekor qilmasin: har sahifa
+                // uch marta so'raladi. 10 000 qatorli hujjatda bitta
+                // sahifaning tasodifiy xatosi tufayli qaytadan boshlash
+                // xodim uchun juda qimmat.
+                var r: ApiResult? = null
+                for (attempt in 1..PAGE_TRIES) {
+                    r = Api.get(this, "inventory-detail", mapOf(
+                        "id" to inventoryId,
+                        "offset" to offset.toString(),
+                        "limit" to PAGE.toString()))
+                    if (r is ApiResult.Success) break
+                    if (attempt < PAGE_TRIES) Thread.sleep(1200L * attempt)
+                }
+                if (r !is ApiResult.Success) {
+                    failed = (r as? ApiResult.Error)?.message ?: ""
+                    break
+                }
+                val j = r.json
+                if (offset == 0) {
+                    total = j.optInt("total", 0)
+                    val store = j.optString("store", "-")
+                    runOnUiThread { b.headerRoute.text = store }
+                }
+                val arr = j.optJSONArray("positions") ?: JSONArray()
+                for (i in 0 until arr.length()) {
+                    val p = arr.optJSONObject(i) ?: continue
+                    items.add(InvItem(
+                        productMoyskladId = p.optString("product_moysklad_id"),
+                        productType = p.optString("product_type", "product"),
+                        name = p.optString("name"),
+                        expected = p.optDouble("expected_qty", 0.0),
+                        // Hujjatda allaqachon turgan fakt (sanoq davom ettirilsa).
+                        // `touched=false` - buni ishchi EMAS, hujjat keltirdi.
+                        counted = p.optDouble("counted_qty", 0.0),
+                        touched = false,
+                        wasInDoc = true,
+                    ))
+                }
+                val loaded = items.size
+                val t = total
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed && t > 0) {
+                        b.progressText.text =
+                            getString(R.string.loading_products_fmt, loaded, t)
+                    }
+                }
+                val next = j.optInt("next_offset", 0)
+                if (next <= offset) break        // tugadi yoki oldinga siljimadi
+                offset = next
+            }
+
+            val err = failed
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
                 b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> {
-                        b.btnConfirm.isEnabled = true
-                        b.btnConfirm.alpha = 1f
-                        val j = result.json
-                        b.headerRoute.text = j.optString("store", "—")
-                        items.clear()
-                        val arr = j.optJSONArray("positions") ?: JSONArray()
-                        for (i in 0 until arr.length()) {
-                            val p = arr.optJSONObject(i) ?: continue
-                            items.add(InvItem(
-                                productMoyskladId = p.optString("product_moysklad_id"),
-                                productType = p.optString("product_type", "product"),
-                                name = p.optString("name"),
-                                expected = p.optDouble("expected_qty", 0.0),
-                                // Hujjatда allaqachon turgan fakt (sanoq davom ettirilsa).
-                                // `touched=false` — buni ishchi EMAS, hujjat keltirdi.
-                                counted = p.optDouble("counted_qty", 0.0),
-                                touched = false,
-                                wasInDoc = true,
-                            ))
-                        }
-                        renderList()
-                    }
-                    is ApiResult.Error -> {
-                        // Ro'yxat kelmasa tugma o'chiriladi — aks holda xodim
-                        // bo'sh hujjatni saqlab, MoySklad'dagi ro'yxatni
-                        // o'chirib yuborishi mumkin edi.
-                        b.btnConfirm.isEnabled = false
-                        b.btnConfirm.alpha = 0.5f
-                        Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
-                    }
+                if (err != null && items.isEmpty()) {
+                    // Ro'yxat kelmasa tugma o'chiq qoladi - aks holda xodim
+                    // bo'sh hujjatni saqlab, MoySklad'dagi ro'yxatni
+                    // o'chirib yuborishi mumkin edi.
+                    Toast.makeText(this, err, Toast.LENGTH_LONG).show()
+                    return@runOnUiThread
                 }
+                if (err != null) {
+                    // Yarim kelgan ro'yxat bilan ishlash XAVFLI: saqlashda
+                    // kelmagan qatorlar hujjatdan o'chib ketardi.
+                    Toast.makeText(this, err, Toast.LENGTH_LONG).show()
+                    items.clear()
+                    renderList()
+                    return@runOnUiThread
+                }
+                b.btnConfirm.isEnabled = true
+                b.btnConfirm.alpha = 1f
+                // Uzilib qolgan sanoq bo'lsa - tiklaymiz.
+                val back = restoreDraft()
+                if (back > 0) {
+                    Toast.makeText(this,
+                        getString(R.string.draft_restored_fmt, back),
+                        Toast.LENGTH_LONG).show()
+                }
+                renderList()
             }
         }
     }
@@ -280,6 +355,7 @@ class InventoryCountActivity : AppCompatActivity() {
             if (addQty > 0) {
                 item.counted = round3(item.counted + addQty)
                 item.touched = true
+                markDraftDirty()
                 renderList()
             }
             dialog.dismiss()
@@ -303,6 +379,102 @@ class InventoryCountActivity : AppCompatActivity() {
      * Shuning uchun qatorда faqat FAKT turadi. Farqni menejer kompyuterda,
      * MoySklad hujjatida ko'radi — u yerda ikkala son ham bor.
      */
+    // ------------------------------------------------------------------
+    //  QORALAMA (uzilishga qarshi)
+    // ------------------------------------------------------------------
+    //  Sanoq faqat XOTIRADA turardi: ilova yopilsa, batareya tugasa yoki
+    //  xodim boshqa ekranga o'tib qaytsa - kiritilgan sonlar yo'qolardi.
+    //  10 000 qatorli hujjatda bu bir kunlik ishni yo'qotish demakdir.
+    //
+    //  Endi har o'zgarishda qurilmaga yoziladi. Faqat SANALGAN qatorlar
+    //  saqlanadi - hujjat qaytadan yuklanganda qolgani baribir serverdan
+    //  keladi.
+    // ------------------------------------------------------------------
+
+    private var draftDirty = false
+    private var lastDraftMs = 0L
+
+    /**
+     * O'zgarish bo'ldi - qoralamani yozish kerak.
+     *
+     * NEGA ORALAB. Har skanda BARCHA sanalgan qatorlar qaytadan yoziladi.
+     * 300 tagacha bu sezilmaydi. 5000 qator sanalganda esa har skanda
+     * yuzlab kilobayt yozish ekranni sekinlashtirardi. Shuning uchun
+     * ro'yxat kattalashgach yozish 2 soniyada bir marta bajariladi.
+     *
+     * Kichik ro'yxatda esa DARHOL yoziladi - eng ko'p uchraydigan holat
+     * to'liq himoyalangan bo'lib qoladi.
+     */
+    private fun markDraftDirty() {
+        draftDirty = true
+        val big = items.count { it.touched } > DRAFT_BIG
+        val now = System.currentTimeMillis()
+        if (!big || now - lastDraftMs >= DRAFT_MIN_MS) flushDraft()
+    }
+
+    private fun flushDraft() {
+        if (!draftDirty) return
+        draftDirty = false
+        lastDraftMs = System.currentTimeMillis()
+        saveDraft()
+    }
+
+    /** Ekran fondan chiqsa - kutib turgan qoralama albatta yoziladi. */
+    override fun onPause() {
+        super.onPause()
+        flushDraft()
+    }
+
+    private fun saveDraft() {
+        val counted = items.filter { it.touched }
+        if (counted.isEmpty()) { DraftStore.clear(this, DRAFT); return }
+        val arr = JSONArray()
+        for (it2 in counted) {
+            arr.put(JSONObject().apply {
+                put("id", it2.productMoyskladId)
+                put("t", it2.productType)
+                put("n", it2.name)
+                put("q", it2.counted)
+                put("d", it2.wasInDoc)
+            })
+        }
+        DraftStore.save(this, DRAFT, JSONObject().apply {
+            put("inv", inventoryId)
+            put("lines", arr)
+        }.toString())
+    }
+
+    /** Yuklash tugagach chaqiriladi. Boshqa hujjatning qoralamasi tiklanmaydi. */
+    private fun restoreDraft(): Int {
+        val raw = DraftStore.load(this, DRAFT) ?: return 0
+        val j = try { JSONObject(raw) } catch (e: Exception) { return 0 }
+        if (j.optString("inv") != inventoryId) return 0
+        val arr = j.optJSONArray("lines") ?: return 0
+        var n = 0
+        for (i in 0 until arr.length()) {
+            val l = arr.optJSONObject(i) ?: continue
+            val id = l.optString("id")
+            val q = l.optDouble("q", 0.0)
+            val ex = items.find { it.productMoyskladId == id }
+            if (ex != null) {
+                ex.counted = q; ex.touched = true; n++
+            } else {
+                // Hujjatda yo'q, lekin xodim skanerlagan tovar.
+                items.add(InvItem(
+                    productMoyskladId = id,
+                    productType = l.optString("t", "product"),
+                    name = l.optString("n"),
+                    expected = 0.0,
+                    counted = q,
+                    touched = true,
+                    wasInDoc = l.optBoolean("d", false),
+                ))
+                n++
+            }
+        }
+        return n
+    }
+
     private fun renderList() {
         var counted = 0
         val rows = ArrayList<RecvRowAdapter.Row>(items.size)
@@ -355,15 +527,16 @@ class InventoryCountActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(item.name)
             .setMessage(if (item.wasInDoc)
-                "Haqiqiy son. 0 = umuman yo'q."
+                getString(R.string.real_qty_hint)
             else
-                "Haqiqiy son. Bu tovar hujjatda yo'q edi.")
+                getString(R.string.real_qty_hint_extra))
             .setView(view)
             .setPositiveButton(getString(R.string.save_kt)) { _, _ ->
                 val v = input.text.toString().toDoubleOrNull()
                 if (v != null && v >= 0) {
                     item.counted = v
                     item.touched = true      // 0 kiritilsa ham "sanaldi"
+                    markDraftDirty()
                     renderList()
                 }
             }
@@ -428,13 +601,22 @@ class InventoryCountActivity : AppCompatActivity() {
 
     private fun send() {
         if (!busy.start(b.btnConfirm)) return
+        flushDraft()          // kutib turgan o'zgarish yo'qolmasin
         b.loading.visibility = View.VISIBLE
-        // MUHIM: BARCHA qatorlar yuboriladi, sanalmaganlari ham.
-        // Sabab: server hujjat pozitsiyalarini QAYTA YOZADI. Faqat
-        // sanalganlarini yuborsak, qolganlari hujjatdan O'CHIB ketardi va
-        // menejer ro'yxatni boy berardi.
+        // FAQAT SANALGAN qatorlar yuboriladi.
+        //
+        // ILGARI hammasi yuborilardi, chunki server pozitsiyalarni QAYTA
+        // YOZARDI va yuborilmagan qator hujjatdan o'chib ketardi.
+        // Server `POST /positions` ga o'tkazilgach bu holat o'zgardi:
+        // endi faqat yuborilgan qator YANGILANADI, qolganlariga TEGILMAYDI.
+        //
+        // Buning uchligi bor:
+        //   1. Tarmoq uzilsa ham hujjatdan hech narsa o'chmaydi;
+        //   2. 10 ta terminal bitta hujjatda ishlay oladi - har biri
+        //      faqat o'zi sanaganini yozadi, boshqasinikini bosmaydi;
+        //   3. 10 000 qatorli hujjatda ham so'rov kichik bo'ladi.
         val lines = JSONArray()
-        for (item in items) {
+        for (item in items.filter { it.touched }) {
             lines.put(JSONObject().apply {
                 put("product_moysklad_id", item.productMoyskladId)
                 put("product_type", item.productType)
@@ -455,18 +637,20 @@ class InventoryCountActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("name", "Инвентаризация")
+                        // Serverga yozildi - endi qoralama keraksiz.
+                        DraftStore.clear(this, DRAFT)
+                        val name = result.json.optString("name", getString(R.string.inventory))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.saved_ok))
                             .setMessage("MoySklad: $name\n\n" +
-                                    "Hujjat o'tkazilmadi — menejer tekshirib o'tkazadi.")
+                                    getString(R.string.not_posted_manager))
                             .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                             .setCancelable(false)
                             .show()
                     }
                     is ApiResult.Error -> {
                         val msg = if (result.offline)
-                            "Internet yo'q. Qayta urinib ko'ring."
+                            getString(R.string.no_internet_retry2)
                         else result.message
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.not_saved))

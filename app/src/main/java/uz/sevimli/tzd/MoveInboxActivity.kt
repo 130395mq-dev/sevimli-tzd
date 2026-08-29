@@ -25,7 +25,7 @@ class MoveInboxActivity : AppCompatActivity() {
         b = ActivityMoveInboxBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.btnBack.setOnClickListener { finish() }
         b.btnRefresh.setOnClickListener { load() }
         b.btnNew.setOnClickListener {

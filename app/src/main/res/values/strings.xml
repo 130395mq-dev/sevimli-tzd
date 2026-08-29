@@ -338,4 +338,37 @@
     <string name="latest_installed">Eng so\'nggi versiya o\'rnatilgan</string>
     <string name="force_update_zero_fmt">Majburiy yangilanish: %1$s\nYuklanmoqda... 0%%</string>
     <string name="install_open_failed_fmt">O\'rnatishni ochib bo\'lmadi: %1$s</string>
+    <string name="doc_status_pending">Navbatda</string>
+    <string name="doc_status_synced">Yuborildi</string>
+    <string name="doc_status_error">Xato</string>
+    <string name="doc_status_fmt">%1$s · jami %2$s</string>
+    <string name="doc_error_tap">⚠ %1$s · qayta yuborish uchun bosing</string>
+    <string name="doc_content">Hujjat tarkibi</string>
+    <string name="error_pre_fmt">Xato: %1$s\n\n</string>
+    <string name="price_mode_wholesale">Narx: Ulgurji</string>
+    <string name="no_internet_retry">Internet yo\'q — qayta urinib ko\'ring</string>
+    <string name="no_internet_retry2">Internet yo\'q. Qayta urinib ko\'ring.</string>
+    <string name="real_qty_hint">Haqiqiy son. 0 = umuman yo\'q.</string>
+    <string name="real_qty_hint_extra">Haqiqiy son. Bu tovar hujjatda yo\'q edi.</string>
+    <string name="not_posted_manager">Hujjat o\'tkazilmadi — menejer tekshirib o\'tkazadi.</string>
+    <string name="items_to_count_fmt">%1$s ta tovar sanaladi</string>
+    <string name="store_pending_fmt">%1$s · ⏳ %2$s yuborilmagan</string>
+    <string name="notice_update_fmt">Yangi versiya %1$s</string>
+    <string name="notice_update_sub">Bosing — darhol yangilanadi</string>
+    <string name="notice_move_title">Bugun kelgan ko\'chirish</string>
+    <string name="notice_move_sub">Qabul qilish kutilmoqda</string>
+    <string name="notice_inv_title">Bugungi sanoq</string>
+    <string name="notice_inv_sub">Davom ettirish mumkin</string>
+    <string name="notice_queue_title">Yuborilmagan hujjat</string>
+    <string name="notice_queue_sub">Internet tiklanganda ketadi</string>
+    <string name="qr_is_link">Bu QR — sayt havolasi, tovar kodi emas</string>
+    <string name="license_free">Bo\'sh — tayyor</string>
+    <string name="no_internet">Internet yo\'q</string>
+    <string name="server_no_answer">Server javob bermadi</string>
+    <string name="unknown_error">Noma\'lum xato</string>
+    <string name="force_update_msg_fmt">Yangi versiya (%1$s) o\'rnatilishi shart — ilovadan foydalanishni davom ettirish uchun.\n\nSozlamalar ochiladi: \"Ruxsat berish\"ni yoqing va ortga qayting. Yangilanish avtomatik davom etadi.</string>
+    <string name="resend_q_fmt">«%1$s» hujjatini MoySklad\'ga qaytadan yuboraylikmi?</string>
+    <string name="pick_license">Litsenziyani tanlang</string>
+    <string name="pick_branch2">Filialni tanlang</string>
+    <string name="draft_restored_fmt">Uzilib qolgan sanoq tiklandi: %1$s ta tovar</string>
 </resources>

@@ -319,4 +319,37 @@
     <string name="latest_installed">Установлена последняя версия</string>
     <string name="force_update_zero_fmt">Обязательное обновление: %1$s\nЗагрузка... 0%%</string>
     <string name="install_open_failed_fmt">Не удалось открыть установку: %1$s</string>
+    <string name="doc_status_pending">В очереди</string>
+    <string name="doc_status_synced">Отправлено</string>
+    <string name="doc_status_error">Ошибка</string>
+    <string name="doc_status_fmt">%1$s · всего %2$s</string>
+    <string name="doc_error_tap">⚠ %1$s · нажмите, чтобы отправить снова</string>
+    <string name="doc_content">Состав документа</string>
+    <string name="error_pre_fmt">Ошибка: %1$s\n\n</string>
+    <string name="price_mode_wholesale">Цена: Опт</string>
+    <string name="no_internet_retry">Нет интернета — попробуйте снова</string>
+    <string name="no_internet_retry2">Нет интернета. Попробуйте снова.</string>
+    <string name="real_qty_hint">Фактическое количество. 0 = нет совсем.</string>
+    <string name="real_qty_hint_extra">Фактическое количество. Этого товара не было в документе.</string>
+    <string name="not_posted_manager">Документ не проведён — менеджер проверит и проведёт.</string>
+    <string name="items_to_count_fmt">Товаров к пересчёту: %1$s</string>
+    <string name="store_pending_fmt">%1$s · ⏳ %2$s не отправлено</string>
+    <string name="notice_update_fmt">Новая версия %1$s</string>
+    <string name="notice_update_sub">Нажмите — обновится сразу</string>
+    <string name="notice_move_title">Перемещения за сегодня</string>
+    <string name="notice_move_sub">Ожидает приёмки</string>
+    <string name="notice_inv_title">Пересчёт за сегодня</string>
+    <string name="notice_inv_sub">Можно продолжить</string>
+    <string name="notice_queue_title">Неотправленный документ</string>
+    <string name="notice_queue_sub">Отправится при восстановлении связи</string>
+    <string name="qr_is_link">Этот QR — ссылка на сайт, а не код товара</string>
+    <string name="license_free">Свободна — готова</string>
+    <string name="no_internet">Нет интернета</string>
+    <string name="server_no_answer">Сервер не ответил</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="force_update_msg_fmt">Требуется установить новую версию (%1$s), чтобы продолжить работу.\n\nОткроются настройки: включите \"Разрешить\" и вернитесь назад. Обновление продолжится автоматически.</string>
+    <string name="resend_q_fmt">Отправить документ «%1$s» в МойСклад ещё раз?</string>
+    <string name="pick_license">Выберите лицензию</string>
+    <string name="pick_branch2">Выберите филиал</string>
+    <string name="draft_restored_fmt">Прерванный пересчёт восстановлен: %1$s товаров</string>
 </resources>

@@ -268,8 +268,13 @@ class ProductSearchActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT)
         }
 
-    private fun trimNum(d: Double): String =
-        if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()
+    private fun trimNum(d: Double): String {
+        // Yaxlitlash: `Double` da qo'shish ikkilik kasr xatosini to'playdi
+        // (63.789 -> 63.788999999999994). Boshqa ekranlarda bor edi,
+        // shu uchtasida tushib qolgan.
+        val r = Math.round(d * 1000.0) / 1000.0
+        return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
+    }
 
     private fun dp(v: Float): Int = (v * resources.displayMetrics.density).toInt()
 }

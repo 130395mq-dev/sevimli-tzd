@@ -44,8 +44,8 @@ class SetupActivity : AppCompatActivity() {
         b.step3.visibility = if (i == 3) View.VISIBLE else View.GONE
         b.setupSub.text = when (i) {
             0 -> "Hisobingizga kiring"
-            1 -> "Litsenziyani tanlang"
-            2 -> "Filialni tanlang"
+            1 -> getString(R.string.pick_license)
+            2 -> getString(R.string.pick_branch2)
             else -> "Tayyorlanmoqda"
         }
     }
@@ -122,7 +122,7 @@ class SetupActivity : AppCompatActivity() {
                 mine -> "Shu qurilmaga bog'langan"
                 taken -> "Band — boshqa qurilmada"
                 store.isNotEmpty() -> "Filial: $store"
-                else -> "Bo'sh — tayyor"
+                else -> getString(R.string.license_free)
             }
             val card = CardView(this).apply {
                 radius = dp(14f); cardElevation = 0f

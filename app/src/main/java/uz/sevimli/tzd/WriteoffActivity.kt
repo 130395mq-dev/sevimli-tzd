@@ -59,7 +59,7 @@ class WriteoffActivity : AppCompatActivity() {
         b.list.adapter = rowAdapter
         b.list.setHasFixedSize(true)
 
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
 
         b.btnBack.setOnClickListener { confirmExit() }
         b.btnFinish.setOnClickListener { finishDocument() }
@@ -288,7 +288,7 @@ class WriteoffActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Списание")
+                        val name = result.json.optString("moysklad_name", getString(R.string.writeoff))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
@@ -299,7 +299,7 @@ class WriteoffActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
-                            OfflineQueue.enqueue(this, "writeoff", "Списание", body)
+                            OfflineQueue.enqueue(this, "writeoff", getString(R.string.writeoff), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))
@@ -353,7 +353,7 @@ class WriteoffActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        b.headerStore.text = Config.storeName(this) ?: "Sklad tanlanmagan"
+        b.headerStore.text = Config.storeName(this) ?: getString(R.string.store_not_set)
         b.scanInput.requestFocus()
     }
 

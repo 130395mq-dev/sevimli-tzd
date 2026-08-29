@@ -308,7 +308,7 @@ class SalesReturnActivity : AppCompatActivity() {
                 b.loading.visibility = View.GONE
                 when (result) {
                     is ApiResult.Success -> {
-                        val name = result.json.optString("moysklad_name", "Возврат")
+                        val name = result.json.optString("moysklad_name", getString(R.string.sales_return))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.sent_ok))
                             .setMessage("MoySklad: $name")
@@ -319,7 +319,7 @@ class SalesReturnActivity : AppCompatActivity() {
                     is ApiResult.Error -> {
                         if (result.offline) {
                             // Internet yo'q — hujjatni navbatga saqlaymiz, keyin o'zi yuboriladi.
-                            OfflineQueue.enqueue(this, "sales-return", "Возврат пок.", body)
+                            OfflineQueue.enqueue(this, "sales-return", getString(R.string.sales_return), body)
                             AlertDialog.Builder(this)
                                 .setTitle(getString(R.string.saved_pending))
                                 .setMessage(getString(R.string.offline_saved))
