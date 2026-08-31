@@ -298,20 +298,24 @@ class InventoryCountActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.err_not_in_ms), Toast.LENGTH_SHORT).show()
             return
         }
-        var item = items.find { it.productMoyskladId == mid }
+        val item = items.find { it.productMoyskladId == mid }
         if (item == null) {
-            // Hujjatda yo'q tovar — QO'SHAMIZ. Omborda haqiqatda bor ekan,
-            // uni yashirish inventarizatsiyani ma'nosiz qilardi.
-            item = InvItem(
-                productMoyskladId = mid,
-                productType = product.optString("product_type", "product"),
-                name = product.optString("name"),
-                expected = 0.0,
-                wasInDoc = false,
-            )
-            items.add(item)
-            Toast.makeText(this, getString(R.string.added_not_in_doc_fmt, item.name),
-                Toast.LENGTH_SHORT).show()
+            // HUJJATDA YO'Q TOVAR SANALMAYDI.
+            //
+            // ILGARI bunday tovar ro'yxatga SO'RAMASDAN qo'shilardi va
+            // saqlanganda MoySklad hujjatiga yangi qator bo'lib yozilardi.
+            // Adashib skanerlangan tovar ham shu yo'l bilan hujjatga tushib
+            // qolardi va uni keyin faqat menejer o'chira olardi.
+            //
+            // DIQQAT — bu ONGLI tanlov, kamchiligi ham bor: omborda haqiqatan
+            // ortiqcha tovar topilsa u bu sanoqqa KIRMAYDI. Uni hisobga olish
+            // uchun menejer MoySklad'da hujjatga o'sha tovarni qo'shishi
+            // kerak; shundan keyin terminalda ko'rinadi.
+            ScanFeedback.fail(this)
+            val nm = product.optString("name").ifBlank { product.optString("barcode") }
+            Toast.makeText(this, getString(R.string.not_in_doc_refused_fmt, nm),
+                Toast.LENGTH_LONG).show()
+            return
         }
         ScanFeedback.ok(this)
         askQuantity(item, product)
@@ -523,20 +527,10 @@ class InventoryCountActivity : AppCompatActivity() {
             val ex = items.find { it.productMoyskladId == id }
             if (ex != null) {
                 ex.added = q; ex.touched = true; n++
-            } else {
-                // Hujjatda yo'q, lekin xodim skanerlagan tovar.
-                items.add(InvItem(
-                    productMoyskladId = id,
-                    productType = l.optString("t", "product"),
-                    name = l.optString("n"),
-                    expected = 0.0,
-                    counted = 0.0,
-                    added = q,
-                    touched = true,
-                    wasInDoc = l.optBoolean("d", false),
-                ))
-                n++
             }
+            // ESKI QORALAMA: hujjatda yo'q tovar tiklanmaydi. Bunday tovar
+            // endi umuman sanalmaydi (yuqoridagi izohga qarang), shuning
+            // uchun uni qaytarib qo'yish faqat chalkashlik tug'dirardi.
         }
         return n
     }

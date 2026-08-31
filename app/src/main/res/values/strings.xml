@@ -380,4 +380,5 @@
     <string name="buy_price_missing">⚠ Kirim narxi topilmadi</string>
     <string name="buy_price_missing_qty_fmt">⚠ Kirim narxi topilmadi · Qoldiq: %1$s</string>
     <string name="stock_pill_fmt">Qoldiq: %1$s</string>
+    <string name="not_in_doc_refused_fmt">⚠ «%1$s» hujjatda yo\'q — sanalmaydi</string>
 </resources>

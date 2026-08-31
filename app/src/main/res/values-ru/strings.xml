@@ -361,4 +361,5 @@
     <string name="buy_price_missing">⚠ Закупочная цена не найдена</string>
     <string name="buy_price_missing_qty_fmt">⚠ Закупочная цена не найдена · Остаток: %1$s</string>
     <string name="stock_pill_fmt">Остаток: %1$s</string>
+    <string name="not_in_doc_refused_fmt">⚠ «%1$s» нет в документе — не пересчитывается</string>
 </resources>
