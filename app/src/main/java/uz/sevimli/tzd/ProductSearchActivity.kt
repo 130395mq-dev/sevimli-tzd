@@ -31,6 +31,15 @@ class ProductSearchActivity : AppCompatActivity() {
     private var searchRunnable: Runnable? = null
     private val fmt = NumberFormat.getInstance(Locale("uz"))
 
+    /**
+     * Приёмка / Возврат поставщику ekranlaridan chaqirilganda ro'yxatda
+     * SOTUV emas, KIRIM narxi ko'rsatiladi. Bu ekran hamma hujjat turiga
+     * umumiy, shuning uchun chaqiruvchi qaysi narx kerakligini aytadi.
+     */
+    private val buyMode: Boolean by lazy {
+        intent.getStringExtra("price_mode") == "buy"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityProductSearchBinding.inflate(layoutInflater)
@@ -137,7 +146,10 @@ class ProductSearchActivity : AppCompatActivity() {
 
     private fun buildRow(p: JSONObject): View {
         val name = p.optString("name")
-        val price = p.optLong("price", 0)
+        val salePrice = p.optLong("price", 0)
+        val buyPrice = p.optLong("buy_price", 0)
+        // FAQAT ko'rsatish uchun. Keyingi ekranga IKKALASI ham uzatiladi.
+        val price = if (buyMode) buyPrice else salePrice
         val qty = p.optDouble("store_qty", 0.0)
 
         val row = LinearLayout(this).apply {
@@ -210,10 +222,15 @@ class ProductSearchActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(7f) }
         }
-        chips.addView(pill("${fmt.format(price)} so'm", R.color.brand_tint, R.color.brand_dark))
+        chips.addView(
+            if (buyMode && price <= 0)
+                pill(getString(R.string.buy_price_missing), R.color.warning_tint, R.color.warning)
+            else
+                pill(getString(R.string.sum_fmt, fmt.format(price)),
+                     R.color.brand_tint, R.color.brand_dark))
         val inStock = qty > 0
         chips.addView(pill(
-            "Qoldiq: ${trimNum(qty)}",
+            getString(R.string.stock_pill_fmt, trimNum(qty)),
             if (inStock) R.color.green_tint else R.color.pill_gray,
             if (inStock) R.color.green_ok else R.color.text_gray
         ).apply { (layoutParams as LinearLayout.LayoutParams).marginStart = dp(6f) })
@@ -239,7 +256,9 @@ class ProductSearchActivity : AppCompatActivity() {
             val data = Intent().apply {
                 putExtra("p_moysklad_id", p.optString("moysklad_id"))
                 putExtra("p_name", name)
-                putExtra("p_price", price)
+                putExtra("p_price", salePrice)
+                // KIRIM narxi - Приёмка va Возврат поставщику uchun.
+                putExtra("p_buy_price", buyPrice)
                 putExtra("p_uom", p.optString("uom"))
                 putExtra("p_article", p.optString("article"))
                 putExtra("p_code", p.optString("code"))

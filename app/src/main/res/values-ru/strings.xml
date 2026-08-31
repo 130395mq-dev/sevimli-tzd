@@ -356,4 +356,9 @@
     <string name="in_doc_qty_fmt">В документе: %1$s</string>
     <string name="this_time_fmt">В этот раз: %1$s</string>
     <string name="manager_will_post">Менеджер проверит на компьютере и проведёт.</string>
+    <string name="buy_price_fmt">Приход: %1$s сум</string>
+    <string name="buy_price_qty_fmt">Приход: %1$s сум · Остаток: %2$s</string>
+    <string name="buy_price_missing">⚠ Закупочная цена не найдена</string>
+    <string name="buy_price_missing_qty_fmt">⚠ Закупочная цена не найдена · Остаток: %1$s</string>
+    <string name="stock_pill_fmt">Остаток: %1$s</string>
 </resources>

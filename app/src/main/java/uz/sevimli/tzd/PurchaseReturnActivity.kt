@@ -76,7 +76,8 @@ class PurchaseReturnActivity : AppCompatActivity() {
         // yuqoridagi kichik belgiga bir qo'lda yetish qiyin edi.
         b.btnFinishBig.setOnClickListener { finishDocument() }
         b.btnManualAdd.setOnClickListener {
-            pickProduct.launch(Intent(this, ProductSearchActivity::class.java))
+            pickProduct.launch(Intent(this, ProductSearchActivity::class.java)
+                .putExtra("price_mode", "buy"))
         }
         // Skan uch kanaldan qabul qilinadi: Enter, Enter'siz (jimlik) va
         // qurilma skaner signali. Tafsilot — ScanInput.kt
@@ -119,8 +120,16 @@ class PurchaseReturnActivity : AppCompatActivity() {
 
     private fun askQuantity(product: JSONObject, code: String) {
         val name = product.optString("name")
-        // Приёмка uchun KIRIM (закупочная) narxi; bo'lmasa sotuv narxi zaxira
-        val price = product.optLong("buy_price", product.optLong("price", 0))
+        // Возврат поставщику uchun KIRIM (закупочная) narxi.
+        //
+        // ILGARI bu yerda `product.optLong("price", 0)` zaxira turardi va
+        // kirim narxi kelmasa SOTUV narxi olinardi. Natijada "Kirim" yozuvi
+        // ostida chakana narx ko'rinar, bundan ham yomoni - o'sha narx
+        // MoySklad возврат hujjatiga yozilardi.
+        //
+        // Endi zaxira yo'l YO'Q: narx topilmasa 0 bo'ladi va ekranda ochiq
+        // ogohlantirish chiqadi. Xato jimgina yashirinib qolmaydi.
+        val price = product.optLong("buy_price", 0)
         val pmid = product.optString("moysklad_id",
             product.optString("code")) // backend product_moysklad_id qaytarmasa fallback
         // Diqqat: barcode bo'sh bo'lishi mumkin (qo'lda qo'shilgan mahsulot),
@@ -148,10 +157,15 @@ class PurchaseReturnActivity : AppCompatActivity() {
 
         qName.text = name
         val storeQty = product.optDouble("store_qty", -1.0)
-        qPrice.text = if (storeQty >= 0)
-            "Kirim: ${fmt.format(price)} so'm · Qoldiq: ${trimNum(storeQty)}"
-        else
-            "Kirim: ${fmt.format(price)} so'm"
+        qPrice.text = when {
+            price > 0 && storeQty >= 0 -> getString(
+                R.string.buy_price_qty_fmt, fmt.format(price), trimNum(storeQty))
+            price > 0 -> getString(R.string.buy_price_fmt, fmt.format(price))
+            storeQty >= 0 -> getString(
+                R.string.buy_price_missing_qty_fmt, trimNum(storeQty))
+            else -> getString(R.string.buy_price_missing)
+        }
+        if (price <= 0) qPrice.setTextColor(getColor(R.color.warning))
         qWas.text = getString(R.string.was_fmt, trimNum(was))
 
         // Tarozi shtrixi — og'irlik (kg), yoki Upakovka (blok) — ichidagi dona: avto to'ldiramiz
@@ -365,6 +379,7 @@ class PurchaseReturnActivity : AppCompatActivity() {
         put("name", data.getStringExtra("p_name") ?: "")
         put("barcode", data.getStringExtra("p_barcode") ?: "")
         put("price", data.getLongExtra("p_price", 0))
+        put("buy_price", data.getLongExtra("p_buy_price", 0))
         put("moysklad_id", data.getStringExtra("p_moysklad_id") ?: "")
         put("uom", data.getStringExtra("p_uom") ?: "")
         put("store_qty", data.getDoubleExtra("p_store_qty", 0.0))
