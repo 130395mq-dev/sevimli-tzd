@@ -11,8 +11,8 @@ android {
         applicationId "uz.sevimli.tzd"
         minSdk 21
         targetSdk 34
-        versionCode 92
-        versionName "6.11.0"
+        versionCode 93
+        versionName "6.11.1"
     }
 
     signingConfigs {
