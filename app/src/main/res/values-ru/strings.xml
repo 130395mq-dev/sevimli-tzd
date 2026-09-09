@@ -362,4 +362,7 @@
     <string name="buy_price_missing_qty_fmt">⚠ Закупочная цена не найдена · Остаток: %1$s</string>
     <string name="stock_pill_fmt">Остаток: %1$s</string>
     <string name="not_in_doc_refused_fmt">⚠ «%1$s» нет в документе — не пересчитывается</string>
+    <string name="camera_scan">Сканировать камерой</string>
+    <string name="camera_prompt">Наведите штрихкод в рамку</string>
+    <string name="camera_failed">Не удалось открыть камеру</string>
 </resources>

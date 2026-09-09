@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kod ichida yasaladigan ko'rinishlar uchun ID lar.
+
+  `btnCamera` layout fayllarida yozilmagan: u ScanInput.kt tomonidan
+  har skan ekranining sarlavhasiga QO'SHILADI. Sabab — skan ekrani 11 ta,
+  hammasining sarlavhasi bir xil tuzilishda, va 11 ta layoutni qo'lda
+  tahrirlash o'rniga bitta joydan qo'shilgani xatoga kamroq moyil.
+-->
+<resources>
+    <item name="btnCamera" type="id" />
+</resources>

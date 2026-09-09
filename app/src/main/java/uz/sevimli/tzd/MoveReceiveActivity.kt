@@ -57,7 +57,7 @@ class MoveReceiveActivity : AppCompatActivity() {
         moveId = intent.getStringExtra("move_id") ?: ""
         b.headerName.text = intent.getStringExtra("move_name") ?: getString(R.string.move)
 
-        b.btnBack.setOnClickListener { finish() }
+        b.btnBack.setOnClickListener { confirmExit() }
         b.btnConfirm.setOnClickListener { confirm() }
         // Skan uch kanaldan qabul qilinadi: Enter, Enter'siz (jimlik) va
         // qurilma skaner signali. Tafsilot — ScanInput.kt
@@ -439,4 +439,25 @@ class MoveReceiveActivity : AppCompatActivity() {
         }
         return super.dispatchKeyEvent(event)
     }
+
+    /**
+     * Chiqishdan oldin so'raymiz.
+     *
+     * ILGARI "←" to'g'ridan-to'g'ri `finish()` chaqirardi. Bu ekranda
+     * skanerlangan sonlar FAQAT xotirada turadi (qoralamaga yozilmaydi),
+     * ya'ni bitta noto'g'ri bosish butun qabulni yo'q qilardi.
+     */
+    private fun confirmExit() {
+        if (items.none { it.scanned > 0 }) { finish(); return }
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.exit))
+            .setMessage(getString(R.string.doc_unfinished_exit))
+            .setPositiveButton(getString(R.string.exit)) { _, _ -> finish() }
+            .setNegativeButton(getString(R.string.stay2), null)
+            .show()
+    }
+
+    /** Apparat "orqaga" tugmasi ham qabulni jimgina yo'qotib yubormasin. */
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() { confirmExit() }
 }

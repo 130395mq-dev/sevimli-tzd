@@ -354,6 +354,11 @@ class PurchaseReturnActivity : AppCompatActivity() {
         }
     }
 
+    /** Apparat "orqaga" tugmasi ham ishni jimgina yo'qotib yubormasin.
+     *  targetSdk 34 da bu chaqiruv hali ishlaydi (faqat eskirgan deb belgilangan). */
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() { confirmExit() }
+
     private fun confirmExit() {
         if (items.isEmpty()) { finish(); return }
         AlertDialog.Builder(this)

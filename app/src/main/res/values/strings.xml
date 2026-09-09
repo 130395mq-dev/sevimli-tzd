@@ -381,4 +381,7 @@
     <string name="buy_price_missing_qty_fmt">⚠ Kirim narxi topilmadi · Qoldiq: %1$s</string>
     <string name="stock_pill_fmt">Qoldiq: %1$s</string>
     <string name="not_in_doc_refused_fmt">⚠ «%1$s» hujjatda yo\'q — sanalmaydi</string>
+    <string name="camera_scan">Kamera bilan skanerlash</string>
+    <string name="camera_prompt">Shtrixni ramka ichiga tuting</string>
+    <string name="camera_failed">Kamerani ochib bo\'lmadi</string>
 </resources>
