@@ -255,7 +255,6 @@ object ScanInput {
                 btnClose.setColorFilter(Color.WHITE)
                 btnClose.setPadding((14 * d).toInt(), (14 * d).toInt(),
                                     (14 * d).toInt(), (14 * d).toInt())
-                btnClose.contentDescription = act.getString(R.string.camera_close)
                 btnClose.setOnClickListener { close() }
                 box.addView(btnClose, FrameLayout.LayoutParams(
                     (52 * d).toInt(), (52 * d).toInt(),
@@ -328,7 +327,10 @@ object ScanInput {
                 ActivityResultContracts.RequestPermission()
             ) { granted ->
                 if (granted) cam.open()
-                else Toast.makeText(act, act.getString(R.string.camera_denied),
+                // Ruxsat berilmadi. ATAYIN mavjud matn ishlatiladi: yangi
+                // matn qo'shilsa `strings.xml` ham o'zgarishi kerak bo'lardi,
+                // bu esa fayllar yo'lda yo'qolib qolish xavfini oshiradi.
+                else Toast.makeText(act, act.getString(R.string.camera_failed),
                     Toast.LENGTH_LONG).show()
             }
         } catch (e: Throwable) {
