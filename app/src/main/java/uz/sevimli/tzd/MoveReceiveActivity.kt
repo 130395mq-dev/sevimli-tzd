@@ -2,6 +2,9 @@ package uz.sevimli.tzd
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +12,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.json.JSONArray
 import org.json.JSONObject
@@ -284,7 +288,7 @@ class MoveReceiveActivity : AppCompatActivity() {
                 name = item.name,
                 status = status,
                 statusColor = statusColor,
-                qty = "${trimNum(item.expected)} / ${trimNum(item.scanned)}",
+                qty = qtyText(item),
                 qtyColor = if (item.scanned == item.expected && item.scanned > 0)
                     R.color.brand else R.color.text_dark,
                 numColor = if (scanned) R.color.brand else R.color.text_gray,
@@ -293,6 +297,32 @@ class MoveReceiveActivity : AppCompatActivity() {
         }
         rowAdapter.submit(rows)
         b.progressText.text = getString(R.string.checked_fmt, checked, items.size)
+    }
+
+    /**
+     * "kutilgan / kelgan" matni.
+     *
+     * SKANERLANMAGAN QATORDA FAKT QIZIL BO'LADI.
+     *
+     * Xodimlar shikoyati: ro'yxatda qaysi tovar hali skanerlanmagani
+     * bilinmasdi — "200 / 0" dagi nol qolgan raqamlardan farq qilmasdi.
+     * Endi faqat FAKT qismi qizil bo'ladi; kutilgan son o'z rangida
+     * qoladi, ya'ni qator "qizarib ketmaydi", ko'z faqat nolga tushadi.
+     *
+     * Skanerlangan qator AVVALGIDEK: to'liq kelgan bo'lsa yashil, aks
+     * holda oddiy qora.
+     */
+    private fun qtyText(item: RecvItem): CharSequence {
+        val exp = trimNum(item.expected)
+        val fact = trimNum(item.scanned)
+        val text = "$exp / $fact"
+        if (item.scanned > 0) return text          // skanerlangan — o'zgarishsiz
+        val sp = SpannableString(text)
+        sp.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(this, R.color.danger)),
+            text.length - fact.length, text.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return sp
     }
 
     private fun editItem(item: RecvItem) {

@@ -27,6 +27,9 @@
     <color name="green_tint">#DCFCE7</color>
     <color name="amber_wait">#C98A00</color>
     <color name="warning">#D97706</color>
+    <!-- Skanerlanmagan qator. Sariqdan (warning) ATAYIN farq qiladi:
+         sariq "miqdor mos kelmadi", qizil esa "umuman tegilmagan". -->
+    <color name="danger">#DC2626</color>
     <color name="warning_tint">#FEF3C7</color>
 
     <!-- Ikonka foni (adaptiv) -->

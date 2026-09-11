@@ -29,7 +29,10 @@ class RecvRowAdapter(
         val name: String,
         val status: String,
         val statusColor: Int,
-        val qty: String,
+        // CharSequence — String emas. Sabab: qatorning bir QISMINI boshqa
+        // rangga bo'yash kerak bo'ladi (skanerlanmagan "0" qizil turadi),
+        // buning uchun esa Spannable uzatiladi.
+        val qty: CharSequence,
         val qtyColor: Int,
         val numColor: Int,
         val numBold: Boolean,
@@ -73,6 +76,8 @@ class RecvRowAdapter(
         holder.status.text = r.status
         holder.status.setTextColor(ContextCompat.getColor(ctx, r.statusColor))
         holder.qty.text = r.qty
+        // Asosiy rang. Matn ichida ForegroundColorSpan bo'lsa — o'sha
+        // bo'lakda span ustun turadi, ya'ni bu chaqiruv uni bosmaydi.
         holder.qty.setTextColor(ContextCompat.getColor(ctx, r.qtyColor))
         holder.qty.setTypeface(null, Typeface.BOLD)
     }
