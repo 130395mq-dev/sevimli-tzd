@@ -384,4 +384,9 @@
     <string name="camera_scan">Kamera bilan skanerlash</string>
     <string name="camera_prompt">Shtrixni ramka ichiga tuting</string>
     <string name="camera_failed">Kamerani ochib bo\'lmadi</string>
+
+    <!-- Qurilma serverdan uzilgan (401) -->
+    <string name="device_unlinked_title">Qurilma uzilgan</string>
+    <string name="device_unlinked_msg">Bu terminal serverdan uzilgan. Ishni davom ettirish uchun qaytadan ulanish kerak.</string>
+    <string name="relink">Qaytadan ulash</string>
 </resources>

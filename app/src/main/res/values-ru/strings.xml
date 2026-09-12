@@ -365,4 +365,9 @@
     <string name="camera_scan">Сканировать камерой</string>
     <string name="camera_prompt">Наведите штрихкод в рамку</string>
     <string name="camera_failed">Не удалось открыть камеру</string>
+
+    <!-- Qurilma serverdan uzilgan (401) -->
+    <string name="device_unlinked_title">Устройство отключено</string>
+    <string name="device_unlinked_msg">Этот терминал отключён от сервера. Чтобы продолжить работу, нужно подключить заново.</string>
+    <string name="relink">Подключить заново</string>
 </resources>

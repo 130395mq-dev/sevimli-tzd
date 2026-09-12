@@ -150,7 +150,10 @@ class MenuActivity : AppCompatActivity() {
     private val syncHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val syncTick = object : Runnable {
         override fun run() {
-            thread { CatalogSync.autoRefresh(this@MenuActivity) }
+            thread {
+                CatalogSync.autoRefresh(this@MenuActivity)
+                runOnUiThread { checkAccess() }
+            }
             syncHandler.postDelayed(this, 2 * 60 * 1000L)
         }
     }
@@ -175,10 +178,10 @@ class MenuActivity : AppCompatActivity() {
             lastPingAt = now
             thread {
                 Api.get(this, "ping")
-                runOnUiThread { Api.blocked?.let { showBlocked(it) } }
+                runOnUiThread { checkAccess() }
             }
         } else {
-            Api.blocked?.let { showBlocked(it) }
+            checkAccess()
         }
         // davriy avto-yangilashni yoqamiz
         syncHandler.removeCallbacks(syncTick)
@@ -189,6 +192,58 @@ class MenuActivity : AppCompatActivity() {
         super.onPause()
         menuVisible = false
         syncHandler.removeCallbacks(syncTick)   // orqa fonда behuda ishlamasin
+    }
+
+    /**
+     * Ishlashga to'sqinlik qiladigan ikkita holatni bir joyda tekshiradi:
+     * obuna to'xtatilgan (403) va qurilma serverdan uzilgan (401).
+     *
+     * Obuna bloki birinchi: u butun kompaniyaga tegishli, uzilish esa
+     * bitta qurilmaga. Ikkalasi bir vaqtda chiqsa muhimrog'i ko'rsatiladi.
+     */
+    private fun checkAccess() {
+        if (isFinishing || isDestroyed) return
+        Api.blocked?.let { showBlocked(it); return }
+        if (Api.unlinked) showUnlinked()
+    }
+
+    // ---- Qurilma serverdan uzilganda ----
+    //
+    // Panelda qurilma o'chirilgan yoki tokeni bekor qilingan. ILGARI ilova
+    // buni sezmasdi: eski token bilan qayta-qayta urinardi, xodim esa
+    // sababini bilmasdi. Endi aniq aytiladi va qaytadan ulash taklif
+    // qilinadi. Oyna yopilmaydi — uzilgan qurilmada ishlashning ma'nosi yo'q.
+    private var unlinkDialog: AlertDialog? = null
+    private fun showUnlinked() {
+        if (unlinkDialog?.isShowing == true) return
+        val d = (24 * resources.displayMetrics.density).toInt()
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(d, d, d, d)
+            addView(TextView(this@MenuActivity).apply {
+                text = getString(R.string.device_unlinked_title)
+                textSize = 21f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            addView(TextView(this@MenuActivity).apply {
+                text = getString(R.string.device_unlinked_msg)
+                textSize = 15f
+                setPadding(0, (14 * resources.displayMetrics.density).toInt(), 0, 0)
+            })
+        }
+        unlinkDialog = AlertDialog.Builder(this)
+            .setView(box)
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.relink)) { _, _ ->
+                // Yaroqsiz tokenni saqlab o'tirishning ma'nosi yo'q.
+                // Tozalanishi bilan Api dagi "uzilgan" belgisi ham tushadi.
+                Config.setToken(this, "")
+                Config.setConfigured(this, false)
+                startActivity(Intent(this, SetupActivity::class.java))
+                finish()
+            }
+            .create()
+        unlinkDialog?.show()
     }
 
     // ---- Obuna to'xtatilganda bloklash ekrani ----

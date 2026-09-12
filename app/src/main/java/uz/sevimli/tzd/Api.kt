@@ -9,7 +9,8 @@ import java.net.URLEncoder
 /** Backend javobi: muvaffaqiyat yoki xato. */
 sealed class ApiResult {
     data class Success(val json: JSONObject) : ApiResult()
-    data class Error(val message: String, val offline: Boolean = false, val blocked: Boolean = false) : ApiResult()
+    data class Error(val message: String, val offline: Boolean = false,
+                     val blocked: Boolean = false, val unlinked: Boolean = false) : ApiResult()
 }
 
 object Api {
@@ -30,6 +31,28 @@ object Api {
     /** Obuna to'xtatilgan/muddati tugagan bo'lsa server 403 "blocked" qaytaradi.
      *  Shu global bayroq o'rnatiladi; muvaffaqiyatli javobda tozalanadi. */
     @Volatile var blocked: String? = null
+
+    /**
+     * QURILMA SERVERDAN UZILGAN (401).
+     *
+     * Token bekor qilingan yoki qurilma panelda o'chirilgan bo'lsa server
+     * har so'rovga 401 qaytaradi. ILGARI ilova buni ajratmasdi: tokenni
+     * saqlab turaverar va qayta-qayta urinardi — serverda to'xtovsiz
+     * "Unauthorized", xodimda esa tushunarsiz "ishlamayapti".
+     *
+     * Endi bu holat ajratiladi va TZD so'rovlari to'xtatiladi.
+     */
+    @Volatile var unlinked: Boolean = false
+        private set
+
+    /** Shuncha KETMA-KET 401 dan keyin qurilma uzilgan deb hisoblanadi. */
+    private const val UNLINK_STRIKES = 2
+
+    /** Ketma-ket 401 soni. Muvaffaqiyatli javob uni nolga qaytaradi. */
+    private val authFails = java.util.concurrent.atomic.AtomicInteger(0)
+
+    /** 401 chiqargan token. Token almashsa — bayroq o'zi tozalanadi. */
+    @Volatile private var badToken: String? = null
 
     // --- KUTISH VAQTLARI ---
     //
@@ -80,6 +103,22 @@ object Api {
                         body: JSONObject?, apiSeg: String): ApiResult {
         val base = Config.baseUrl(ctx)
         val token = Config.token(ctx)
+        // Token almashgan bo'lsa — "uzilgan" belgisi o'z-o'zidan tushadi.
+        // Shu sababli qaytadan ulangandan keyin hech narsani qo'lda
+        // tozalash shart emas.
+        if (unlinked && token != badToken) {
+            unlinked = false
+            authFails.set(0)
+            badToken = null
+        }
+        // Uzilgan holatda TZD so'rovlari UMUMAN yuborilmaydi. Bu ham
+        // serverni behuda so'rovdan, ham terminalni behuda kutishdan
+        // xalos qiladi. SaaS (kabinet) so'rovlariga tegilmaydi — qaytadan
+        // ulanish aynan ular orqali boradi.
+        if (unlinked && apiSeg == "api/tzd") {
+            return ApiResult.Error(ctx.getString(R.string.device_unlinked_msg),
+                unlinked = true)
+        }
         var conn: HttpURLConnection? = null
         return try {
             val url = URL("$base/$apiSeg/$path")
@@ -111,16 +150,26 @@ object Api {
             val json = try { JSONObject(text) } catch (e: Exception) { null }
             if (code in 200..299) {
                 blocked = null   // muvaffaqiyat — obuna faol, blok yo'q
+                authFails.set(0) // token ishlayapti — hisob nolga
                 if (json != null) ApiResult.Success(json)
                 else ApiResult.Error("Server javobi noto'g'ri format ($code)")
             } else {
                 val msg = json?.optString("error", "Server xatosi ($code)")
                     ?: "Server xatosi ($code)"
-                if (json?.optBoolean("blocked", false) == true) {
-                    blocked = msg
-                    ApiResult.Error(msg, blocked = true)
-                } else {
-                    ApiResult.Error(msg)
+                when {
+                    json?.optBoolean("blocked", false) == true -> {
+                        blocked = msg
+                        ApiResult.Error(msg, blocked = true)
+                    }
+                    // 401 — token yaroqsiz yoki qurilma o'chirilgan.
+                    code == 401 && apiSeg == "api/tzd" -> {
+                        if (authFails.incrementAndGet() >= UNLINK_STRIKES) {
+                            badToken = token
+                            unlinked = true
+                        }
+                        ApiResult.Error(msg, unlinked = unlinked)
+                    }
+                    else -> ApiResult.Error(msg)
                 }
             }
         } catch (e: java.net.UnknownHostException) {
