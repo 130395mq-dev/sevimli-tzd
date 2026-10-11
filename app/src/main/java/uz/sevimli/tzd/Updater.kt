@@ -300,6 +300,14 @@ object Updater {
         } finally {
             try { conn.disconnect() } catch (_: Exception) {}
         }
+        // YARIM FAYL O'RNATISHGA BERILMAYDI. Tarmoq sekin bo'lsa oqim erta
+        // tugashi mumkin — ilgari shunday fayl "imzo mos kelmadi" deb
+        // rad etilardi va xodim sababini bilmasdi. Endi yuklash xatosi
+        // sifatida qaytadi va "Qayta urinish" taklif qilinadi.
+        if (total > 0 && out.length() != total) {
+            try { out.delete() } catch (_: Exception) {}
+            throw java.io.IOException("APK to'liq yuklanmadi: ${out.length()}/$total")
+        }
         return out
     }
 
@@ -316,9 +324,15 @@ object Updater {
     private fun verifyApk(activity: Activity, file: File): Boolean {
         return try {
             val pm = activity.packageManager
+            // ANDROID 9 (API 28): `getPackageArchiveInfo` APK FAYL sertifikatini
+            // faqat GET_SIGNATURES bilan o'qiydi — GET_SIGNING_CERTIFICATES ni
+            // e'tiborsiz qoldiradi (Android 10 da tuzatilgan). Faqat ikkinchisi
+            // so'ralsa imzo "bo'sh" chiqib, m71 terminali bir oy yangilanmadi.
+            // Shuning uchun ikkalasi birga so'raladi.
             @Suppress("DEPRECATION")
             val flag = if (Build.VERSION.SDK_INT >= 28)
-                android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+                android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES or
+                    android.content.pm.PackageManager.GET_SIGNATURES
             else
                 android.content.pm.PackageManager.GET_SIGNATURES
             val info = pm.getPackageArchiveInfo(file.absolutePath, flag) ?: return false
@@ -337,6 +351,9 @@ object Updater {
                     (cur.signingInfo?.apkContentsSigners ?: cur.signatures)
                 else cur.signatures
             if (newSigs.isNullOrEmpty() || curSigs.isNullOrEmpty()) return false
+            // Bitta sertifikat ikki xil yo'l bilan kelishi mumkin
+            // (signingInfo yoki eski signatures) — ikkalasi ham o'sha
+            // sertifikatning baytlari, solishtirish to'g'ri ishlaydi.
             val a = newSigs.map { it.toCharsString() }.toHashSet()
             val b = curSigs.map { it.toCharsString() }.toHashSet()
             a == b
