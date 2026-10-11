@@ -9,8 +9,11 @@ import java.net.URLEncoder
 /** Backend javobi: muvaffaqiyat yoki xato. */
 sealed class ApiResult {
     data class Success(val json: JSONObject) : ApiResult()
+    /** @param code HTTP holat kodi (tarmoq xatosida 0). Natija noma'lum
+     *  yoki aniq rad etilganini ajratish uchun kerak. */
     data class Error(val message: String, val offline: Boolean = false,
-                     val blocked: Boolean = false, val unlinked: Boolean = false) : ApiResult()
+                     val blocked: Boolean = false, val unlinked: Boolean = false,
+                     val code: Int = 0) : ApiResult()
 }
 
 object Api {
@@ -67,6 +70,16 @@ object Api {
     private const val POST_READ_MS = 60000
     private const val GET_READ_MS = 12000
 
+    /**
+     * Uzoq yoziladigan so'rov uchun kutish (inventarizatsiya sanog'i).
+     *
+     * 11.10.2026: MoySklad band bo'lganda sanoqni saqlash 55–122 soniya
+     * davom etdi. Terminal 60 soniyada uzar, server esa yozishni davom
+     * ettirardi — natija terminalga yetmasdi. 150 soniya server
+     * (gunicorn `--timeout 150`) chegarasi bilan bir xil.
+     */
+    const val LONG_POST_MS = 150000
+
     /** GET so'rov (TZD API, token bilan). */
     fun get(ctx: Context, path: String, query: Map<String, String> = emptyMap()): ApiResult {
         // TEZLIK: shtrix skan lookup — avval mahalliy baza (bir zumda), topilmasa serverga.
@@ -85,8 +98,8 @@ object Api {
     }
 
     /** POST so'rov (TZD API, JSON tanasi bilan). */
-    fun post(ctx: Context, path: String, body: JSONObject): ApiResult {
-        return request(ctx, "POST", path, body, "api/tzd")
+    fun post(ctx: Context, path: String, body: JSONObject, readMs: Int = 0): ApiResult {
+        return request(ctx, "POST", path, body, "api/tzd", readMs)
     }
 
     /** SaaS API (/api/saas/...) — kabinet login/onboarding uchun (device token shart emas). */
@@ -100,7 +113,7 @@ object Api {
     }
 
     private fun request(ctx: Context, method: String, path: String,
-                        body: JSONObject?, apiSeg: String): ApiResult {
+                        body: JSONObject?, apiSeg: String, readMs: Int = 0): ApiResult {
         val base = Config.baseUrl(ctx)
         val token = Config.token(ctx)
         // Token almashgan bo'lsa — "uzilgan" belgisi o'z-o'zidan tushadi.
@@ -125,7 +138,11 @@ object Api {
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = method
                 connectTimeout = CONNECT_MS
-                readTimeout = if (body != null) POST_READ_MS else GET_READ_MS
+                readTimeout = when {
+                    readMs > 0 -> readMs
+                    body != null -> POST_READ_MS
+                    else -> GET_READ_MS
+                }
                 setRequestProperty("X-Device-Token", token)
                 setRequestProperty("X-Device-Id", Config.deviceId(ctx))
                 setRequestProperty("X-App-Version", BuildConfig.VERSION_NAME)
@@ -159,7 +176,7 @@ object Api {
                 when {
                     json?.optBoolean("blocked", false) == true -> {
                         blocked = msg
-                        ApiResult.Error(msg, blocked = true)
+                        ApiResult.Error(msg, blocked = true, code = code)
                     }
                     // 401 — token yaroqsiz yoki qurilma o'chirilgan.
                     code == 401 && apiSeg == "api/tzd" -> {
@@ -167,9 +184,9 @@ object Api {
                             badToken = token
                             unlinked = true
                         }
-                        ApiResult.Error(msg, unlinked = unlinked)
+                        ApiResult.Error(msg, unlinked = unlinked, code = code)
                     }
-                    else -> ApiResult.Error(msg)
+                    else -> ApiResult.Error(msg, code = code)
                 }
             }
         } catch (e: java.net.UnknownHostException) {

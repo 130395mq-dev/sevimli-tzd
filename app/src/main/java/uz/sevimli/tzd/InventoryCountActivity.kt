@@ -3,6 +3,8 @@ package uz.sevimli.tzd
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -43,6 +45,18 @@ class InventoryCountActivity : AppCompatActivity() {
         /** Shu sondan ko'p qator sanalgach qoralama tez-tez emas, oralab yoziladi. */
         private const val DRAFT_BIG = 300
         private const val DRAFT_MIN_MS = 2000L
+
+        /** Natijasi noma'lum saqlash shu kalit + hujjat ID bilan yoziladi. */
+        private const val PENDING = "inventory_pending_"
+        /** Noma'lum natijani necha marta qayta tekshirish. */
+        private const val SUBMIT_TRIES = 8
+        /**
+         * Shundan eski noma'lum saqlash AVTOMATIK qayta yuborilmaydi —
+         * xodimdan so'raladi. Server takrorni qancha vaqt eslab qolishi
+         * bizga kafolatlanmagan; eski so'rovni ko'r-ko'rona yuborish
+         * sanoqni ikkilantirib qo'yishi mumkin.
+         */
+        private const val PENDING_MAX_AGE_MS = 2 * 60 * 60 * 1000L
     }
 
     private lateinit var b: ActivityInventoryCountBinding
@@ -232,6 +246,15 @@ class InventoryCountActivity : AppCompatActivity() {
                 b.btnConfirm.alpha = 1f
                 // Uzilib qolgan sanoq bo'lsa - tiklaymiz.
                 val back = restoreDraft()
+                // NATIJASI NOMA'LUM SAQLASH bo'lsa — avval o'sha hal qilinadi.
+                // Aks holda xodim qoralamani yana yuborib, sanoqni
+                // ikkilantirib qo'yishi mumkin edi (11.10.2026 dagi holat).
+                val pending = loadPending()
+                if (pending != null) {
+                    renderList()
+                    resumePending(pending)
+                    return@runOnUiThread
+                }
                 if (back > 0) {
                     Toast.makeText(this,
                         getString(R.string.draft_restored_fmt, back),
@@ -264,6 +287,7 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private fun onScan(code: String) {
+        if (blockedByPending()) return
         b.loading.visibility = View.VISIBLE
         thread {
             val result = Api.get(this, "product", mapOf("barcode" to code))
@@ -292,6 +316,7 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private fun matchScan(product: JSONObject) {
+        if (blockedByPending()) return
         val mid = product.optString("moysklad_id")
         if (mid.isBlank()) {
             ScanFeedback.fail(this)
@@ -598,6 +623,7 @@ class InventoryCountActivity : AppCompatActivity() {
      * kiritish maydoniga aralashmaydi.
      */
     private fun editItem(item: InvItem) {
+        if (blockedByPending()) return
         // Yalang'och EditText o'rniga chetlari joyida turgan, yirik raqamli
         // maydon — oyna ilovaning qolgan qismi bilan bir uslubda bo'lsin.
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_qty_edit, null)
@@ -631,16 +657,12 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private val busy = Busy()
-
-    // TAKROR-HIMOYA kaliti. Tarmoq uzilib qayta bosilganda AYNAN o'sha
-    // ro'yxat ketsa — server uni ikkinchi marta qo'shmaydi. Ro'yxat
-    // o'zgargan bo'lsa kalit ham yangilanadi, ya'ni qo'shimcha sanoq
-    // "takror" deb tashlab yuborilmaydi.
-    private var lastSignature = ""
-    private var lastKey = ""
+    private val handler = Handler(Looper.getMainLooper())
+    private var savingDialog: AlertDialog? = null
 
     private fun confirm() {
         if (busy.isRunning) return
+        loadPending()?.let { resumePending(it); return }
         if (items.isEmpty()) {
             Toast.makeText(this, getString(R.string.list_empty), Toast.LENGTH_SHORT).show(); return
         }
@@ -695,6 +717,9 @@ class InventoryCountActivity : AppCompatActivity() {
     }
 
     private fun send() {
+        // Oldingi saqlash natijasi noma'lum bo'lsa — YANGI so'rov tuzilmaydi,
+        // o'sha so'rov o'sha kalit bilan qayta tekshiriladi.
+        loadPending()?.let { resumePending(it); return }
         if (!busy.start(b.btnConfirm)) return
         flushDraft()          // kutib turgan o'zgarish yo'qolmasin
         b.loading.visibility = View.VISIBLE
@@ -728,32 +753,160 @@ class InventoryCountActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.nothing_counted), Toast.LENGTH_SHORT).show()
             return
         }
-        val sig = lines.toString()
-        if (sig != lastSignature || lastKey.isEmpty()) {
-            lastKey = java.util.UUID.randomUUID().toString()
-            lastSignature = sig
-        }
-        val body = JSONObject().apply {
-            // TAKROR-HIMOYA: tarmoq uzilib qayta yuborilsa sanoq ikkilanmasin.
-            put("client_uuid", lastKey)
-            put("inventory_id", inventoryId)
+        // TAKROR-HIMOYA. Kalit va qatorlar yuborishdan OLDIN qurilmaga
+        // yoziladi. Natija aniq bo'lmaguncha AYNAN SHU so'rov shu kalit
+        // bilan qayta yuboriladi — server takrorni tanib, ikkinchi marta
+        // qo'shmaydi. Ilgari kalit faqat xotirada edi: hujjat qayta
+        // ochilsa yangi kalit olinib, sanoq 2 barobar bo'lib ketardi.
+        val pending = JSONObject().apply {
+            put("v", 1)
+            put("inv", inventoryId)
+            put("key", java.util.UUID.randomUUID().toString())
+            put("at", System.currentTimeMillis())
             put("lines", lines)
+        }
+        savePending(pending)
+        submit(pending, 1)
+    }
+
+    // ==================== NATIJASI NOMA'LUM SAQLASH ====================
+
+    private fun pendingKey() = PENDING + inventoryId
+
+    private fun loadPending(): JSONObject? {
+        val raw = DraftStore.load(this, pendingKey()) ?: return null
+        val j = try { JSONObject(raw) } catch (e: Exception) { return null }
+        if (j.optString("inv") != inventoryId || j.optString("key").isBlank()) return null
+        if (j.optJSONArray("lines") == null) return null
+        return j
+    }
+
+    private fun savePending(p: JSONObject) =
+        DraftStore.save(this, pendingKey(), p.toString())
+
+    private fun clearPending() = DraftStore.clear(this, pendingKey())
+
+    /** Noma'lum saqlash turganda yangi son kiritilmaydi. */
+    private fun blockedByPending(): Boolean {
+        if (loadPending() == null) return false
+        Toast.makeText(this, getString(R.string.save_pending_wait), Toast.LENGTH_SHORT).show()
+        return true
+    }
+
+    /** Hujjat ochilganda yoki "Saqlash" qayta bosilganda chaqiriladi. */
+    private fun resumePending(p: JSONObject) {
+        val age = System.currentTimeMillis() - p.optLong("at", 0L)
+        if (age in 0..PENDING_MAX_AGE_MS) {
+            if (!busy.start(b.btnConfirm)) return
+            submit(p, 1)
+            return
+        }
+        // ESKI: ko'r-ko'rona qayta yubormaymiz, xodim MoySklad'da tekshiradi.
+        val whenTxt = java.text.SimpleDateFormat("dd.MM HH:mm", java.util.Locale.US)
+            .format(java.util.Date(p.optLong("at", 0L)))
+        askPendingOutcome(p, getString(R.string.save_old_title),
+            getString(R.string.save_old_msg_fmt, whenTxt))
+    }
+
+    /**
+     * Natijani faqat odam aniqlay oladigan holat: xodim MoySklad'da hujjatni
+     * ko'radi va tanlaydi. "Keyinroq" — hech narsa o'zgarmaydi, so'rov
+     * qurilmada qoladi.
+     */
+    private fun askPendingOutcome(p: JSONObject, title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.save_old_done)) { _, _ ->
+                // Sanoq hujjatda bor — qoralama ham, noma'lum so'rov ham keraksiz.
+                clearPending()
+                DraftStore.clear(this, DRAFT)
+                try { LocalDb.get(this).invCacheClear(inventoryId) } catch (_: Throwable) {}
+                finish()
+            }
+            .setNegativeButton(getString(R.string.save_old_resend)) { _, _ ->
+                if (!busy.start(b.btnConfirm)) return@setNegativeButton
+                submit(p, 1)
+            }
+            .setNeutralButton(getString(R.string.save_later), null)
+            .show()
+    }
+
+    private enum class Outcome { OK, REJECTED, UNKNOWN }
+
+    /**
+     * Javobni uch turga ajratadi.
+     *
+     * UNKNOWN — sanoq yozilgan ham, yozilmagan ham bo'lishi mumkin:
+     *   vaqt tugadi / internet uzildi (server yozishni davom ettirgan bo'lishi
+     *   mumkin), 409 (server shu kalitni HALI yozyapti), 408/429, 5xx.
+     * REJECTED — server aniq rad etdi (400, 403, 404…): hech narsa yozilmagan,
+     *   qoralama saqlanib qoladi va xodim qayta yuborishi xavfsiz.
+     */
+    private fun classify(r: ApiResult): Outcome = when (r) {
+        is ApiResult.Success -> Outcome.OK
+        is ApiResult.Error -> when {
+            r.offline -> Outcome.UNKNOWN
+            r.code == 0 -> Outcome.UNKNOWN
+            r.code == 408 || r.code == 409 || r.code == 429 -> Outcome.UNKNOWN
+            r.code >= 500 -> Outcome.UNKNOWN
+            else -> Outcome.REJECTED
+        }
+    }
+
+    /** Kutish: 5, 10, 15, 20, 30, 30, 30 soniya. */
+    private fun retryDelay(attempt: Int): Long =
+        (if (attempt <= 4) attempt * 5 else 30) * 1000L
+
+    private fun showSaving(attempt: Int) {
+        b.loading.visibility = View.VISIBLE
+        val msg = getString(R.string.save_in_progress_fmt, attempt)
+        val d = savingDialog
+        if (d != null && d.isShowing) { d.setMessage(msg); return }
+        savingDialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.count_save_kt))
+            .setMessage(msg)
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun hideSaving() {
+        b.loading.visibility = View.GONE
+        savingDialog?.dismiss()
+        savingDialog = null
+    }
+
+    /**
+     * So'rovni yuboradi. Natija noma'lum bo'lsa o'sha so'rovni o'sha kalit
+     * bilan qayta yuboradi. `busy` qulfi butun jarayon davomida turadi.
+     */
+    private fun submit(p: JSONObject, attempt: Int) {
+        showSaving(attempt)
+        val body = JSONObject().apply {
+            put("client_uuid", p.getString("key"))
+            put("inventory_id", inventoryId)
+            put("lines", p.getJSONArray("lines"))
             put("mode", "add")
         }
         thread {
-            val result = Api.post(this, "inventory-save", body)
+            val result = Api.post(this, "inventory-save", body, Api.LONG_POST_MS)
             runOnUiThread {
-                busy.stop(b.btnConfirm)
+                // Ekran yopilgan bo'lsa — noma'lum so'rov qurilmada qoladi va
+                // hujjat keyingi ochilganda hal qilinadi.
                 if (isFinishing || isDestroyed) return@runOnUiThread
-                b.loading.visibility = View.GONE
-                when (result) {
-                    is ApiResult.Success -> {
+                when (classify(result)) {
+                    Outcome.OK -> {
+                        clearPending()
+                        busy.stop(b.btnConfirm)
+                        hideSaving()
                         // Serverga yozildi - endi qoralama keraksiz.
                         DraftStore.clear(this, DRAFT)
                         // Hujjat serverda o'zgardi - kesh yaroqsiz.
                         try { LocalDb.get(this).invCacheClear(inventoryId) }
                         catch (_: Throwable) {}
-                        val name = result.json.optString("name", getString(R.string.inventory))
+                        val json = (result as ApiResult.Success).json
+                        val name = json.optString("name", getString(R.string.inventory))
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.saved_ok))
                             .setMessage("MoySklad: $name\n\n" +
@@ -762,22 +915,53 @@ class InventoryCountActivity : AppCompatActivity() {
                             .setCancelable(false)
                             .show()
                     }
-                    is ApiResult.Error -> {
-                        val msg = if (result.offline)
-                            getString(R.string.no_internet_retry2)
-                        else result.message
+                    Outcome.REJECTED -> {
+                        // Server aniq rad etdi — hech narsa yozilmagan.
+                        clearPending()
+                        busy.stop(b.btnConfirm)
+                        hideSaving()
                         AlertDialog.Builder(this)
                             .setTitle(getString(R.string.not_saved))
-                            .setMessage(msg)
+                            .setMessage((result as ApiResult.Error).message)
                             .setPositiveButton(getString(R.string.ok), null)
                             .show()
+                    }
+                    Outcome.UNKNOWN -> {
+                        if (attempt < SUBMIT_TRIES) {
+                            showSaving(attempt + 1)
+                            handler.postDelayed({
+                                if (!isFinishing && !isDestroyed) submit(p, attempt + 1)
+                            }, retryDelay(attempt))
+                        } else {
+                            // Qurilmada qoladi. "Saqlash" qayta bosilsa yoki
+                            // hujjat qayta ochilsa — xuddi shu so'rov ketadi.
+                            busy.stop(b.btnConfirm)
+                            hideSaving()
+                            askPendingOutcome(p, getString(R.string.save_unknown_title),
+                                getString(R.string.save_unknown_msg))
+                        }
                     }
                 }
             }
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Qayta urinish ekran yopilgach ketmasin. Noma'lum so'rov qurilmada
+        // saqlangan — hujjat keyingi ochilganda hal qilinadi.
+        handler.removeCallbacksAndMessages(null)
+        savingDialog?.dismiss()
+        savingDialog = null
+    }
+
     private fun confirmExit() {
+        if (busy.isRunning) {
+            // Saqlash ketyapti — chiqish so'rovni yo'qotmaydi (u qurilmada),
+            // lekin xodim natijani ko'rmay ketmasin.
+            Toast.makeText(this, getString(R.string.save_pending_wait), Toast.LENGTH_SHORT).show()
+            return
+        }
         if (items.none { it.added > 0 }) { finish(); return }
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.exit_q))

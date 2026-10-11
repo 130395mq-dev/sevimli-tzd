@@ -370,4 +370,15 @@
     <string name="device_unlinked_title">Устройство отключено</string>
     <string name="device_unlinked_msg">Этот терминал отключён от сервера. Чтобы продолжить работу, нужно подключить заново.</string>
     <string name="relink">Подключить заново</string>
+
+    <!-- Inventarizatsiya: natijasi noma'lum saqlash (6.11.7) -->
+    <string name="save_pending_wait">Дождитесь окончания сохранения</string>
+    <string name="save_in_progress_fmt">Пересчёт записывается в МойСклад…\n\nСервер отвечает медленно. Приложение проверяет само — НЕ НАЖИМАЙТЕ ПОВТОРНО.\n\nПроверка: %1$d</string>
+    <string name="save_unknown_title">Результат пока неизвестен</string>
+    <string name="save_unknown_msg">Сервер долго не отвечал. Пересчёт, возможно, уже записан — НЕ ПЕРЕСЧИТЫВАЙТЕ.\n\nОткройте этот документ в МойСклад и проверьте. Если выбрать «Позже», при повторном нажатии «Сохранить» приложение снова проверит то же сохранение и не добавит второй раз.</string>
+    <string name="save_later">Позже</string>
+    <string name="save_old_title">Прошлое сохранение не проверено</string>
+    <string name="save_old_msg_fmt">Результат пересчёта, отправленного %1$s, остался неизвестен.\n\nОткройте этот документ в МойСклад и проверьте, записан ли пересчёт.</string>
+    <string name="save_old_done">Записан</string>
+    <string name="save_old_resend">Не записан — отправить</string>
 </resources>

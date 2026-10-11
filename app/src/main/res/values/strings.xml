@@ -389,4 +389,15 @@
     <string name="device_unlinked_title">Qurilma uzilgan</string>
     <string name="device_unlinked_msg">Bu terminal serverdan uzilgan. Ishni davom ettirish uchun qaytadan ulanish kerak.</string>
     <string name="relink">Qaytadan ulash</string>
+
+    <!-- Inventarizatsiya: natijasi noma'lum saqlash (6.11.7) -->
+    <string name="save_pending_wait">Oldingi saqlash tugashini kuting</string>
+    <string name="save_in_progress_fmt">Sanoq MoySklad\'ga yozilmoqda…\n\nServer sekin javob beryapti. Ilova o\'zi tekshirib turadi — QAYTA BOSMANG.\n\nTekshiruv: %1$d</string>
+    <string name="save_unknown_title">Natija hali noma\'lum</string>
+    <string name="save_unknown_msg">Server uzoq javob bermadi. Sanoq yozilgan bo\'lishi mumkin — QAYTA SANAMANG.\n\nMoySklad\'da shu hujjatni oching va tekshiring. «Keyinroq» desangiz, «Saqlash» qayta bosilganda ilova o\'sha saqlashni yana tekshiradi va ikkinchi marta qo\'shmaydi.</string>
+    <string name="save_later">Keyinroq</string>
+    <string name="save_old_title">Oldingi saqlash tekshirilmagan</string>
+    <string name="save_old_msg_fmt">%1$s da yuborilgan sanoqning natijasi noma\'lum qolgan.\n\nMoySklad\'da shu hujjatni oching va sanoq yozilganmi — tekshiring.</string>
+    <string name="save_old_done">Yozilgan</string>
+    <string name="save_old_resend">Yozilmagan — yuborish</string>
 </resources>
